@@ -185,7 +185,7 @@ export default function Pricing() {
                   <CardTitle className="text-2xl">{planData.name}</CardTitle>
                   <div className="mt-4">
                     <span className="text-4xl font-extrabold text-foreground">
-                      ${price.toLocaleString()}
+                      ${price.toLocaleString()} <span className="text-lg font-medium text-muted-foreground">USD</span>
                     </span>
                     <span className="text-muted-foreground">
                       /{isAnnual ? 'año' : 'mes'}
@@ -193,7 +193,7 @@ export default function Pricing() {
                   </div>
                   {isAnnual && (
                     <p className="text-sm text-muted-foreground">
-                      ${Math.round(price / 12).toLocaleString()}/mes facturado anualmente
+                      ${Math.round(price / 12).toLocaleString()} USD/mes facturado anualmente
                     </p>
                   )}
                 </CardHeader>
