@@ -9,18 +9,23 @@ import {
   Ticket, 
   Users, 
   Clock, 
-  BarChart3 
+  BarChart3,
+  Trophy,
+  Pencil
 } from 'lucide-react';
 import { useRaffles } from '@/hooks/useRaffles';
+import { useAuth } from '@/hooks/useAuth';
 import { OverviewTab } from '@/components/raffle/detail/OverviewTab';
 import { TicketsTab } from '@/components/raffle/detail/TicketsTab';
 import { BuyersTab } from '@/components/raffle/detail/BuyersTab';
 import { ApprovalsTab } from '@/components/raffle/detail/ApprovalsTab';
 import { AnalyticsTab } from '@/components/raffle/detail/AnalyticsTab';
+import { ExportMenu } from '@/components/raffle/detail/ExportMenu';
 
 export default function RaffleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { role } = useAuth();
   
   const { useRaffleById, toggleRaffleStatus } = useRaffles();
   const { data: raffle, isLoading, error } = useRaffleById(id);
@@ -88,6 +93,22 @@ export default function RaffleDetail() {
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{raffle.title}</h1>
             <p className="text-muted-foreground">{raffle.prize_name}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <ExportMenu raffleId={raffle.id} raffleName={raffle.title} />
+            {raffle.status === 'active' && 
+             raffle.tickets_sold > 0 && 
+             !raffle.winner_ticket_number &&
+             (role === 'owner' || role === 'admin') && (
+              <Button onClick={() => navigate(`/dashboard/raffles/${id}/draw`)}>
+                <Trophy className="h-4 w-4 mr-2" />
+                Realizar Sorteo
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => navigate(`/dashboard/raffles/${id}/edit`)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
           </div>
         </div>
 
