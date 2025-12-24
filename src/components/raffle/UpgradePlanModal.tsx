@@ -76,7 +76,7 @@ export const UpgradePlanModal = ({
                     Hasta {STRIPE_PLANS.pro.limits.maxTicketsPerRaffle.toLocaleString()} boletos • {STRIPE_PLANS.pro.limits.maxActiveRaffles} sorteos activos
                   </p>
                 </div>
-                <span className="font-bold">${STRIPE_PLANS.pro.monthlyPrice}/mes</span>
+                <span className="font-bold">${STRIPE_PLANS.pro.monthlyPrice} USD/mes</span>
               </div>
             )}
 
@@ -92,7 +92,7 @@ export const UpgradePlanModal = ({
                     Hasta {STRIPE_PLANS.premium.limits.maxTicketsPerRaffle.toLocaleString()} boletos • Sorteos ilimitados
                   </p>
                 </div>
-                <span className="font-bold">${STRIPE_PLANS.premium.monthlyPrice}/mes</span>
+                <span className="font-bold">${STRIPE_PLANS.premium.monthlyPrice} USD/mes</span>
               </div>
             )}
           </div>
