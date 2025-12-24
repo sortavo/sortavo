@@ -1,7 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 
 interface Profile {
   id: string;
@@ -15,12 +14,17 @@ interface Organization {
   id: string;
   name: string;
   email: string;
-  subscription_tier: string;
-  subscription_status: string;
-  onboarding_completed: boolean;
-  max_active_raffles: number;
-  max_tickets_per_raffle: number;
-  templates_available: number;
+  subscription_tier: string | null;
+  subscription_status: string | null;
+  onboarding_completed: boolean | null;
+  max_active_raffles: number | null;
+  max_tickets_per_raffle: number | null;
+  templates_available: number | null;
+  currency_code: string | null;
+  country_code: string | null;
+  timezone: string | null;
+  brand_color: string | null;
+  logo_url: string | null;
 }
 
 interface AuthContextType {
