@@ -327,6 +327,7 @@ export type Database = {
           title: string
           total_tickets: number
           updated_at: string | null
+          winner_announced: boolean | null
           winner_data: Json | null
           winner_ticket_number: string | null
         }
@@ -368,6 +369,7 @@ export type Database = {
           title: string
           total_tickets: number
           updated_at?: string | null
+          winner_announced?: boolean | null
           winner_data?: Json | null
           winner_ticket_number?: string | null
         }
@@ -409,6 +411,7 @@ export type Database = {
           title?: string
           total_tickets?: number
           updated_at?: string | null
+          winner_announced?: boolean | null
           winner_data?: Json | null
           winner_ticket_number?: string | null
         }
