@@ -27,9 +27,10 @@ import {
   ChevronRight,
   Users
 } from 'lucide-react';
-import { useBuyers, getWhatsAppLink, getMailtoLink, exportBuyers } from '@/hooks/useBuyers';
+import { useBuyers } from '@/hooks/useBuyers';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
 
 interface BuyersTabProps {
   raffleId: string;
@@ -42,24 +43,37 @@ export function BuyersTab({ raffleId }: BuyersTabProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
 
-  const { useBuyersList, useCities } = useBuyers();
+  const { useBuyersList, useCities, exportBuyers, getWhatsAppLink, getMailtoLink } = useBuyers(raffleId);
   
-  const { data: buyersData, isLoading } = useBuyersList(raffleId, {
+  const { data: buyersData, isLoading } = useBuyersList({
     status: statusFilter !== 'all' ? statusFilter : undefined,
     city: cityFilter !== 'all' ? cityFilter : undefined,
     search: searchQuery || undefined,
     page: currentPage,
-    limit: BUYERS_PER_PAGE,
+    pageSize: BUYERS_PER_PAGE,
   });
 
-  const { data: cities = [] } = useCities(raffleId);
+  const { data: cities = [] } = useCities();
 
-  const buyers = buyersData?.data || [];
-  const totalPages = Math.ceil((buyersData?.total || 0) / BUYERS_PER_PAGE);
+  const buyers = buyersData?.buyers || [];
+  const totalPages = Math.ceil((buyersData?.count || 0) / BUYERS_PER_PAGE);
 
   const handleExport = async () => {
-    await exportBuyers(raffleId);
+    try {
+      const csv = await exportBuyers();
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `compradores-${raffleId}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast({ title: 'CSV exportado correctamente' });
+    } catch (error) {
+      toast({ title: 'Error al exportar', variant: 'destructive' });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -126,7 +140,7 @@ export function BuyersTab({ raffleId }: BuyersTabProps) {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Compradores ({buyersData?.total || 0})
+            Compradores ({buyersData?.count || 0})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -159,46 +173,53 @@ export function BuyersTab({ raffleId }: BuyersTabProps) {
                   {buyers.map((buyer) => (
                     <TableRow key={buyer.id}>
                       <TableCell className="font-medium">
-                        {buyer.buyer_name || 'Sin nombre'}
+                        {buyer.name || 'Sin nombre'}
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          {buyer.buyer_email && (
+                          {buyer.email && (
                             <div className="text-sm text-muted-foreground">
-                              {buyer.buyer_email}
+                              {buyer.email}
                             </div>
                           )}
-                          {buyer.buyer_phone && (
+                          {buyer.phone && (
                             <div className="text-sm text-muted-foreground">
-                              {buyer.buyer_phone}
+                              {buyer.phone}
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          #{buyer.ticket_number}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {buyer.tickets.slice(0, 3).map((ticket) => (
+                            <Badge key={ticket} variant="outline">
+                              #{ticket}
+                            </Badge>
+                          ))}
+                          {buyer.tickets.length > 3 && (
+                            <Badge variant="secondary">+{buyer.tickets.length - 3}</Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(buyer.status || 'unknown')}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {buyer.sold_at ? format(new Date(buyer.sold_at), 'dd MMM yyyy', { locale: es }) : '-'}
+                        {buyer.date ? format(new Date(buyer.date), 'dd MMM yyyy', { locale: es }) : '-'}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {buyer.buyer_city || '-'}
+                        {buyer.city || '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {buyer.buyer_phone && (
+                          {buyer.phone && (
                             <Button
                               variant="ghost"
                               size="icon"
                               asChild
                             >
                               <a 
-                                href={getWhatsAppLink(buyer.buyer_phone)}
+                                href={getWhatsAppLink(buyer.phone)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
@@ -206,13 +227,13 @@ export function BuyersTab({ raffleId }: BuyersTabProps) {
                               </a>
                             </Button>
                           )}
-                          {buyer.buyer_email && (
+                          {buyer.email && (
                             <Button
                               variant="ghost"
                               size="icon"
                               asChild
                             >
-                              <a href={getMailtoLink(buyer.buyer_email)}>
+                              <a href={getMailtoLink(buyer.email)}>
                                 <Mail className="h-4 w-4 text-blue-600" />
                               </a>
                             </Button>

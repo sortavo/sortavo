@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Form } from '@/components/ui/form';
 import { ArrowLeft, ArrowRight, Save, Rocket } from 'lucide-react';
 import { useRaffles } from '@/hooks/useRaffles';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,18 +16,8 @@ import { Step3Tickets } from '@/components/raffle/wizard/Step3Tickets';
 import { Step4Draw } from '@/components/raffle/wizard/Step4Draw';
 import { Step5Design } from '@/components/raffle/wizard/Step5Design';
 import { UpgradePlanModal } from '@/components/raffle/UpgradePlanModal';
-import { getTicketLimitByTier, getRaffleLimitByTier } from '@/lib/raffle-utils';
+import { getTicketLimitByTier } from '@/lib/raffle-utils';
 import type { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
-
-type RaffleData = Partial<TablesInsert<'raffles'>> & {
-  packages?: Array<{
-    quantity: number;
-    price: number;
-    discount_percent: number;
-    label: string;
-    display_order: number;
-  }>;
-};
 
 const STEPS = [
   { id: 1, title: 'Información Básica', description: 'Título y descripción' },
@@ -48,71 +40,80 @@ export default function RaffleWizard() {
   
   const [currentStep, setCurrentStep] = useState(1);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [raffleData, setRaffleData] = useState<RaffleData>({
-    title: '',
-    description: '',
-    category: 'other',
-    prize_name: '',
-    prize_value: 0,
-    prize_images: [],
-    prize_video_url: '',
-    prize_terms: '',
-    total_tickets: 100,
-    ticket_price: 100,
-    currency_code: organization?.currency_code || 'MXN',
-    ticket_number_format: 'sequential',
-    allow_individual_sale: true,
-    reservation_time_minutes: 15,
-    max_tickets_per_purchase: 0,
-    max_tickets_per_person: 0,
-    lucky_numbers_enabled: false,
-    lucky_numbers_config: null,
-    draw_method: 'manual',
-    close_sale_hours_before: 0,
-    auto_publish_result: false,
-    template_id: 'modern',
-    customization: {
-      primary_color: organization?.brand_color || '#2563EB',
-      secondary_color: '#F97316',
-      title_font: 'Inter',
-      body_font: 'Inter',
-      logo_position: 'top-left',
-      sections: {
-        hero: true,
-        countdown: true,
-        ticket_grid: true,
-        packages: true,
-        gallery: true,
-        video: false,
-        how_it_works: true,
-        testimonials: false,
-        faq: true,
-        live_feed: false,
-        stats: true,
-        share_buttons: true,
-      },
-      custom_texts: {
+
+  const form = useForm({
+    defaultValues: {
+      title: '',
+      slug: '',
+      description: '',
+      category: 'other',
+      prize_name: '',
+      prize_value: 0,
+      prize_images: [] as string[],
+      prize_video_url: '',
+      prize_terms: '',
+      total_tickets: 100,
+      ticket_price: 100,
+      currency_code: organization?.currency_code || 'MXN',
+      ticket_number_format: 'sequential' as 'sequential' | 'prefixed' | 'random',
+      allow_individual_sale: true,
+      reservation_time_minutes: 15,
+      max_tickets_per_purchase: 0,
+      max_tickets_per_person: 0,
+      lucky_numbers_enabled: false,
+      lucky_numbers_config: null as unknown,
+      draw_method: 'manual' as 'lottery_nacional' | 'manual' | 'random_org',
+      draw_date: null as string | null,
+      start_date: null as string | null,
+      close_sale_hours_before: 0,
+      lottery_draw_number: '',
+      lottery_digits: 3,
+      livestream_url: '',
+      auto_publish_result: false,
+      template_id: 'modern',
+      customization: {
+        primary_color: organization?.brand_color || '#2563EB',
+        secondary_color: '#F97316',
+        title_font: 'Inter',
+        body_font: 'Inter',
+        logo_position: 'top-left',
+        sections: {
+          hero: true,
+          countdown: true,
+          ticket_grid: true,
+          packages: true,
+          gallery: true,
+          video: false,
+          how_it_works: true,
+          testimonials: false,
+          faq: true,
+          live_feed: false,
+          stats: true,
+          share_buttons: true,
+        },
         headline: '',
         subheadline: '',
-        cta_button: 'Comprar Boletos',
-      },
+        cta_text: 'Comprar Boletos',
+      } as unknown,
+      packages: [] as Array<{
+        quantity: number;
+        price: number;
+        discount_percent: number;
+        label: string;
+        display_order: number;
+      }>,
     },
-    packages: [],
   });
 
   // Load existing raffle data
   useEffect(() => {
     if (existingRaffle) {
-      setRaffleData({
+      form.reset({
         ...existingRaffle,
         packages: [],
       });
     }
-  }, [existingRaffle]);
-
-  const updateData = (data: Partial<RaffleData>) => {
-    setRaffleData(prev => ({ ...prev, ...data }));
-  };
+  }, [existingRaffle, form]);
 
   const handleNext = () => {
     if (currentStep < 5) {
@@ -128,13 +129,14 @@ export default function RaffleWizard() {
 
   const handleSaveDraft = async () => {
     try {
+      const values = form.getValues();
+      const { packages, ...data } = values;
+      
       if (isEditing && id) {
-        const { packages, ...updateData } = raffleData;
-        await updateRaffle.mutateAsync({ id, data: updateData as TablesUpdate<'raffles'> });
+        await updateRaffle.mutateAsync({ id, data: data as unknown as TablesUpdate<'raffles'> });
         toast({ title: 'Cambios guardados' });
       } else {
-        const { packages, ...insertData } = raffleData;
-        const result = await createRaffle.mutateAsync(insertData as TablesInsert<'raffles'>);
+        const result = await createRaffle.mutateAsync(data as unknown as TablesInsert<'raffles'>);
         toast({ title: 'Borrador guardado' });
         navigate(`/dashboard/raffles/${result.id}/edit`);
       }
@@ -144,17 +146,19 @@ export default function RaffleWizard() {
   };
 
   const handlePublish = async () => {
+    const values = form.getValues();
+    
     // Check subscription limits
     const tier = organization?.subscription_tier || 'basic';
     const ticketLimit = getTicketLimitByTier(tier);
     
-    if (raffleData.total_tickets && raffleData.total_tickets > ticketLimit) {
+    if (values.total_tickets && values.total_tickets > ticketLimit) {
       setShowUpgradeModal(true);
       return;
     }
 
     // Validate required fields
-    if (!raffleData.title || !raffleData.prize_name || !raffleData.ticket_price) {
+    if (!values.title || !values.prize_name || !values.ticket_price) {
       toast({ 
         title: 'Campos requeridos', 
         description: 'Completa los campos obligatorios antes de publicar',
@@ -165,14 +169,13 @@ export default function RaffleWizard() {
 
     try {
       let raffleId = id;
+      const { packages, ...data } = values;
       
       if (!isEditing) {
-        const { packages, ...insertData } = raffleData;
-        const result = await createRaffle.mutateAsync(insertData as TablesInsert<'raffles'>);
+        const result = await createRaffle.mutateAsync(data as unknown as TablesInsert<'raffles'>);
         raffleId = result.id;
       } else {
-        const { packages, ...updateData } = raffleData;
-        await updateRaffle.mutateAsync({ id: id!, data: updateData as TablesUpdate<'raffles'> });
+        await updateRaffle.mutateAsync({ id: id!, data: data as unknown as TablesUpdate<'raffles'> });
       }
 
       await publishRaffle.mutateAsync(raffleId!);
@@ -185,33 +188,15 @@ export default function RaffleWizard() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1BasicInfo data={raffleData} onUpdate={updateData} />;
+        return <Step1BasicInfo form={form} />;
       case 2:
-        return <Step2Prize data={raffleData} onUpdate={updateData} />;
+        return <Step2Prize form={form} />;
       case 3:
-        return (
-          <Step3Tickets 
-            data={raffleData} 
-            onUpdate={updateData}
-            subscriptionTier={organization?.subscription_tier || 'basic'}
-          />
-        );
+        return <Step3Tickets form={form} />;
       case 4:
-        return (
-          <Step4Draw 
-            data={raffleData} 
-            onUpdate={updateData}
-            timezone={organization?.timezone || 'America/Mexico_City'}
-          />
-        );
+        return <Step4Draw form={form} />;
       case 5:
-        return (
-          <Step5Design 
-            data={raffleData} 
-            onUpdate={updateData}
-            brandColor={organization?.brand_color || '#2563EB'}
-          />
-        );
+        return <Step5Design form={form} />;
       default:
         return null;
     }
@@ -249,11 +234,15 @@ export default function RaffleWizard() {
         <WizardProgress steps={STEPS} currentStep={currentStep} />
 
         {/* Step Content */}
-        <Card>
-          <CardContent className="pt-6">
-            {renderStep()}
-          </CardContent>
-        </Card>
+        <Form {...form}>
+          <form onSubmit={(e) => e.preventDefault()}>
+            <Card>
+              <CardContent className="pt-6">
+                {renderStep()}
+              </CardContent>
+            </Card>
+          </form>
+        </Form>
 
         {/* Navigation */}
         <div className="flex items-center justify-between">

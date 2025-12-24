@@ -44,16 +44,17 @@ export function TicketsTab({ raffleId }: TicketsTabProps) {
   const [jumpToPage, setJumpToPage] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
 
-  const { useTicketsList, useTicketStats } = useTickets();
+  const { useTicketsList, useTicketStats } = useTickets(raffleId);
   
-  const { data: tickets = [], isLoading } = useTicketsList(raffleId, {
+  const { data: ticketsData, isLoading } = useTicketsList({
     status: statusFilter !== 'all' ? statusFilter : undefined,
     page: currentPage,
-    limit: TICKETS_PER_PAGE,
+    pageSize: TICKETS_PER_PAGE,
   });
 
-  const { data: stats } = useTicketStats(raffleId);
+  const { data: stats } = useTicketStats();
 
+  const tickets = ticketsData?.tickets || [];
   const totalPages = Math.ceil((stats?.total || 0) / TICKETS_PER_PAGE);
 
   const handleJumpToPage = () => {
@@ -178,7 +179,7 @@ export function TicketsTab({ raffleId }: TicketsTabProps) {
                       disabled={!ticket}
                       className={cn(
                         'aspect-square rounded-md border text-xs font-medium flex items-center justify-center transition-colors',
-                        ticket ? getTicketColor(ticket.status) : 'bg-muted/50 border-transparent',
+                        ticket ? getTicketColor(ticket.status || 'available') : 'bg-muted/50 border-transparent',
                         ticket && 'cursor-pointer'
                       )}
                     >

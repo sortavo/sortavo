@@ -16,7 +16,7 @@ import {
   Timer
 } from 'lucide-react';
 import { useTickets } from '@/hooks/useTickets';
-import { getWhatsAppLink } from '@/hooks/useBuyers';
+import { useBuyers } from '@/hooks/useBuyers';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -29,12 +29,15 @@ export function ApprovalsTab({ raffleId }: ApprovalsTabProps) {
   const [selectedWithProof, setSelectedWithProof] = useState<string[]>([]);
   
   const { toast } = useToast();
-  const { useTicketsList, approveTicket, rejectTicket, extendReservation, bulkApprove, bulkReject } = useTickets();
+  const { useTicketsList, approveTicket, rejectTicket, extendReservation, bulkApprove, bulkReject } = useTickets(raffleId);
+  const { getWhatsAppLink } = useBuyers(raffleId);
   
-  const { data: reservedTickets = [], isLoading, refetch } = useTicketsList(raffleId, {
+  const { data: ticketsData, isLoading, refetch } = useTicketsList({
     status: 'reserved',
-    limit: 100,
+    pageSize: 100,
   });
+
+  const reservedTickets = ticketsData?.tickets || [];
 
   // Split tickets by payment proof
   const withoutProof = reservedTickets.filter(t => !t.payment_proof_url);

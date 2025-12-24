@@ -6,17 +6,19 @@ import { useNavigate } from 'react-router-dom';
 interface UpgradePlanModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentLimit: number;
-  requestedValue: number;
-  feature: string;
+  currentTier?: string;
+  currentLimit?: number;
+  requestedValue?: number;
+  feature?: string;
 }
 
 export const UpgradePlanModal = ({ 
   open, 
   onOpenChange, 
-  currentLimit, 
+  currentTier = 'basic',
+  currentLimit,
   requestedValue,
-  feature 
+  feature = 'boletos'
 }: UpgradePlanModalProps) => {
   const navigate = useNavigate();
 
@@ -29,20 +31,24 @@ export const UpgradePlanModal = ({
             Actualiza tu Plan
           </DialogTitle>
           <DialogDescription>
-            Has alcanzado el límite de tu plan actual
+            {currentLimit && requestedValue 
+              ? 'Has alcanzado el límite de tu plan actual'
+              : 'Desbloquea más funcionalidades con un plan superior'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="text-sm">
-              <strong>{feature}:</strong> Tu plan actual permite hasta <strong>{currentLimit.toLocaleString()}</strong>, 
-              pero intentas usar <strong>{requestedValue.toLocaleString()}</strong>.
-            </p>
-          </div>
+          {currentLimit && requestedValue && (
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm">
+                <strong>{feature}:</strong> Tu plan actual permite hasta <strong>{currentLimit.toLocaleString()}</strong>, 
+                pero intentas usar <strong>{requestedValue.toLocaleString()}</strong>.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer">
+            <div className={`flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer ${currentTier === 'pro' ? 'border-primary bg-primary/5' : ''}`}>
               <Zap className="w-8 h-8 text-blue-500" />
               <div className="flex-1">
                 <p className="font-medium">Plan Pro</p>
@@ -51,7 +57,7 @@ export const UpgradePlanModal = ({
               <span className="font-bold">$149/mes</span>
             </div>
 
-            <div className="flex items-center gap-3 p-3 border rounded-lg border-primary bg-primary/5 hover:border-primary transition-colors cursor-pointer">
+            <div className={`flex items-center gap-3 p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer ${currentTier === 'premium' ? 'border-primary bg-primary/5' : ''}`}>
               <Star className="w-8 h-8 text-yellow-500" />
               <div className="flex-1">
                 <p className="font-medium">Plan Premium</p>
