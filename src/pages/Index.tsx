@@ -54,15 +54,15 @@ export default function Index() {
             </Link>
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9 transition-transform duration-200 active:scale-95">
+                  <Menu className={`h-5 w-5 transition-transform duration-300 ${mobileMenuOpen ? 'rotate-90 opacity-0' : 'rotate-0 opacity-100'}`} />
                   <span className="sr-only">Abrir menú</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] p-0">
+              <SheetContent side="right" className="w-[280px] p-0 data-[state=open]:animate-slide-in-right data-[state=closed]:animate-slide-out-right">
                 <div className="flex flex-col h-full">
                   {/* Header */}
-                  <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center justify-between p-4 border-b animate-fade-in" style={{ animationDelay: '100ms' }}>
                     <div className="flex items-center gap-2">
                       <Ticket className="h-5 w-5 text-primary" />
                       <span className="font-bold text-foreground">SORTAVO</span>
@@ -72,16 +72,17 @@ export default function Index() {
                   {/* Navigation Links */}
                   <div className="flex-1 py-4">
                     <div className="space-y-1 px-2">
-                      {navLinks.map((link) => {
+                      {navLinks.map((link, index) => {
                         const Icon = link.icon;
                         return (
                           <Link
                             key={link.to}
                             to={link.to}
                             onClick={() => setMobileMenuOpen(false)}
-                            className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 hover:translate-x-1 animate-fade-in"
+                            style={{ animationDelay: `${150 + index * 50}ms` }}
                           >
-                            <Icon className="h-5 w-5" />
+                            <Icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
                             <span>{link.label}</span>
                           </Link>
                         );
@@ -90,14 +91,14 @@ export default function Index() {
                   </div>
 
                   {/* Auth Buttons */}
-                  <div className="p-4 border-t space-y-2">
+                  <div className="p-4 border-t space-y-2 animate-fade-in" style={{ animationDelay: '400ms' }}>
                     <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full transition-transform duration-200 active:scale-[0.98]">
                         Iniciar Sesión
                       </Button>
                     </Link>
                     <Link to="/auth?tab=signup" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full">
+                      <Button className="w-full transition-transform duration-200 active:scale-[0.98]">
                         Crear Cuenta Gratis
                       </Button>
                     </Link>
