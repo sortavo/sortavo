@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { notifyWinnerSelected, notifyRaffleCompleted } from '@/lib/notifications';
 import type { Json } from '@/integrations/supabase/types';
 
 interface WinnerData {
@@ -93,20 +94,49 @@ export function useDrawWinner() {
         throw new Error('Error al guardar el ganador: ' + raffleError.message);
       }
 
-      // Log to analytics
+      // Get raffle info for notifications
       const { data: raffle } = await supabase
         .from('raffles')
-        .select('organization_id')
+        .select('organization_id, created_by, title, prize_name')
         .eq('id', raffleId)
         .single();
 
       if (raffle) {
+        // Log to analytics
         await supabase.from('analytics_events').insert([{
           organization_id: raffle.organization_id,
           raffle_id: raffleId,
           event_type: 'winner_selected',
           metadata: winnerData as unknown as Json,
         }]);
+
+        // Send in-app notification to winner if they have an account
+        const { data: winnerProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', buyerEmail)
+          .maybeSingle();
+
+        if (winnerProfile?.id) {
+          notifyWinnerSelected(
+            winnerProfile.id,
+            raffle.title,
+            ticketNumber,
+            raffle.prize_name
+          ).catch(console.error);
+        }
+
+        // Notify the organizer about raffle completion
+        if (raffle.created_by && raffle.organization_id) {
+          notifyRaffleCompleted(
+            raffle.created_by,
+            raffle.organization_id,
+            raffleId,
+            raffle.title,
+            buyerName,
+            ticketNumber
+          ).catch(console.error);
+        }
       }
 
       return winnerData;
