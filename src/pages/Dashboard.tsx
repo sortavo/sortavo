@@ -1,10 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useDashboardCharts } from "@/hooks/useDashboardCharts";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { RevenueChart, SalesChart } from "@/components/dashboard/DashboardCharts";
+import { DateRangePicker } from "@/components/dashboard/DateRangePicker";
+import { subDays, format, differenceInDays } from "date-fns";
+import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { 
   Loader2, 
@@ -32,7 +35,23 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, organization, isLoading: authLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: chartData, isLoading: chartsLoading } = useDashboardCharts();
+  
+  // Date range state for charts
+  const [dateRange, setDateRange] = useState({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  });
+  
+  const { data: chartData, isLoading: chartsLoading } = useDashboardCharts(dateRange);
+
+  // Calculate period label for charts
+  const getPeriodLabel = () => {
+    const days = differenceInDays(dateRange.to, dateRange.from);
+    if (days === 7) return "Últimos 7 días";
+    if (days === 30) return "Últimos 30 días";
+    if (days === 90) return "Últimos 90 días";
+    return `${format(dateRange.from, "dd MMM", { locale: es })} - ${format(dateRange.to, "dd MMM", { locale: es })}`;
+  };
 
   // Handle subscription success/cancel from Stripe checkout
   useEffect(() => {
@@ -242,18 +261,30 @@ export default function Dashboard() {
           </div>
 
           {/* Charts Section */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <RevenueChart 
-              data={chartData?.dailyRevenue || []}
-              totalRevenue={chartData?.totalRevenue || 0}
-              revenueChange={chartData?.revenueChange || 0}
-              currency={organization?.currency_code || 'MXN'}
-            />
-            <SalesChart 
-              data={chartData?.raffleSales || []}
-              totalTickets={chartData?.totalTicketsSold || 0}
-              ticketsChange={chartData?.ticketsChange || 0}
-            />
+          <div className="space-y-4">
+            {/* Date Range Picker */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Análisis de Ventas</h2>
+              <DateRangePicker 
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+              />
+            </div>
+            
+            <div className="grid gap-6 lg:grid-cols-2">
+              <RevenueChart 
+                data={chartData?.dailyRevenue || []}
+                totalRevenue={chartData?.totalRevenue || 0}
+                revenueChange={chartData?.revenueChange || 0}
+                currency={organization?.currency_code || 'MXN'}
+                periodLabel={getPeriodLabel()}
+              />
+              <SalesChart 
+                data={chartData?.raffleSales || []}
+                totalTickets={chartData?.totalTicketsSold || 0}
+                ticketsChange={chartData?.ticketsChange || 0}
+              />
+            </div>
           </div>
 
           {/* Content Grid */}
