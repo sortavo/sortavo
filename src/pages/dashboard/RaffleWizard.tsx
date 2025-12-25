@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, ArrowRight, Save, Rocket, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowLeft, ArrowRight, Save, Rocket, AlertCircle, CreditCard } from 'lucide-react';
 import { useRaffles } from '@/hooks/useRaffles';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { WizardProgress } from '@/components/raffle/wizard/WizardProgress';
 import { Step1BasicInfo } from '@/components/raffle/wizard/Step1BasicInfo';
 import { Step2Prize } from '@/components/raffle/wizard/Step2Prize';
@@ -36,12 +37,18 @@ export default function RaffleWizard() {
   const { organization } = useAuth();
   const { toast } = useToast();
   const { useRaffleById, createRaffle, updateRaffle, publishRaffle } = useRaffles();
+  const { methods: paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods();
   
   const { data: existingRaffle, isLoading: isLoadingRaffle } = useRaffleById(id);
   
   const [currentStep, setCurrentStep] = useState(1);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState('');
+  const [showPaymentMethodsWarning, setShowPaymentMethodsWarning] = useState(false);
+
+  // Check if there are enabled payment methods
+  const enabledPaymentMethods = paymentMethods?.filter(m => m.enabled) || [];
+  const hasEnabledPaymentMethods = enabledPaymentMethods.length > 0;
 
   // Get subscription limits
   const subscriptionLimits = getSubscriptionLimits(organization?.subscription_tier as SubscriptionTier);
@@ -151,6 +158,17 @@ export default function RaffleWizard() {
   };
 
   const handlePublish = async () => {
+    // Check payment methods first
+    if (!hasEnabledPaymentMethods) {
+      setShowPaymentMethodsWarning(true);
+      toast({ 
+        title: 'Métodos de pago requeridos', 
+        description: 'Configura al menos un método de pago antes de publicar',
+        variant: 'destructive' 
+      });
+      return;
+    }
+
     const values = form.getValues();
     
     // Check raffle limit
@@ -285,6 +303,22 @@ export default function RaffleWizard() {
 
         {/* Progress */}
         <WizardProgress steps={STEPS} currentStep={currentStep} />
+
+        {/* Payment Methods Warning */}
+        {showPaymentMethodsWarning && !hasEnabledPaymentMethods && (
+          <Alert variant="destructive">
+            <CreditCard className="h-4 w-4" />
+            <AlertTitle>Métodos de pago requeridos</AlertTitle>
+            <AlertDescription className="flex items-center justify-between">
+              <span>Configura al menos un método de pago para que los compradores puedan pagarte.</span>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/dashboard/settings?tab=payment-methods">
+                  Configurar Métodos de Pago
+                </Link>
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Step Content */}
         <Form {...form}>
