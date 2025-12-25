@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,12 +12,14 @@ import { DownloadableTicket } from "@/components/ticket/DownloadableTicket";
 import { 
   Loader2, Ticket, Search, QrCode, ChevronRight, Calendar, Trophy, 
   Clock, CheckCircle2, AlertCircle, Download, Eye, Mail, User, MapPin,
-  Hourglass
+  Hourglass, ChevronDown
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "@/lib/currency-utils";
+
+const TICKETS_PER_PAGE = 20;
 
 // Status configuration for visual display
 const STATUS_CONFIG = {
@@ -57,6 +59,7 @@ export default function MyTickets() {
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [ticketSearch, setTicketSearch] = useState('');
+  const [visibleRaffles, setVisibleRaffles] = useState<Record<string, number>>({});
 
   const { data: tickets, isLoading } = useMyTickets(searchEmail);
 
@@ -79,29 +82,44 @@ export default function MyTickets() {
   });
 
   // Group tickets by raffle with additional stats
-  const groupedTickets = filteredTickets?.reduce((acc, ticket) => {
-    const raffleId = ticket.raffles?.id || 'unknown';
-    if (!acc[raffleId]) {
-      acc[raffleId] = { 
-        raffle: ticket.raffles, 
-        tickets: [],
-        stats: { confirmed: 0, pending: 0, total: 0, totalValue: 0 }
-      };
-    }
-    acc[raffleId].tickets.push(ticket);
-    acc[raffleId].stats.total += 1;
-    acc[raffleId].stats.totalValue += ticket.raffles?.ticket_price || 0;
-    if (ticket.status === 'sold') {
-      acc[raffleId].stats.confirmed += 1;
-    } else if (ticket.status === 'reserved') {
-      acc[raffleId].stats.pending += 1;
-    }
-    return acc;
-  }, {} as Record<string, { 
-    raffle: typeof filteredTickets[0]['raffles']; 
-    tickets: typeof filteredTickets;
-    stats: { confirmed: number; pending: number; total: number; totalValue: number }
-  }>);
+  const groupedTickets = useMemo(() => {
+    return filteredTickets?.reduce((acc, ticket) => {
+      const raffleId = ticket.raffles?.id || 'unknown';
+      if (!acc[raffleId]) {
+        acc[raffleId] = { 
+          raffle: ticket.raffles, 
+          tickets: [],
+          stats: { confirmed: 0, pending: 0, total: 0, totalValue: 0 }
+        };
+      }
+      acc[raffleId].tickets.push(ticket);
+      acc[raffleId].stats.total += 1;
+      acc[raffleId].stats.totalValue += ticket.raffles?.ticket_price || 0;
+      if (ticket.status === 'sold') {
+        acc[raffleId].stats.confirmed += 1;
+      } else if (ticket.status === 'reserved') {
+        acc[raffleId].stats.pending += 1;
+      }
+      return acc;
+    }, {} as Record<string, { 
+      raffle: typeof filteredTickets[0]['raffles']; 
+      tickets: typeof filteredTickets;
+      stats: { confirmed: number; pending: number; total: number; totalValue: number }
+    }>);
+  }, [filteredTickets]);
+
+  // Get visible tickets count for a raffle
+  const getVisibleCount = (raffleId: string) => {
+    return visibleRaffles[raffleId] || TICKETS_PER_PAGE;
+  };
+
+  // Load more tickets for a specific raffle
+  const loadMoreTickets = (raffleId: string, totalTickets: number) => {
+    setVisibleRaffles(prev => ({
+      ...prev,
+      [raffleId]: Math.min((prev[raffleId] || TICKETS_PER_PAGE) + TICKETS_PER_PAGE, totalTickets)
+    }));
+  };
 
   // Calculate overall stats
   const overallStats = tickets?.reduce((acc, t) => {
@@ -374,71 +392,101 @@ export default function MyTickets() {
 
                   {/* Tickets List */}
                   <CardContent className="p-0 divide-y">
-                    {raffleTickets.map((t, ticketIndex) => {
-                      const status = STATUS_CONFIG[t.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.available;
-                      const StatusIcon = status.icon;
-                      const purchaseDate = t.reserved_at || t.sold_at || t.created_at;
+                    {(() => {
+                      const raffleId = raffle?.id || 'unknown';
+                      const visibleCount = getVisibleCount(raffleId);
+                      const visibleTickets = raffleTickets.slice(0, visibleCount);
+                      const hasMore = raffleTickets.length > visibleCount;
+                      const remaining = raffleTickets.length - visibleCount;
 
                       return (
-                        <motion.button
-                          key={t.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: ticketIndex * 0.05 }}
-                          onClick={() => setSelectedTicket({ ticket: t, raffle })}
-                          className="w-full p-4 text-left hover:bg-muted/50 transition-colors flex items-center gap-4"
-                        >
-                          {/* Ticket Number */}
-                          <div className="flex-shrink-0">
-                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg border-2 ${status.color}`}>
-                              {t.ticket_number}
-                            </div>
-                          </div>
+                        <>
+                          {visibleTickets.map((t, ticketIndex) => {
+                            const status = STATUS_CONFIG[t.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.available;
+                            const StatusIcon = status.icon;
+                            const purchaseDate = t.reserved_at || t.sold_at || t.created_at;
 
-                          {/* Ticket Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">Boleto #{t.ticket_number}</span>
-                              <Badge variant="outline" className={`text-xs ${status.color}`}>
-                                <StatusIcon className="w-3 h-3 mr-1" />
-                                {status.label}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                              {purchaseDate && (
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {formatDistanceToNow(new Date(purchaseDate), { addSuffix: true, locale: es })}
-                                </span>
-                              )}
-                              {t.buyer_name && (
-                                <span className="flex items-center gap-1">
-                                  <User className="w-3 h-3" />
-                                  {t.buyer_name}
-                                </span>
-                              )}
-                              {t.buyer_city && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  {t.buyer_city}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                            return (
+                              <motion.button
+                                key={t.id}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: ticketIndex * 0.02 }}
+                                onClick={() => setSelectedTicket({ ticket: t, raffle })}
+                                className="w-full p-4 text-left hover:bg-muted/50 transition-colors flex items-center gap-4"
+                              >
+                                {/* Ticket Number */}
+                                <div className="flex-shrink-0">
+                                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg border-2 ${status.color}`}>
+                                    {t.ticket_number}
+                                  </div>
+                                </div>
 
-                          {/* Actions */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            <div className="p-2 rounded-lg bg-muted/50">
-                              {t.status === 'sold' ? (
-                                <Download className="w-4 h-4 text-primary" />
-                              ) : (
-                                <Eye className="w-4 h-4 text-muted-foreground" />
-                              )}
+                                {/* Ticket Info */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold">Boleto #{t.ticket_number}</span>
+                                    <Badge variant="outline" className={`text-xs ${status.color}`}>
+                                      <StatusIcon className="w-3 h-3 mr-1" />
+                                      {status.label}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                                    {purchaseDate && (
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {formatDistanceToNow(new Date(purchaseDate), { addSuffix: true, locale: es })}
+                                      </span>
+                                    )}
+                                    {t.buyer_name && (
+                                      <span className="flex items-center gap-1">
+                                        <User className="w-3 h-3" />
+                                        {t.buyer_name}
+                                      </span>
+                                    )}
+                                    {t.buyer_city && (
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3" />
+                                        {t.buyer_city}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <div className="p-2 rounded-lg bg-muted/50">
+                                    {t.status === 'sold' ? (
+                                      <Download className="w-4 h-4 text-primary" />
+                                    ) : (
+                                      <Eye className="w-4 h-4 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                </div>
+                              </motion.button>
+                            );
+                          })}
+
+                          {/* Load More Button */}
+                          {hasMore && (
+                            <div className="p-4 text-center border-t bg-muted/20">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  loadMoreTickets(raffleId, raffleTickets.length);
+                                }}
+                                className="gap-2"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                                Cargar más ({remaining} restante{remaining !== 1 ? 's' : ''})
+                              </Button>
                             </div>
-                          </div>
-                        </motion.button>
+                          )}
+                        </>
                       );
-                    })}
+                    })()}
                   </CardContent>
                 </Card>
               </motion.div>
