@@ -178,6 +178,29 @@ export const useRaffles = () => {
   // Publish raffle mutation
   const publishRaffle = useMutation({
     mutationFn: async (raffleId: string) => {
+      // Get organization ID from the raffle
+      const { data: raffleData, error: raffleError } = await supabase
+        .from('raffles')
+        .select('organization_id')
+        .eq('id', raffleId)
+        .single();
+
+      if (raffleError) throw raffleError;
+
+      // Check for enabled payment methods
+      const { data: paymentMethods, error: paymentError } = await supabase
+        .from('payment_methods')
+        .select('id')
+        .eq('organization_id', raffleData.organization_id)
+        .eq('enabled', true)
+        .limit(1);
+
+      if (paymentError) throw paymentError;
+
+      if (!paymentMethods || paymentMethods.length === 0) {
+        throw new Error('PAYMENT_METHODS_REQUIRED');
+      }
+
       // First update status
       const { data: raffle, error } = await supabase
         .from('raffles')
@@ -206,7 +229,15 @@ export const useRaffles = () => {
       toast({ title: 'Sorteo publicado', description: 'Los boletos están siendo generados' });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      if (error.message === 'PAYMENT_METHODS_REQUIRED') {
+        toast({ 
+          title: 'Métodos de pago requeridos', 
+          description: 'Configura al menos un método de pago habilitado antes de publicar',
+          variant: 'destructive' 
+        });
+      } else {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      }
     },
   });
 
