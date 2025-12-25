@@ -5,13 +5,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Sparkles } from 'lucide-react';
-import { TICKET_COUNT_OPTIONS, RESERVATION_TIME_OPTIONS, getTicketLimitByTier } from '@/lib/raffle-utils';
+import { Plus, Trash2, Sparkles, Clock } from 'lucide-react';
+import { 
+  TICKET_COUNT_OPTIONS, 
+  RESERVATION_TIME_OPTIONS, 
+  RESERVATION_TIME_UNITS,
+  MAX_RESERVATION_MINUTES,
+  formatReservationTime,
+  getTicketLimitByTier 
+} from '@/lib/raffle-utils';
 import { CURRENCIES } from '@/lib/currency-utils';
 import { useAuth } from '@/hooks/useAuth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Step3Props {
   form: UseFormReturn<any>;
@@ -38,6 +44,49 @@ export const Step3Tickets = ({ form }: Step3Props) => {
   const currencyData = CURRENCIES.find(c => c.code === currency);
   const basePrice = form.watch('ticket_price') || 0;
   const reservationTime = form.watch('reservation_time_minutes') || 15;
+  
+  // Custom reservation time state
+  const [isCustomTime, setIsCustomTime] = useState(false);
+  const [customValue, setCustomValue] = useState(15);
+  const [customUnit, setCustomUnit] = useState<'minutes' | 'hours' | 'days'>('minutes');
+
+  // Check if current value matches a preset
+  useEffect(() => {
+    const matchesPreset = RESERVATION_TIME_OPTIONS.some(opt => opt.value === reservationTime);
+    if (!matchesPreset && reservationTime > 0) {
+      setIsCustomTime(true);
+      // Determine best unit for display
+      if (reservationTime >= 1440 && reservationTime % 1440 === 0) {
+        setCustomValue(reservationTime / 1440);
+        setCustomUnit('days');
+      } else if (reservationTime >= 60 && reservationTime % 60 === 0) {
+        setCustomValue(reservationTime / 60);
+        setCustomUnit('hours');
+      } else {
+        setCustomValue(reservationTime);
+        setCustomUnit('minutes');
+      }
+    }
+  }, []);
+
+  const handleReservationTimeChange = (value: string) => {
+    if (value === 'custom') {
+      setIsCustomTime(true);
+      // Keep current value when switching to custom
+    } else {
+      setIsCustomTime(false);
+      form.setValue('reservation_time_minutes', parseInt(value));
+    }
+  };
+
+  const handleCustomValueChange = (value: number, unit: 'minutes' | 'hours' | 'days') => {
+    const unitData = RESERVATION_TIME_UNITS.find(u => u.value === unit);
+    const minutes = value * (unitData?.multiplier || 1);
+    const clampedMinutes = Math.min(Math.max(1, minutes), MAX_RESERVATION_MINUTES);
+    form.setValue('reservation_time_minutes', clampedMinutes);
+    setCustomValue(value);
+    setCustomUnit(unit);
+  };
 
   const addPackage = () => {
     setPackages([...packages, {
@@ -239,20 +288,77 @@ export const Step3Tickets = ({ form }: Step3Props) => {
             name="reservation_time_minutes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tiempo de reservación: {reservationTime} minutos</FormLabel>
-                <FormControl>
-                  <Slider
-                    min={5}
-                    max={60}
-                    step={5}
-                    defaultValue={[field.value || 15]}
-                    onValueChange={(v) => field.onChange(v[0])}
-                    className="py-4"
-                  />
-                </FormControl>
-                <FormDescription>
-                  Tiempo que el comprador tiene para completar el pago
+                <FormLabel className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Tiempo de reservación
+                </FormLabel>
+                <FormDescription className="mt-1 mb-3">
+                  Tiempo que el comprador tiene para completar el pago antes de que expire su reservación
                 </FormDescription>
+                <div className="space-y-3">
+                  <Select
+                    value={isCustomTime ? 'custom' : field.value?.toString()}
+                    onValueChange={handleReservationTimeChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona tiempo de reservación">
+                          {isCustomTime 
+                            ? `Personalizado: ${formatReservationTime(reservationTime)}`
+                            : formatReservationTime(field.value || 15)
+                          }
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {RESERVATION_TIME_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value.toString()}>
+                          <div className="flex flex-col">
+                            <span>{opt.label}</span>
+                            <span className="text-xs text-muted-foreground">{opt.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="custom">
+                        <div className="flex flex-col">
+                          <span>Personalizado</span>
+                          <span className="text-xs text-muted-foreground">Define tu propio tiempo</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {isCustomTime && (
+                    <div className="flex gap-2 items-center p-3 rounded-lg border bg-muted/50">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={customUnit === 'days' ? 7 : customUnit === 'hours' ? 168 : MAX_RESERVATION_MINUTES}
+                        value={customValue}
+                        onChange={(e) => handleCustomValueChange(parseInt(e.target.value) || 1, customUnit)}
+                        className="w-24"
+                      />
+                      <Select
+                        value={customUnit}
+                        onValueChange={(v) => handleCustomValueChange(customValue, v as 'minutes' | 'hours' | 'days')}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {RESERVATION_TIME_UNITS.map((unit) => (
+                            <SelectItem key={unit.value} value={unit.value}>
+                              {unit.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        = {formatReservationTime(reservationTime)}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
