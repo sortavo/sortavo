@@ -131,6 +131,29 @@ export function usePaymentMethods() {
     },
   });
 
+  const reorderMethods = useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      // Update each method's display_order based on its position in the array
+      const updates = orderedIds.map((id, index) => 
+        supabase
+          .from("payment_methods")
+          .update({ display_order: index })
+          .eq("id", id)
+      );
+      
+      const results = await Promise.all(updates);
+      const errors = results.filter(r => r.error);
+      if (errors.length > 0) throw errors[0].error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment-methods", organization?.id] });
+    },
+    onError: (error: Error) => {
+      console.error("Error reordering payment methods:", error);
+      toast.error("Error al reordenar métodos de pago");
+    },
+  });
+
   return {
     methods: query.data ?? [],
     isLoading: query.isLoading,
@@ -139,6 +162,7 @@ export function usePaymentMethods() {
     updateMethod,
     deleteMethod,
     toggleMethod,
+    reorderMethods,
   };
 }
 

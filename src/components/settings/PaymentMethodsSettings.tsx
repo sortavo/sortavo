@@ -7,6 +7,23 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePaymentMethods, PaymentMethod } from "@/hooks/usePaymentMethods";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { 
   CreditCard, 
   Landmark, 
@@ -67,12 +84,144 @@ const getDefaultEditingMethod = (type: PaymentMethodType): EditingMethod => ({
   account_holder: "",
 });
 
+const getIcon = (type: string) => {
+  switch (type) {
+    case "bank_transfer":
+      return <Landmark className="h-5 w-5" />;
+    case "cash":
+      return <Wallet className="h-5 w-5" />;
+    default:
+      return <CreditCard className="h-5 w-5" />;
+  }
+};
+
+interface SortableMethodCardProps {
+  method: PaymentMethod;
+  onEdit: (method: PaymentMethod) => void;
+  onDelete: (id: string) => void;
+  onToggle: (method: PaymentMethod) => void;
+  isToggling: boolean;
+}
+
+function SortableMethodCard({ method, onEdit, onDelete, onToggle, isToggling }: SortableMethodCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: method.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      className={`${!method.enabled ? "opacity-60" : ""} ${isDragging ? "shadow-lg ring-2 ring-primary" : ""}`}
+    >
+      <CardContent className="flex items-start gap-4 p-4">
+        <div 
+          className="flex items-center gap-2 text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-5 w-5" />
+        </div>
+        
+        <div className={`p-2 rounded-lg ${method.enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+          {getIcon(method.type)}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium">{method.name}</h4>
+            {method.type === "bank_transfer" && method.bank_name && (
+              <span className="text-xs bg-secondary px-2 py-0.5 rounded">
+                {method.bank_name}
+              </span>
+            )}
+          </div>
+          {method.type === "bank_transfer" && method.clabe && (
+            <p className="text-sm text-muted-foreground font-mono mt-1">
+              CLABE: {method.clabe}
+            </p>
+          )}
+          {method.type === "bank_transfer" && method.account_holder && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Titular: {method.account_holder}
+            </p>
+          )}
+          {method.instructions && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              {method.instructions}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(method)}
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            onClick={() => onDelete(method.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          <Switch
+            checked={method.enabled}
+            onCheckedChange={() => onToggle(method)}
+            disabled={isToggling}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function PaymentMethodsSettings() {
-  const { methods, isLoading, createMethod, updateMethod, deleteMethod, toggleMethod } = usePaymentMethods();
+  const { methods, isLoading, createMethod, updateMethod, deleteMethod, toggleMethod, reorderMethods } = usePaymentMethods();
   const [editingMethod, setEditingMethod] = useState<EditingMethod | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newMethodType, setNewMethodType] = useState<PaymentMethodType>("bank_transfer");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = methods.findIndex((m) => m.id === active.id);
+      const newIndex = methods.findIndex((m) => m.id === over.id);
+      
+      const reorderedMethods = arrayMove(methods, oldIndex, newIndex);
+      const orderedIds = reorderedMethods.map(m => m.id);
+      
+      reorderMethods.mutate(orderedIds);
+    }
+  };
 
   const handleToggle = (method: PaymentMethod) => {
     toggleMethod.mutate({ id: method.id, enabled: !method.enabled });
@@ -127,17 +276,6 @@ export function PaymentMethodsSettings() {
     });
   };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "bank_transfer":
-        return <Landmark className="h-5 w-5" />;
-      case "cash":
-        return <Wallet className="h-5 w-5" />;
-      default:
-        return <CreditCard className="h-5 w-5" />;
-    }
-  };
-
   if (isLoading) {
     return (
       <Card>
@@ -160,7 +298,7 @@ export function PaymentMethodsSettings() {
           <div>
             <CardTitle>Métodos de Pago</CardTitle>
             <CardDescription>
-              Configura cómo los compradores pueden pagarte. Estos datos aparecerán en la página de instrucciones de pago.
+              Configura cómo los compradores pueden pagarte. Arrastra para reordenar.
             </CardDescription>
           </div>
           <Button onClick={() => setShowAddDialog(true)} disabled={methods.length >= 10}>
@@ -176,68 +314,29 @@ export function PaymentMethodsSettings() {
               <p className="text-sm">Agrega al menos un método para recibir pagos</p>
             </div>
           ) : (
-            methods.map((method) => (
-              <Card key={method.id} className={!method.enabled ? "opacity-60" : ""}>
-                <CardContent className="flex items-start gap-4 p-4">
-                  <div className="flex items-center gap-2 text-muted-foreground cursor-grab">
-                    <GripVertical className="h-5 w-5" />
-                  </div>
-                  
-                  <div className={`p-2 rounded-lg ${method.enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                    {getIcon(method.type)}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium">{method.name}</h4>
-                      {method.type === "bank_transfer" && method.bank_name && (
-                        <span className="text-xs bg-secondary px-2 py-0.5 rounded">
-                          {method.bank_name}
-                        </span>
-                      )}
-                    </div>
-                    {method.type === "bank_transfer" && method.clabe && (
-                      <p className="text-sm text-muted-foreground font-mono mt-1">
-                        CLABE: {method.clabe}
-                      </p>
-                    )}
-                    {method.type === "bank_transfer" && method.account_holder && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Titular: {method.account_holder}
-                      </p>
-                    )}
-                    {method.instructions && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {method.instructions}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditMethod(method)}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => setDeleteConfirmId(method.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Switch
-                      checked={method.enabled}
-                      onCheckedChange={() => handleToggle(method)}
-                      disabled={toggleMethod.isPending}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={methods.map(m => m.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-4">
+                  {methods.map((method) => (
+                    <SortableMethodCard
+                      key={method.id}
+                      method={method}
+                      onEdit={handleEditMethod}
+                      onDelete={setDeleteConfirmId}
+                      onToggle={handleToggle}
+                      isToggling={toggleMethod.isPending}
                     />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
           {methods.length >= 10 && (
             <p className="text-sm text-muted-foreground text-center">
