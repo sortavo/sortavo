@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LoadMoreTrigger } from "@/components/ui/LoadMoreTrigger";
 import { useMyTickets } from "@/hooks/usePublicRaffle";
 import { useAuth } from "@/hooks/useAuth";
 import { TicketQRCode } from "@/components/ticket/TicketQRCode";
@@ -12,7 +13,7 @@ import { DownloadableTicket } from "@/components/ticket/DownloadableTicket";
 import { 
   Loader2, Ticket, Search, QrCode, ChevronRight, Calendar, Trophy, 
   Clock, CheckCircle2, AlertCircle, Download, Eye, Mail, User, MapPin,
-  Hourglass, ChevronDown
+  Hourglass
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -467,23 +468,12 @@ export default function MyTickets() {
                             );
                           })}
 
-                          {/* Load More Button */}
-                          {hasMore && (
-                            <div className="p-4 text-center border-t bg-muted/20">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  loadMoreTickets(raffleId, raffleTickets.length);
-                                }}
-                                className="gap-2"
-                              >
-                                <ChevronDown className="w-4 h-4" />
-                                Cargar más ({remaining} restante{remaining !== 1 ? 's' : ''})
-                              </Button>
-                            </div>
-                          )}
+                          {/* Infinite Scroll Trigger */}
+                          <LoadMoreTrigger
+                            onLoadMore={() => loadMoreTickets(raffleId, raffleTickets.length)}
+                            remaining={remaining}
+                            enabled={hasMore}
+                          />
                         </>
                       );
                     })()}
