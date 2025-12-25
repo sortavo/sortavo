@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +11,9 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency-utils";
 import { usePublicTickets, useRandomAvailableTickets } from "@/hooks/usePublicRaffle";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { TicketButton } from "./TicketButton";
+import { FloatingCartButton } from "./FloatingCartButton";
+import { toast } from "sonner";
 import { 
   Loader2, 
   Search, 
@@ -21,7 +25,8 @@ import {
   Sparkles,
   Check,
   ArrowRight,
-  Ticket
+  Ticket,
+  Trash2
 } from "lucide-react";
 
 interface Package {
@@ -80,19 +85,28 @@ export function TicketSelector({
     return tickets.filter(t => t.status === 'available');
   }, [tickets, showOnlyAvailable]);
 
-  const handleTicketClick = (ticketNumber: string, status: string) => {
+  const handleTicketClick = useCallback((ticketNumber: string, status: string) => {
     if (status !== 'available') return;
 
     setSelectedTickets(prev => {
       if (prev.includes(ticketNumber)) {
+        toast.info(`Boleto ${ticketNumber} removido`);
         return prev.filter(t => t !== ticketNumber);
       }
       if (maxPerPurchase > 0 && prev.length >= maxPerPurchase) {
+        toast.warning(`Máximo ${maxPerPurchase} boletos por compra`);
         return prev;
       }
+      toast.success(`Boleto ${ticketNumber} seleccionado`, { duration: 1500 });
       return [...prev, ticketNumber];
     });
-  };
+  }, [maxPerPurchase]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedTickets([]);
+    setGeneratedNumbers([]);
+    toast.info('Selección limpiada');
+  }, []);
 
   const handleRandomGenerate = async () => {
     try {
@@ -102,13 +116,17 @@ export function TicketSelector({
       });
       setGeneratedNumbers(numbers);
       setSelectedTickets(numbers);
+      toast.success(`${numbers.length} boletos aleatorios seleccionados`);
     } catch (error) {
       // Error handled by mutation
     }
   };
 
   const handleRegenerate = async () => {
-    if (regenerateCount >= 3) return;
+    if (regenerateCount >= 3) {
+      toast.warning('Máximo 3 regeneraciones permitidas');
+      return;
+    }
     setRegenerateCount(prev => prev + 1);
     await handleRandomGenerate();
   };
@@ -116,7 +134,15 @@ export function TicketSelector({
   const handleSearchTicket = () => {
     const ticket = tickets.find(t => t.ticket_number === searchNumber);
     if (ticket && ticket.status === 'available') {
-      setSelectedTickets([searchNumber]);
+      if (!selectedTickets.includes(searchNumber)) {
+        setSelectedTickets(prev => [...prev, searchNumber]);
+        toast.success(`Boleto ${searchNumber} agregado`);
+      }
+      setSearchNumber('');
+    } else if (ticket) {
+      toast.error(`El boleto ${searchNumber} no está disponible`);
+    } else {
+      toast.error(`Boleto ${searchNumber} no encontrado en esta página`);
     }
   };
 
@@ -219,35 +245,59 @@ export function TicketSelector({
               </div>
             </div>
 
-            {/* Selected tickets banner */}
-            {selectedTickets.length > 0 && (
-              <div className="p-4 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl border-2 border-violet-200">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center">
-                      <Check className="w-6 h-6 text-white" />
+            {/* Selected tickets banner - improved with clear button */}
+            <AnimatePresence>
+              {selectedTickets.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="p-4 bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30 rounded-xl border-2 border-violet-200 dark:border-violet-800"
+                >
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <motion.div 
+                        key={selectedTickets.length}
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                        className="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center"
+                      >
+                        <span className="text-white font-bold">{selectedTickets.length}</span>
+                      </motion.div>
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
+                          Boletos seleccionados
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {selectedTickets.slice(0, 5).join(', ')}
+                          {selectedTickets.length > 5 && ` +${selectedTickets.length - 5} más`}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {selectedTickets.length} boleto{selectedTickets.length !== 1 && 's'} seleccionado{selectedTickets.length !== 1 && 's'}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Total: {formatCurrency(calculateTotal(), currencyCode)}
-                      </p>
+                    
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearSelection}
+                        className="text-gray-500 hover:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Limpiar
+                      </Button>
+                      <Button
+                        size="lg"
+                        className="flex-1 sm:flex-initial bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-lg"
+                        onClick={() => onContinue(selectedTickets)}
+                      >
+                        {formatCurrency(calculateTotal(), currencyCode)}
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </Button>
                     </div>
                   </div>
-                  
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-lg w-full sm:w-auto"
-                    onClick={() => onContinue(selectedTickets)}
-                  >
-                    Continuar
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Premium ticket grid */}
             {isLoading ? (
@@ -255,32 +305,24 @@ export function TicketSelector({
                 <Loader2 className="h-10 w-10 animate-spin text-violet-600" />
               </div>
             ) : (
-              <div 
+              <motion.div 
                 className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2"
                 {...swipeHandlers}
               >
-                {filteredTickets.map(ticket => (
-                  <button
-                    key={ticket.id}
-                    onClick={() => handleTicketClick(ticket.ticket_number, ticket.status)}
-                    disabled={ticket.status !== 'available'}
-                    className={cn(
-                      "aspect-square rounded-xl font-bold text-sm transition-all duration-200",
-                      "hover:scale-105 active:scale-95 touch-manipulation",
-                      ticket.status === 'available' && !selectedTickets.includes(ticket.ticket_number) && 
-                        "bg-white border-2 border-gray-300 text-gray-900 hover:border-violet-600 hover:text-violet-600 hover:shadow-lg",
-                      ticket.status === 'available' && selectedTickets.includes(ticket.ticket_number) && 
-                        "bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-lg scale-105 border-2 border-transparent",
-                      ticket.status === 'sold' && 
-                        "bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed",
-                      ticket.status === 'reserved' && 
-                        "bg-yellow-50 border-2 border-yellow-300 text-yellow-700 cursor-not-allowed"
-                    )}
-                  >
-                    {ticket.ticket_number}
-                  </button>
-                ))}
-              </div>
+                <AnimatePresence>
+                  {filteredTickets.map((ticket, index) => (
+                    <TicketButton
+                      key={ticket.id}
+                      ticketNumber={ticket.ticket_number}
+                      status={ticket.status}
+                      isSelected={selectedTickets.includes(ticket.ticket_number)}
+                      onClick={() => handleTicketClick(ticket.ticket_number, ticket.status)}
+                      disabled={ticket.status !== 'available'}
+                      isLastFew={ticket.status === 'available' && filteredTickets.filter(t => t.status === 'available').length <= 10}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
             )}
 
             {/* Pagination */}
@@ -515,33 +557,15 @@ export function TicketSelector({
         </Tabs>
       </div>
 
-      {/* Floating Selection Summary */}
-      {selectedTickets.length > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50">
-          <Card className="bg-white/95 backdrop-blur-lg border-2 border-violet-200 shadow-2xl">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">
-                    {selectedTickets.length} boleto{selectedTickets.length !== 1 ? 's' : ''}
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(calculateTotal(), currencyCode)}
-                  </p>
-                </div>
-                <Button
-                  size="lg"
-                  onClick={() => onContinue(selectedTickets)}
-                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-lg"
-                >
-                  Continuar
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Floating Cart Button */}
+      <FloatingCartButton
+        selectedCount={selectedTickets.length}
+        total={calculateTotal()}
+        currency={currencyCode}
+        selectedTickets={selectedTickets}
+        onContinue={() => onContinue(selectedTickets)}
+        onClear={handleClearSelection}
+      />
     </div>
   );
 }
