@@ -13,6 +13,7 @@ import { usePublicTickets, useRandomAvailableTickets } from "@/hooks/usePublicRa
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { TicketButton } from "./TicketButton";
 import { FloatingCartButton } from "./FloatingCartButton";
+import { SlotMachineAnimation } from "./SlotMachineAnimation";
 import { toast } from "sonner";
 import { 
   Loader2, 
@@ -64,6 +65,8 @@ export function TicketSelector({
   const [searchNumber, setSearchNumber] = useState('');
   const [generatedNumbers, setGeneratedNumbers] = useState<string[]>([]);
   const [regenerateCount, setRegenerateCount] = useState(0);
+  const [isSlotSpinning, setIsSlotSpinning] = useState(false);
+  const [pendingNumbers, setPendingNumbers] = useState<string[]>([]);
 
   const pageSize = 100;
   const totalPages = Math.ceil(totalTickets / pageSize);
@@ -110,17 +113,34 @@ export function TicketSelector({
 
   const handleRandomGenerate = async () => {
     try {
+      // Start spinning animation
+      setIsSlotSpinning(true);
+      setPendingNumbers([]);
+      
       const numbers = await randomMutation.mutateAsync({
         raffleId,
         count: randomCount,
       });
-      setGeneratedNumbers(numbers);
-      setSelectedTickets(numbers);
-      toast.success(`${numbers.length} boletos aleatorios seleccionados`);
+      
+      // Set pending numbers for the animation to reveal
+      setPendingNumbers(numbers);
+      
+      // The animation will complete and call handleSlotComplete
     } catch (error) {
+      setIsSlotSpinning(false);
+      setPendingNumbers([]);
       // Error handled by mutation
     }
   };
+
+  const handleSlotComplete = useCallback(() => {
+    setIsSlotSpinning(false);
+    if (pendingNumbers.length > 0) {
+      setGeneratedNumbers(pendingNumbers);
+      setSelectedTickets(pendingNumbers);
+      toast.success(`${pendingNumbers.length} boletos aleatorios seleccionados`);
+    }
+  }, [pendingNumbers]);
 
   const handleRegenerate = async () => {
     if (regenerateCount >= 3) {
@@ -404,94 +424,133 @@ export function TicketSelector({
           </TabsContent>
 
           <TabsContent value="random" className="space-y-6">
-            <Card className="border-2">
+            <Card className="border-2 overflow-hidden">
               <CardContent className="pt-6 space-y-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Shuffle className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Selección Aleatoria</h3>
-                  <p className="text-gray-600">Deja que la suerte elija tus números</p>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-base">¿Cuántos boletos quieres?</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={maxPerPurchase || 100}
-                    value={randomCount}
-                    onChange={(e) => setRandomCount(parseInt(e.target.value) || 1)}
-                    className="h-12 text-lg border-2 text-center"
-                  />
-                </div>
-
-                {/* Package quick select */}
-                {packages.length > 0 && (
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {packages.map(pkg => (
-                      <Button
-                        key={pkg.id}
-                        variant={randomCount === pkg.quantity ? 'default' : 'outline'}
-                        size="lg"
-                        onClick={() => setRandomCount(pkg.quantity)}
-                        className={cn(
-                          "border-2",
-                          randomCount === pkg.quantity && "bg-gradient-to-r from-violet-600 to-indigo-600"
-                        )}
-                      >
-                        {pkg.label || `${pkg.quantity} boletos`}
-                        {pkg.discount_percent && pkg.discount_percent > 0 && (
-                          <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700">
-                            -{pkg.discount_percent}%
-                          </Badge>
-                        )}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleRandomGenerate}
-                  disabled={randomMutation.isPending}
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 h-14 text-lg"
-                >
-                  {randomMutation.isPending ? (
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                {/* Slot Machine Animation - shown when spinning or has numbers */}
+                <AnimatePresence mode="wait">
+                  {(isSlotSpinning || pendingNumbers.length > 0) ? (
+                    <motion.div
+                      key="slot-machine"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="flex justify-center py-4"
+                    >
+                      <SlotMachineAnimation
+                        numbers={pendingNumbers}
+                        isSpinning={isSlotSpinning}
+                        onComplete={handleSlotComplete}
+                      />
+                    </motion.div>
                   ) : (
-                    <Sparkles className="h-5 w-5 mr-2" />
+                    <motion.div
+                      key="intro"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-center"
+                    >
+                      <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Shuffle className="w-8 h-8 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">Máquina de la Suerte</h3>
+                      <p className="text-gray-600">¡Gira y deja que la suerte elija tus números!</p>
+                    </motion.div>
                   )}
-                  Generar Números Aleatorios
-                </Button>
+                </AnimatePresence>
 
-                {generatedNumbers.length > 0 && (
-                  <div className="space-y-4 p-4 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl">
-                    <p className="font-medium text-center text-gray-900">Tus números de la suerte:</p>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {generatedNumbers.map(num => (
-                        <Badge 
-                          key={num} 
-                          className="text-lg px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600"
-                        >
-                          {num}
-                        </Badge>
-                      ))}
-                    </div>
-                    
-                    {regenerateCount < 3 && (
+                {/* Controls - hide when spinning */}
+                <AnimatePresence>
+                  {!isSlotSpinning && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-6"
+                    >
+                      <div className="space-y-3">
+                        <Label className="text-base">¿Cuántos boletos quieres?</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={maxPerPurchase || 100}
+                          value={randomCount}
+                          onChange={(e) => setRandomCount(parseInt(e.target.value) || 1)}
+                          className="h-12 text-lg border-2 text-center"
+                        />
+                      </div>
+
+                      {/* Package quick select */}
+                      {packages.length > 0 && (
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {packages.map(pkg => (
+                            <Button
+                              key={pkg.id}
+                              variant={randomCount === pkg.quantity ? 'default' : 'outline'}
+                              size="lg"
+                              onClick={() => setRandomCount(pkg.quantity)}
+                              className={cn(
+                                "border-2",
+                                randomCount === pkg.quantity && "bg-gradient-to-r from-violet-600 to-indigo-600"
+                              )}
+                            >
+                              {pkg.label || `${pkg.quantity} boletos`}
+                              {pkg.discount_percent && pkg.discount_percent > 0 && (
+                                <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700">
+                                  -{pkg.discount_percent}%
+                                </Badge>
+                              )}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+
                       <Button
-                        variant="outline"
-                        onClick={handleRegenerate}
-                        disabled={randomMutation.isPending}
-                        className="w-full border-2"
+                        onClick={handleRandomGenerate}
+                        disabled={randomMutation.isPending || isSlotSpinning}
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 hover:from-amber-600 hover:via-yellow-600 hover:to-amber-600 h-14 text-lg text-amber-950 font-bold shadow-lg shadow-amber-500/30"
                       >
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Regenerar ({3 - regenerateCount} intentos restantes)
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        ¡GIRAR LA MÁQUINA!
                       </Button>
-                    )}
-                  </div>
-                )}
+
+                      {generatedNumbers.length > 0 && !isSlotSpinning && (
+                        <div className="space-y-4 p-4 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl">
+                          <p className="font-medium text-center text-gray-900">Tus números de la suerte:</p>
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {generatedNumbers.map((num, index) => (
+                              <motion.div
+                                key={num}
+                                initial={{ scale: 0, rotate: -180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ delay: index * 0.1, type: "spring" }}
+                              >
+                                <Badge 
+                                  className="text-lg px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600"
+                                >
+                                  {num}
+                                </Badge>
+                              </motion.div>
+                            ))}
+                          </div>
+                          
+                          {regenerateCount < 3 && (
+                            <Button
+                              variant="outline"
+                              onClick={handleRegenerate}
+                              disabled={randomMutation.isPending || isSlotSpinning}
+                              className="w-full border-2"
+                            >
+                              <Sparkles className="h-4 w-4 mr-2" />
+                              Regenerar ({3 - regenerateCount} intentos restantes)
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </CardContent>
             </Card>
           </TabsContent>
