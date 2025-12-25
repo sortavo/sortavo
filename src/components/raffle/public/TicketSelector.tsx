@@ -9,11 +9,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency-utils";
-import { usePublicTickets, useRandomAvailableTickets } from "@/hooks/usePublicRaffle";
+import { usePublicTickets, useRandomAvailableTickets, useCheckTicketsAvailability } from "@/hooks/usePublicRaffle";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { TicketButton } from "./TicketButton";
 import { FloatingCartButton } from "./FloatingCartButton";
 import { SlotMachineAnimation } from "./SlotMachineAnimation";
+import { LuckyNumbersInput } from "./LuckyNumbersInput";
 import { toast } from "sonner";
 import { 
   Loader2, 
@@ -27,7 +28,8 @@ import {
   Check,
   ArrowRight,
   Ticket,
-  Trash2
+  Trash2,
+  Heart
 } from "lucide-react";
 
 interface Package {
@@ -58,7 +60,7 @@ export function TicketSelector({
   onContinue,
 }: TicketSelectorProps) {
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
-  const [mode, setMode] = useState<'manual' | 'random' | 'search'>('manual');
+  const [mode, setMode] = useState<'manual' | 'random' | 'search' | 'lucky'>('manual');
   const [page, setPage] = useState(1);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [randomCount, setRandomCount] = useState(1);
@@ -73,6 +75,10 @@ export function TicketSelector({
 
   const { data, isLoading } = usePublicTickets(raffleId, page, pageSize);
   const randomMutation = useRandomAvailableTickets();
+  const checkAvailabilityMutation = useCheckTicketsAvailability();
+
+  // Calculate max digits from total tickets
+  const maxDigits = totalTickets.toString().length;
 
   const tickets = data?.tickets || [];
 
@@ -151,6 +157,15 @@ export function TicketSelector({
     await handleRandomGenerate();
   };
 
+  const handleLuckyNumbersSelect = useCallback((numbers: string[]) => {
+    setSelectedTickets(numbers);
+    toast.success(`${numbers.length} número${numbers.length !== 1 ? 's' : ''} de la suerte seleccionado${numbers.length !== 1 ? 's' : ''}`);
+  }, []);
+
+  const checkTicketsAvailability = useCallback(async (numbers: string[]): Promise<string[]> => {
+    return checkAvailabilityMutation.mutateAsync({ raffleId, ticketNumbers: numbers });
+  }, [raffleId, checkAvailabilityMutation]);
+
   const handleSearchTicket = () => {
     const ticket = tickets.find(t => t.ticket_number === searchNumber);
     if (ticket && ticket.status === 'available') {
@@ -186,15 +201,20 @@ export function TicketSelector({
       {/* Premium container */}
       <div className="bg-white rounded-3xl border-2 border-gray-200 p-6 lg:p-8 shadow-xl">
         <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
-          <TabsList className="grid w-full grid-cols-3 mb-8 bg-gray-100 p-1 rounded-xl">
-            <TabsTrigger value="manual" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
-              Selección Manual
+          <TabsList className="grid w-full grid-cols-4 mb-8 bg-gray-100 p-1 rounded-xl">
+            <TabsTrigger value="manual" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs sm:text-sm">
+              Manual
             </TabsTrigger>
-            <TabsTrigger value="random" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <TabsTrigger value="random" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs sm:text-sm">
               Al Azar
             </TabsTrigger>
-            <TabsTrigger value="search" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
-              Buscar Número
+            <TabsTrigger value="lucky" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs sm:text-sm flex items-center gap-1">
+              <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-pink-500" />
+              <span className="hidden sm:inline">Mis Números</span>
+              <span className="sm:hidden">Suerte</span>
+            </TabsTrigger>
+            <TabsTrigger value="search" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs sm:text-sm">
+              Buscar
             </TabsTrigger>
           </TabsList>
 
@@ -553,6 +573,15 @@ export function TicketSelector({
                 </AnimatePresence>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="lucky" className="space-y-6">
+            <LuckyNumbersInput
+              maxDigits={maxDigits}
+              onNumbersGenerated={handleLuckyNumbersSelect}
+              checkAvailability={checkTicketsAvailability}
+              isLoading={checkAvailabilityMutation.isPending}
+            />
           </TabsContent>
 
           <TabsContent value="search" className="space-y-6">
