@@ -120,12 +120,32 @@ export const CLOSE_SALE_OPTIONS = [
 ];
 
 export const RESERVATION_TIME_OPTIONS = [
-  { value: 5, label: '5 minutos' },
-  { value: 10, label: '10 minutos' },
-  { value: 15, label: '15 minutos' },
-  { value: 30, label: '30 minutos' },
-  { value: 60, label: '60 minutos' },
+  { value: 15, label: '15 minutos', description: 'Rápido - Ideal para rifas pequeñas' },
+  { value: 30, label: '30 minutos', description: 'Estándar - Tiempo suficiente para transferencias' },
+  { value: 60, label: '1 hora', description: 'Cómodo - Para pagos más complejos' },
+  { value: 120, label: '2 horas', description: 'Extendido - Permite verificar fondos' },
+  { value: 1440, label: '24 horas', description: 'Un día completo' },
+  { value: 2880, label: '48 horas', description: 'Dos días - Para transferencias internacionales' },
+  { value: 4320, label: '72 horas', description: 'Tres días - Máxima flexibilidad' },
 ];
+
+export const RESERVATION_TIME_UNITS = [
+  { value: 'minutes', label: 'Minutos', multiplier: 1 },
+  { value: 'hours', label: 'Horas', multiplier: 60 },
+  { value: 'days', label: 'Días', multiplier: 1440 },
+];
+
+export const formatReservationTime = (minutes: number): string => {
+  if (minutes < 60) return `${minutes} minutos`;
+  if (minutes < 1440) {
+    const hours = minutes / 60;
+    return hours === 1 ? '1 hora' : `${hours} horas`;
+  }
+  const days = minutes / 1440;
+  return days === 1 ? '1 día' : `${days} días`;
+};
+
+export const MAX_RESERVATION_MINUTES = 10080; // 7 days
 
 export const RAFFLE_TEMPLATES = [
   { id: 'modern', name: 'Moderno', description: 'Diseño limpio y contemporáneo' },
