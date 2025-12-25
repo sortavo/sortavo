@@ -37,6 +37,7 @@ interface RevenueChartProps {
   totalRevenue: number;
   revenueChange: number;
   currency?: string;
+  periodLabel?: string;
 }
 
 interface SalesChartProps {
@@ -100,7 +101,7 @@ const SalesTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export function RevenueChart({ data, totalRevenue, revenueChange, currency = 'MXN' }: RevenueChartProps) {
+export function RevenueChart({ data, totalRevenue, revenueChange, currency = 'MXN', periodLabel = 'Últimos 30 días' }: RevenueChartProps) {
   const isPositive = revenueChange >= 0;
 
   return (
@@ -108,7 +109,7 @@ export function RevenueChart({ data, totalRevenue, revenueChange, currency = 'MX
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Ingresos</h3>
-          <p className="text-sm text-gray-500">Últimos 30 días</p>
+          <p className="text-sm text-gray-500">{periodLabel}</p>
         </div>
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
           isPositive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'

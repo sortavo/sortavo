@@ -38,9 +38,23 @@ const CHART_COLORS = [
   "#3b82f6", // blue
 ];
 
-export function useDashboardCharts() {
+interface DateRange {
+  from: Date;
+  to: Date;
+}
+
+export function useDashboardCharts(dateRange?: DateRange) {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
+
+  // Calculate date ranges based on input or default to last 30 days
+  const endDate = dateRange?.to || new Date();
+  const startDate = dateRange?.from || subDays(endDate, 30);
+  
+  // Calculate previous period for comparison (same duration before start date)
+  const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const previousStartDate = subDays(startDate, daysDiff);
+  const previousEndDate = subDays(startDate, 1);
 
   // Real-time subscription for tickets table
   useEffect(() => {
@@ -57,7 +71,7 @@ export function useDashboardCharts() {
         },
         () => {
           // Invalidate and refetch chart data when tickets change
-          queryClient.invalidateQueries({ queryKey: ["dashboard-charts", organization.id] });
+          queryClient.invalidateQueries({ queryKey: ["dashboard-charts"] });
         }
       )
       .subscribe();
@@ -68,7 +82,7 @@ export function useDashboardCharts() {
   }, [organization?.id, queryClient]);
 
   return useQuery({
-    queryKey: ["dashboard-charts", organization?.id],
+    queryKey: ["dashboard-charts", organization?.id, startDate.toISOString(), endDate.toISOString()],
     queryFn: async (): Promise<ChartData> => {
       if (!organization?.id) {
         return {
@@ -80,9 +94,6 @@ export function useDashboardCharts() {
           ticketsChange: 0,
         };
       }
-
-      const thirtyDaysAgo = subDays(new Date(), 30);
-      const sixtyDaysAgo = subDays(new Date(), 60);
 
       // Fetch raffles for this organization
       const { data: raffles, error: rafflesError } = await supabase
@@ -97,8 +108,8 @@ export function useDashboardCharts() {
       if (raffleIds.length === 0) {
         // Generate empty chart data with dates
         const days = eachDayOfInterval({
-          start: thirtyDaysAgo,
-          end: new Date(),
+          start: startDate,
+          end: endDate,
         });
 
         return {
@@ -115,24 +126,25 @@ export function useDashboardCharts() {
         };
       }
 
-      // Fetch tickets sold in the last 30 days
+      // Fetch tickets sold in the selected date range
       const { data: recentTickets, error: recentError } = await supabase
         .from("tickets")
         .select("id, raffle_id, sold_at, status")
         .in("raffle_id", raffleIds)
         .eq("status", "sold")
-        .gte("sold_at", thirtyDaysAgo.toISOString());
+        .gte("sold_at", startDate.toISOString())
+        .lte("sold_at", endDate.toISOString());
 
       if (recentError) throw recentError;
 
-      // Fetch tickets sold in previous 30 days (for comparison)
+      // Fetch tickets sold in previous period (for comparison)
       const { data: previousTickets, error: previousError } = await supabase
         .from("tickets")
         .select("id, raffle_id, sold_at")
         .in("raffle_id", raffleIds)
         .eq("status", "sold")
-        .gte("sold_at", sixtyDaysAgo.toISOString())
-        .lt("sold_at", thirtyDaysAgo.toISOString());
+        .gte("sold_at", previousStartDate.toISOString())
+        .lte("sold_at", previousEndDate.toISOString());
 
       if (previousError) throw previousError;
 
@@ -146,8 +158,8 @@ export function useDashboardCharts() {
 
       // Build daily revenue data
       const days = eachDayOfInterval({
-        start: thirtyDaysAgo,
-        end: new Date(),
+        start: startDate,
+        end: endDate,
       });
 
       const dailyRevenue: DailyRevenue[] = days.map(day => {
