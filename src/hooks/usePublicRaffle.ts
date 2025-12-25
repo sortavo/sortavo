@@ -342,3 +342,30 @@ export function useRandomAvailableTickets() {
     },
   });
 }
+
+export function useCheckTicketsAvailability() {
+  return useMutation({
+    mutationFn: async ({
+      raffleId,
+      ticketNumbers,
+    }: {
+      raffleId: string;
+      ticketNumbers: string[];
+    }): Promise<string[]> => {
+      if (ticketNumbers.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('ticket_number, status')
+        .eq('raffle_id', raffleId)
+        .in('ticket_number', ticketNumbers);
+
+      if (error) throw error;
+
+      // Return only the available ticket numbers
+      return (data || [])
+        .filter(t => t.status === 'available')
+        .map(t => t.ticket_number);
+    },
+  });
+}
