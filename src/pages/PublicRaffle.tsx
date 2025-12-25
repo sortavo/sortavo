@@ -27,6 +27,11 @@ import { CheckoutModal } from "@/components/raffle/public/CheckoutModal";
 import { CountdownTimer } from "@/components/raffle/public/CountdownTimer";
 import { ShareButtons } from "@/components/raffle/public/ShareButtons";
 import { HowItWorks } from "@/components/raffle/public/HowItWorks";
+import { UrgencyBadge } from "@/components/marketing/UrgencyBadge";
+import { SocialProof } from "@/components/marketing/SocialProof";
+import { PurchaseToast } from "@/components/marketing/PurchaseToast";
+import { ViewersCount } from "@/components/marketing/ViewersCount";
+import { StickyUrgencyBanner } from "@/components/marketing/StickyUrgencyBanner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -151,6 +156,19 @@ export default function PublicRaffle() {
       </Helmet>
 
       <div className="min-h-screen bg-white">
+        {/* Sticky Urgency Banner */}
+        {raffle.draw_date && (
+          <StickyUrgencyBanner
+            drawDate={raffle.draw_date}
+            totalTickets={raffle.total_tickets}
+            ticketsSold={raffle.ticketsSold}
+            onScrollToTickets={scrollToTickets}
+          />
+        )}
+
+        {/* Purchase Toast Notifications */}
+        <PurchaseToast raffleId={raffle.id} />
+
         {/* Premium Hero Section */}
         <div className="relative overflow-hidden bg-gradient-to-br from-violet-50 via-white to-indigo-50">
           {/* Background pattern */}
@@ -228,10 +246,22 @@ export default function PublicRaffle() {
                 )}
 
                 {/* Status badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-full font-medium">
-                  <Zap className="w-4 h-4" />
-                  Sorteo Activo
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-full font-medium">
+                    <Zap className="w-4 h-4" />
+                    Sorteo Activo
+                  </div>
+                  <ViewersCount />
                 </div>
+
+                {/* Urgency Badge */}
+                {raffle.draw_date && (
+                  <UrgencyBadge
+                    drawDate={raffle.draw_date}
+                    totalTickets={raffle.total_tickets}
+                    ticketsSold={raffle.ticketsSold}
+                  />
+                )}
 
                 {/* Title */}
                 <div className="space-y-3">
@@ -381,6 +411,11 @@ export default function PublicRaffle() {
             packages={raffle.packages || []}
             onContinue={handleContinue}
           />
+
+          {/* Social Proof */}
+          <div className="mt-12">
+            <SocialProof raffleId={raffle.id} className="max-w-2xl mx-auto" />
+          </div>
         </div>
 
         {/* How It Works */}
