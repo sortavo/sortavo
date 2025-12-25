@@ -26,6 +26,20 @@ export default {
           "Segoe UI",
           "sans-serif",
         ],
+        display: [
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "sans-serif",
+        ],
+      },
+      fontSize: {
+        "2xs": ["0.625rem", { lineHeight: "0.75rem" }],
+        "3xl": ["1.875rem", { lineHeight: "2.25rem", letterSpacing: "-0.02em" }],
+        "4xl": ["2.25rem", { lineHeight: "2.5rem", letterSpacing: "-0.02em" }],
+        "5xl": ["3rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
+        "6xl": ["3.75rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
+        "7xl": ["4.5rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -90,12 +104,30 @@ export default {
       spacing: {
         "4.5": "1.125rem",
         "18": "4.5rem",
+        "22": "5.5rem",
+        "26": "6.5rem",
+        "30": "7.5rem",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
         xl: "var(--radius-xl)",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
+      },
+      boxShadow: {
+        "xs": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+        "sm": "0 2px 4px 0 rgba(0, 0, 0, 0.06)",
+        DEFAULT: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        "md": "0 8px 16px -2px rgba(0, 0, 0, 0.1)",
+        "lg": "0 16px 24px -4px rgba(0, 0, 0, 0.1)",
+        "xl": "0 24px 48px -6px rgba(0, 0, 0, 0.15)",
+        "2xl": "0 32px 64px -12px rgba(0, 0, 0, 0.2)",
+        "glow": "0 0 20px rgba(37, 99, 235, 0.3)",
+        "glow-lg": "0 0 40px rgba(37, 99, 235, 0.4)",
+        "glow-primary": "0 0 30px rgba(37, 99, 235, 0.35)",
+        "inner-sm": "inset 0 1px 2px 0 rgba(0, 0, 0, 0.05)",
       },
       keyframes: {
         "accordion-down": {
@@ -110,9 +142,25 @@ export default {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        "fade-in-up": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
         "slide-up": {
           from: { opacity: "0", transform: "translateY(10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-down": {
+          from: { opacity: "0", transform: "translateY(-10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-in-right": {
+          from: { opacity: "0", transform: "translateX(10px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-in-left": {
+          from: { opacity: "0", transform: "translateX(-10px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
         },
         blob: {
           "0%": { transform: "translate(0px, 0px) scale(1)" },
@@ -128,15 +176,37 @@ export default {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.95)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
+        "fade-in-up": "fade-in-up 0.4s ease-out",
         "slide-up": "slide-up 0.3s ease-out",
+        "slide-down": "slide-down 0.3s ease-out",
+        "slide-in-right": "slide-in-right 0.3s ease-out",
+        "slide-in-left": "slide-in-left 0.3s ease-out",
         blob: "blob 7s infinite",
         float: "float 3s ease-in-out infinite",
         shimmer: "shimmer 2s infinite",
+        "pulse-slow": "pulse 3s ease-in-out infinite",
+        "scale-in": "scale-in 0.2s ease-out",
+      },
+      transitionDuration: {
+        "400": "400ms",
+        "600": "600ms",
+      },
+      transitionTimingFunction: {
+        "bounce-in": "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+        "smooth": "cubic-bezier(0.4, 0, 0.2, 1)",
       },
     },
   },
