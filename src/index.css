@@ -149,8 +149,51 @@
     min-height: 100dvh;
   }
   
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+  /* Premium Typography Scale */
+  h1, .h1 {
+    @apply text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight;
+    line-height: 1.1;
+  }
+  
+  h2, .h2 {
+    @apply text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight;
+    line-height: 1.2;
+  }
+  
+  h3, .h3 {
+    @apply text-2xl lg:text-3xl font-semibold tracking-tight;
+    line-height: 1.3;
+  }
+  
+  h4, .h4 {
+    @apply text-xl lg:text-2xl font-semibold;
+    line-height: 1.4;
+  }
+  
+  h5, .h5 {
+    @apply text-lg lg:text-xl font-medium;
+    line-height: 1.5;
+  }
+  
+  h6, .h6 {
+    @apply text-base lg:text-lg font-medium;
+    line-height: 1.5;
+  }
+  
+  p, .body {
+    @apply text-base lg:text-lg leading-relaxed;
+  }
+  
+  .body-sm {
+    @apply text-sm lg:text-base leading-relaxed;
+  }
+  
+  .small {
+    @apply text-sm lg:text-base;
+  }
+
+  .tiny {
+    @apply text-xs lg:text-sm;
   }
   
   /* Prevent zoom on iOS inputs */
@@ -166,6 +209,114 @@
     select {
       font-size: 14px;
     }
+  }
+}
+
+@layer components {
+  /* Premium font weights */
+  .font-display {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  
+  /* Section spacing */
+  .section-padding {
+    @apply py-16 lg:py-24 xl:py-32;
+  }
+
+  .section-padding-sm {
+    @apply py-12 lg:py-16;
+  }
+  
+  .section-padding-xs {
+    @apply py-8 lg:py-12;
+  }
+
+  /* Container spacing */
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Card spacing */
+  .card-padding {
+    @apply p-6 lg:p-8;
+  }
+
+  .card-padding-sm {
+    @apply p-4 lg:p-6;
+  }
+  
+  .card-padding-xs {
+    @apply p-3 lg:p-4;
+  }
+
+  /* Stack spacing */
+  .stack {
+    @apply space-y-6 lg:space-y-8;
+  }
+
+  .stack-sm {
+    @apply space-y-4 lg:space-y-6;
+  }
+
+  .stack-lg {
+    @apply space-y-8 lg:space-y-12;
+  }
+  
+  .stack-xs {
+    @apply space-y-2 lg:space-y-3;
+  }
+  
+  /* Premium page header */
+  .page-header {
+    @apply mb-8 lg:mb-12;
+  }
+  
+  .page-title {
+    @apply text-3xl lg:text-4xl font-bold tracking-tight text-foreground;
+  }
+  
+  .page-description {
+    @apply mt-2 text-lg text-muted-foreground max-w-2xl;
+  }
+  
+  /* Premium card styles */
+  .premium-card {
+    @apply bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-300;
+  }
+  
+  .premium-card-elevated {
+    @apply bg-card rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+  
+  /* Gradient backgrounds */
+  .gradient-primary {
+    @apply bg-gradient-to-br from-primary via-primary/90 to-primary/80;
+  }
+  
+  .gradient-violet {
+    @apply bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600;
+  }
+  
+  .gradient-success {
+    @apply bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500;
+  }
+  
+  .gradient-warning {
+    @apply bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-500;
+  }
+  
+  .gradient-danger {
+    @apply bg-gradient-to-br from-red-500 via-rose-500 to-pink-500;
+  }
+  
+  /* Gradient text utility */
+  .gradient-text {
+    @apply bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
+  }
+  
+  .gradient-text-primary {
+    @apply bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent;
   }
 }
 
@@ -213,6 +364,20 @@
     min-width: 44px;
     min-height: 44px;
   }
+  
+  /* Text utilities */
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  
+  /* Focus ring utilities */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  
+  .focus-ring-inset {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset;
+  }
 }
 
 /* Smooth scrolling - respects reduced motion */
@@ -254,15 +419,30 @@
 }
 
 /* Animation delay utilities */
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-500 {
+  animation-delay: 500ms;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
 .animation-delay-2000 {
   animation-delay: 2s;
 }
 
 .animation-delay-4000 {
   animation-delay: 4s;
-}
-
-/* Gradient text utility */
-.gradient-text {
-  @apply bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
 }
