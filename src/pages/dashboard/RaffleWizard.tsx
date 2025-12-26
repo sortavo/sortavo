@@ -173,21 +173,78 @@ export default function RaffleWizard() {
     }
   };
 
+  // Helper to ensure customization is always a complete object with explicit boolean values
+  const buildCustomizationForSave = (customization: unknown): Record<string, unknown> => {
+    const defaults = {
+      ...DEFAULT_FEATURE_CUSTOMIZATION,
+      primary_color: organization?.brand_color || '#2563EB',
+      secondary_color: '#F97316',
+      title_font: 'Inter',
+      body_font: 'Inter',
+      logo_position: 'top-left',
+      sections: {
+        hero: true,
+        countdown: true,
+        ticket_grid: true,
+        packages: true,
+        gallery: true,
+        video: false,
+        how_it_works: true,
+        testimonials: false,
+        faq: true,
+        live_feed: false,
+        stats: true,
+        share_buttons: true,
+      },
+      faq_config: {
+        show_default_faqs: true,
+        custom_faqs: [],
+      },
+      headline: '',
+      subheadline: '',
+      cta_text: 'Comprar Boletos',
+    };
+
+    const current = (customization || {}) as Record<string, unknown>;
+    
+    // Merge with defaults, ensuring all feature flags are explicit booleans
+    return {
+      ...defaults,
+      ...current,
+      // Force explicit boolean values for all feature flags
+      show_random_picker: current.show_random_picker === true,
+      show_winners_history: current.show_winners_history === true,
+      show_probability_stats: current.show_probability_stats === true,
+      show_viewers_count: current.show_viewers_count === true,
+      show_purchase_toasts: current.show_purchase_toasts === true,
+      show_urgency_badge: current.show_urgency_badge === true,
+      show_sticky_banner: current.show_sticky_banner === true,
+      show_social_proof: current.show_social_proof === true,
+    };
+  };
+
   const handleSaveDraft = async () => {
     try {
       const values = form.getValues();
       const { packages, ...data } = values;
       
+      // Ensure customization is properly built with explicit values
+      const cleanedData = {
+        ...data,
+        customization: buildCustomizationForSave(data.customization),
+      };
+      
       if (isEditing && id) {
-        await updateRaffle.mutateAsync({ id, data: data as unknown as TablesUpdate<'raffles'> });
-        toast({ title: 'Cambios guardados' });
+        await updateRaffle.mutateAsync({ id, data: cleanedData as unknown as TablesUpdate<'raffles'> });
+        toast({ title: 'Cambios guardados', description: 'La configuración se actualizó correctamente' });
       } else {
-        const result = await createRaffle.mutateAsync(data as unknown as TablesInsert<'raffles'>);
+        const result = await createRaffle.mutateAsync(cleanedData as unknown as TablesInsert<'raffles'>);
         toast({ title: 'Borrador guardado' });
         navigate(`/dashboard/raffles/${result.id}/edit`);
       }
     } catch (error) {
       console.error('Error saving draft:', error);
+      toast({ title: 'Error al guardar', description: 'No se pudieron guardar los cambios', variant: 'destructive' });
     }
   };
 
@@ -276,17 +333,24 @@ export default function RaffleWizard() {
       let raffleId = id;
       const { packages, ...data } = values;
       
+      // Ensure customization is properly built with explicit values
+      const cleanedData = {
+        ...data,
+        customization: buildCustomizationForSave(data.customization),
+      };
+      
       if (!isEditing) {
-        const result = await createRaffle.mutateAsync(data as unknown as TablesInsert<'raffles'>);
+        const result = await createRaffle.mutateAsync(cleanedData as unknown as TablesInsert<'raffles'>);
         raffleId = result.id;
       } else {
-        await updateRaffle.mutateAsync({ id: id!, data: data as unknown as TablesUpdate<'raffles'> });
+        await updateRaffle.mutateAsync({ id: id!, data: cleanedData as unknown as TablesUpdate<'raffles'> });
       }
 
       await publishRaffle.mutateAsync(raffleId!);
       navigate(`/dashboard/raffles/${raffleId}`);
     } catch (error) {
       console.error('Error publishing:', error);
+      toast({ title: 'Error al publicar', description: 'No se pudo publicar el sorteo', variant: 'destructive' });
     }
   };
 
