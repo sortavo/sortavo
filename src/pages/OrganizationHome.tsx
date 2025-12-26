@@ -18,6 +18,7 @@ import {
   Clock, Mail, Phone, MapPin, Globe, BadgeCheck, MessageCircle,
   Facebook, Instagram, ExternalLink
 } from "lucide-react";
+import { CoverCarousel, CoverMediaItem } from "@/components/organization/CoverCarousel";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { formatCurrency } from "@/lib/currency-utils";
@@ -61,6 +62,18 @@ export default function OrganizationHome() {
     ? formatDistanceToNow(new Date(organization.created_at), { addSuffix: false, locale: es })
     : null;
 
+  // Build cover media array with fallback to legacy cover_image_url
+  const coverMedia: CoverMediaItem[] = (() => {
+    const org = organization as any;
+    if (org.cover_media && Array.isArray(org.cover_media) && org.cover_media.length > 0) {
+      return org.cover_media;
+    }
+    if (organization.cover_image_url) {
+      return [{ type: "image" as const, url: organization.cover_image_url, order: 0 }];
+    }
+    return [];
+  })();
+
   return (
     <>
       <Helmet>
@@ -69,16 +82,13 @@ export default function OrganizationHome() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Hero Section with Cover Image */}
+        {/* Hero Section with Cover Carousel */}
         <header className="relative">
-          {/* Cover Image */}
-          <div 
-            className="h-48 sm:h-64 w-full"
-            style={{ 
-              background: organization.cover_image_url 
-                ? `url(${organization.cover_image_url}) center/cover no-repeat`
-                : `linear-gradient(135deg, ${brandColor}40 0%, ${brandColor}10 100%)` 
-            }}
+          {/* Cover Media Carousel */}
+          <CoverCarousel 
+            media={coverMedia} 
+            brandColor={brandColor}
+            autoPlayInterval={5000}
           />
           
           {/* Profile Section */}

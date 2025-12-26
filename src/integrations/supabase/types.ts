@@ -205,6 +205,7 @@ export type Database = {
           city: string | null
           country_code: string | null
           cover_image_url: string | null
+          cover_media: Json | null
           created_at: string | null
           currency_code: string | null
           description: string | null
@@ -248,6 +249,7 @@ export type Database = {
           city?: string | null
           country_code?: string | null
           cover_image_url?: string | null
+          cover_media?: Json | null
           created_at?: string | null
           currency_code?: string | null
           description?: string | null
@@ -291,6 +293,7 @@ export type Database = {
           city?: string | null
           country_code?: string | null
           cover_image_url?: string | null
+          cover_media?: Json | null
           created_at?: string | null
           currency_code?: string | null
           description?: string | null
