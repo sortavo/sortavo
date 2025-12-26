@@ -5,7 +5,7 @@ import { DashboardSidebar } from "./DashboardSidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Ticket, Eye, LogOut, Users } from "lucide-react";
+import { Trophy, Eye, LogOut, Users } from "lucide-react";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { TrialBanner } from "./TrialBanner";
@@ -57,19 +57,23 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
         <DashboardSidebar />
       </div>
       
-      <SidebarInset className="flex flex-col min-h-screen">
+      <SidebarInset className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/20">
         {/* Mobile Header */}
-        <header className="md:hidden flex h-14 items-center justify-between border-b bg-card px-4 safe-area-top">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <Ticket className="h-5 w-5 text-primary" />
-            <span className="text-lg font-extrabold">SORTAVO</span>
+        <header className="md:hidden flex h-14 items-center justify-between border-b border-border/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl px-4 safe-area-top">
+          <Link to="/dashboard" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+              <Trophy className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-lg font-extrabold bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              SORTAVO
+            </span>
           </Link>
           <div className="flex items-center gap-2">
             {isPlatformAdmin && !isSimulating && (
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="h-7 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                className="h-7 text-xs gap-1.5 border-violet-200 text-violet-600 hover:bg-violet-50 dark:border-violet-800 dark:text-violet-400 dark:hover:bg-violet-900/30"
                 onClick={() => navigate('/admin/users')}
               >
                 <Users className="h-3 w-3" />
@@ -77,7 +81,7 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
               </Button>
             )}
             {isSimulating && simulatedUser && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-300 dark:border-amber-700">
                 <Eye className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                 <span className="text-xs font-medium text-amber-800 dark:text-amber-300 truncate max-w-16">
                   {simulatedUser.full_name?.split(' ')[0] || simulatedUser.email.split('@')[0]}
@@ -89,9 +93,9 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
         </header>
 
         {/* Desktop Header */}
-        <header className="hidden md:flex h-14 items-center gap-4 border-b bg-card px-4 lg:px-6">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="h-6" />
+        <header className="hidden md:flex h-14 items-center gap-4 border-b border-border/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl px-4 lg:px-6">
+          <SidebarTrigger className="-ml-1 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors" />
+          <Separator orientation="vertical" className="h-6 bg-border/50" />
           {breadcrumbs && breadcrumbs.length > 0 && (
             <Breadcrumb>
               <BreadcrumbList>
@@ -99,9 +103,9 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
                   <BreadcrumbItem key={index}>
                     {index > 0 && <BreadcrumbSeparator />}
                     {crumb.href ? (
-                      <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
+                      <BreadcrumbLink href={crumb.href} className="text-muted-foreground hover:text-violet-600 transition-colors">{crumb.label}</BreadcrumbLink>
                     ) : (
-                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                      <BreadcrumbPage className="font-medium">{crumb.label}</BreadcrumbPage>
                     )}
                   </BreadcrumbItem>
                 ))}
@@ -114,7 +118,7 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
             <Button 
               size="sm" 
               variant="outline" 
-              className="ml-2 gap-2 border-primary/30 text-primary hover:bg-primary/10"
+              className="ml-2 gap-2 border-violet-200 text-violet-600 hover:bg-violet-50 dark:border-violet-800 dark:text-violet-400 dark:hover:bg-violet-900/30 transition-all"
               onClick={() => navigate('/admin/users')}
             >
               <Users className="h-4 w-4" />
@@ -122,10 +126,10 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
             </Button>
           )}
           {isSimulating && simulatedUser && (
-            <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700">
+            <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-300 dark:border-amber-700">
               <Eye className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               <Avatar className="h-5 w-5">
-                <AvatarFallback className="text-[10px] bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200">
+                <AvatarFallback className="text-[10px] bg-gradient-to-br from-amber-200 to-orange-200 dark:from-amber-800 dark:to-orange-800 text-amber-800 dark:text-amber-200">
                   {getInitials(simulatedUser.full_name, simulatedUser.email)}
                 </AvatarFallback>
               </Avatar>
