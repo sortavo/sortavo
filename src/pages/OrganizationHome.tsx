@@ -36,21 +36,31 @@ export default function OrganizationHome() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 via-white to-indigo-50">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
       </div>
     );
   }
 
   if (error || !organization) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-        <Building2 className="h-16 w-16 text-muted-foreground" />
-        <h1 className="text-2xl font-bold text-foreground">Organización no encontrada</h1>
-        <p className="text-muted-foreground">La organización que buscas no existe o no está disponible.</p>
-        <Button asChild variant="outline">
-          <Link to="/">Volver al inicio</Link>
-        </Button>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-violet-50 via-white to-indigo-50 gap-4 relative overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        </div>
+        
+        <div className="relative z-10 text-center space-y-4">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center">
+            <Building2 className="h-10 w-10 text-violet-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Organización no encontrada</h1>
+          <p className="text-gray-600">La organización que buscas no existe o no está disponible.</p>
+          <Button asChild className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 shadow-lg shadow-violet-500/25">
+            <Link to="/">Volver al inicio</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -169,7 +179,7 @@ export default function OrganizationHome() {
         </header>
 
         {/* Stats Section */}
-        <section className="border-y bg-muted/30">
+        <section className="border-y border-violet-100 bg-gradient-to-r from-violet-50/50 via-white to-indigo-50/50">
           <div className="max-w-6xl mx-auto px-4 py-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8">
               <div className="text-center">

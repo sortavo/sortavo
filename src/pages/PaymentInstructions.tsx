@@ -76,17 +76,32 @@ export default function PaymentInstructions() {
 
   if (!tickets.length || (!isLoadingRaffle && !raffle)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <AlertTriangle className="h-12 w-12 text-amber-500" />
-        <h1 className="text-xl font-bold">No hay reservación activa</h1>
-        <Button onClick={() => navigate(`/r/${slug}`)}>Volver al sorteo</Button>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-violet-50 via-white to-indigo-50 relative overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        </div>
+        
+        <div className="relative z-10 text-center space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+            <AlertTriangle className="h-8 w-8 text-amber-600" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900">No hay reservación activa</h1>
+          <Button 
+            onClick={() => navigate(`/r/${slug}`)}
+            className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 shadow-lg shadow-violet-500/25"
+          >
+            Volver al sorteo
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (isLoadingRaffle) {
     return (
-      <div className="min-h-screen bg-background py-8">
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50 py-8">
         <div className="container mx-auto px-4 max-w-2xl space-y-6">
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-40 w-full" />

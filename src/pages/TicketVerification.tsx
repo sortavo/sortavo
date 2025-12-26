@@ -76,7 +76,7 @@ const statusConfig = {
 
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50">
       <div className="container-padding max-w-lg mx-auto py-8">
         <Skeleton className="h-8 w-32 mb-8" />
         <div className="space-y-6">
@@ -99,23 +99,30 @@ export default function TicketVerification() {
 
   if (error || !ticket) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        </div>
+        
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10"
         >
-          <Card className="max-w-md w-full">
+          <Card className="max-w-md w-full shadow-xl shadow-violet-500/10 border-violet-100">
             <CardContent className="pt-8 pb-6 text-center space-y-4">
-              <div className="w-20 h-20 mx-auto rounded-full bg-red-500/10 flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-red-100 to-rose-100 flex items-center justify-center">
                 <XCircle className="w-10 h-10 text-red-500" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Boleto no encontrado</h1>
-                <p className="text-muted-foreground mt-1">
+                <h1 className="text-xl font-bold text-gray-900">Boleto no encontrado</h1>
+                <p className="text-gray-600 mt-1">
                   El código QR no corresponde a ningún boleto válido o el enlace es incorrecto.
                 </p>
               </div>
-              <Button asChild variant="outline" className="gap-2">
+              <Button asChild className="gap-2 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 shadow-lg shadow-violet-500/25">
                 <Link to="/">
                   <ArrowLeft className="w-4 h-4" />
                   Volver al inicio
@@ -141,13 +148,20 @@ export default function TicketVerification() {
         <meta name="description" content={`Verificación del boleto #${ticket.ticket_number} para ${ticket.raffle.title}`} />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50 relative overflow-hidden">
+        {/* Animated background blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+          <div className="absolute top-1/2 left-1/3 w-60 h-60 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
+        </div>
+
         {/* Header */}
-        <div className="bg-card border-b border-border">
+        <div className="bg-white/80 backdrop-blur-sm border-b border-violet-100 relative z-10">
           <div className="container-padding max-w-lg mx-auto py-4">
             <Link 
               to={`/r/${ticket.raffle.slug}`}
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-violet-600 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Ver sorteo completo
@@ -155,16 +169,16 @@ export default function TicketVerification() {
           </div>
         </div>
 
-        <div className="container-padding max-w-lg mx-auto py-8 space-y-6">
+        <div className="container-padding max-w-lg mx-auto py-8 space-y-6 relative z-10">
           {/* Verification Badge */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-2 shadow-sm">
-              <ShieldCheck className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">Sistema de Verificación</span>
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-violet-200 rounded-full px-4 py-2 shadow-lg shadow-violet-500/10">
+              <ShieldCheck className="w-5 h-5 text-violet-600" />
+              <span className="text-sm font-medium text-gray-700">Sistema de Verificación</span>
             </div>
           </motion.div>
 
@@ -199,8 +213,8 @@ export default function TicketVerification() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="overflow-hidden border-2 border-primary/20">
-              <div className="bg-gradient-to-br from-primary via-primary/95 to-primary/85 px-6 py-8 text-center">
+            <Card className="overflow-hidden border-2 border-violet-200 shadow-xl shadow-violet-500/10">
+              <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 px-6 py-8 text-center">
                 <div className="inline-flex items-center gap-2 bg-primary-foreground/20 rounded-full px-3 py-1 mb-3">
                   <Ticket className="w-4 h-4 text-primary-foreground" />
                   <span className="text-xs text-primary-foreground font-medium uppercase tracking-wider">
@@ -224,7 +238,7 @@ export default function TicketVerification() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className={`border-2 ${status.borderColor}`}>
+            <Card className={`border-2 ${status.borderColor} shadow-lg shadow-violet-500/5 bg-white/80 backdrop-blur-sm`}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className={`w-14 h-14 rounded-full ${status.bgColor} flex items-center justify-center flex-shrink-0`}>
@@ -250,7 +264,7 @@ export default function TicketVerification() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card>
+            <Card className="shadow-lg shadow-violet-500/5 bg-white/80 backdrop-blur-sm border-violet-100">
               <CardContent className="p-6">
                 <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-4 flex items-center gap-2">
                   <Trophy className="w-4 h-4" />
