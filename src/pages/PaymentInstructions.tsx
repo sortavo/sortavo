@@ -15,6 +15,7 @@ import { useEmails } from "@/hooks/useEmails";
 import { formatCurrency } from "@/lib/currency-utils";
 import { WhatsAppContactButton } from "@/components/raffle/public/WhatsAppContactButton";
 import { cn } from "@/lib/utils";
+import { BankBadge } from "@/components/ui/BankBadge";
 import { 
   Loader2, 
   Upload, 
@@ -216,9 +217,8 @@ export default function PaymentInstructions() {
       return (
         <div className="space-y-3">
           {method.bank_name && (
-            <div className="flex items-center gap-2 mb-4">
-              <Landmark className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-lg">{method.bank_name}</span>
+            <div className="mb-4">
+              <BankBadge bankName={method.bank_name} size="lg" />
             </div>
           )}
           
@@ -360,11 +360,9 @@ export default function PaymentInstructions() {
 
           {/* Bank */}
           {method.bank_name && (
-            <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-              <div>
-                <p className="text-sm text-muted-foreground">Banco</p>
-                <p className="font-medium">{method.bank_name}</p>
-              </div>
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground mb-1">Banco</p>
+              <BankBadge bankName={method.bank_name} size="sm" />
             </div>
           )}
 
