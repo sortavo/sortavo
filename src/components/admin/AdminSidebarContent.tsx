@@ -10,6 +10,7 @@ import {
   DollarSign,
   Activity,
   UserCircle,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -39,36 +40,41 @@ export function AdminSidebarContent({ onNavigate }: AdminSidebarContentProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-card">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-purple-600">
+      <div className="p-4 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
             <Shield className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="font-bold text-foreground">Super Admin</h2>
+            <h2 className="font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+              Super Admin
+            </h2>
             <p className="text-xs text-muted-foreground">Panel de Plataforma</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1">
-        <nav className="p-4 space-y-1">
+      <ScrollArea className="flex-1 px-3 py-4">
+        <nav className="space-y-1">
           {menuItems.map((item) => (
             <Link
               key={item.url}
               to={item.url}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                 isActive(item.url)
-                  ? "bg-purple-600 text-white"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25"
+                  : "text-muted-foreground hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-600"
               )}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className={cn(
+                "h-5 w-5 transition-colors",
+                isActive(item.url) ? "text-white" : ""
+              )} />
               {item.title}
             </Link>
           ))}
@@ -76,8 +82,13 @@ export function AdminSidebarContent({ onNavigate }: AdminSidebarContentProps) {
       </ScrollArea>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border">
-        <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+      <div className="p-4 border-t border-border/50">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="w-full justify-start hover:bg-violet-50 dark:hover:bg-violet-900/20 text-muted-foreground hover:text-violet-600 transition-colors" 
+          asChild
+        >
           <Link to="/dashboard" onClick={onNavigate}>
             <ChevronLeft className="h-4 w-4 mr-2" />
             Volver al Dashboard

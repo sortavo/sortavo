@@ -5,7 +5,7 @@ import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminSidebarContent } from "./AdminSidebarContent";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, Menu, ChevronLeft } from "lucide-react";
+import { Shield, Menu, ChevronLeft, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -21,11 +21,11 @@ function AdminMobileNav() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
+        <Button variant="ghost" size="icon" className="md:hidden hover:bg-violet-50 dark:hover:bg-violet-900/20">
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0">
+      <SheetContent side="left" className="w-64 p-0 border-r border-border/50">
         <AdminSidebarContent onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
@@ -34,14 +34,14 @@ function AdminMobileNav() {
 
 function AdminLoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/20 flex items-center justify-center">
       <div className="text-center space-y-4">
-        <div className="p-4 rounded-full bg-purple-600/10 w-fit mx-auto">
-          <Shield className="h-8 w-8 text-purple-600 animate-pulse" />
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 w-fit mx-auto shadow-xl shadow-violet-500/25">
+          <Shield className="h-8 w-8 text-white animate-pulse" />
         </div>
         <div className="space-y-2">
-          <Skeleton className="h-4 w-32 mx-auto" />
-          <Skeleton className="h-3 w-48 mx-auto" />
+          <Skeleton className="h-4 w-32 mx-auto bg-violet-100 dark:bg-violet-900/30" />
+          <Skeleton className="h-3 w-48 mx-auto bg-violet-100/50 dark:bg-violet-900/20" />
         </div>
       </div>
     </div>
@@ -83,24 +83,31 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/20 flex">
       <AdminSidebar />
       
       <main className="flex-1 min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-card border-b border-border">
+        <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-border/50">
           <div className="flex items-center justify-between px-4 md:px-6 h-16">
             <div className="flex items-center gap-3">
               <AdminMobileNav />
               <div className="md:hidden flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-purple-600">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 shadow-lg shadow-violet-500/25">
                   <Shield className="h-4 w-4 text-white" />
                 </div>
-                <span className="font-semibold text-sm">Super Admin</span>
+                <span className="font-bold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+                  Super Admin
+                </span>
               </div>
             </div>
             
-            <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              asChild 
+              className="hidden sm:flex hover:bg-violet-50 dark:hover:bg-violet-900/20 text-muted-foreground hover:text-violet-600 transition-colors"
+            >
               <Link to="/dashboard">
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Dashboard
@@ -111,9 +118,13 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
 
         {/* Page Content */}
         <div className="p-4 md:p-6">
-          <div className="page-header">
-            <h1 className="page-title">{title}</h1>
-            {description && <p className="page-description">{description}</p>}
+          <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              {title}
+            </h1>
+            {description && (
+              <p className="text-muted-foreground mt-1">{description}</p>
+            )}
           </div>
           
           {children}
