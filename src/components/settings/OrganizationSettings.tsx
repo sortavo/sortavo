@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { OrganizationPreview } from "./OrganizationPreview";
 import { MultiContactInput } from "./MultiContactInput";
 import { PhoneInputWithCountry } from "./PhoneInputWithCountry";
+import { CoverMediaUploader, CoverMediaItem } from "./CoverMediaUploader";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 import { normalizeToSlug, isValidSlug, getOrganizationPublicUrl, isReservedSlug } from "@/lib/url-utils";
@@ -77,7 +78,7 @@ export function OrganizationSettings() {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [coverMedia, setCoverMedia] = useState<CoverMediaItem[]>([]);
   const [slugInput, setSlugInput] = useState("");
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
@@ -100,7 +101,7 @@ export function OrganizationSettings() {
     }
   }, [organization?.slug]);
   
-  // Sync contact arrays with organization data
+  // Sync contact arrays and cover media with organization data
   useEffect(() => {
     if (organization) {
       const org = organization as any;
@@ -108,6 +109,15 @@ export function OrganizationSettings() {
       setEmails(org.emails?.length > 0 ? org.emails : (org.email ? [org.email] : []));
       setPhones(org.phones?.length > 0 ? org.phones : (org.phone ? [org.phone] : []));
       setWhatsappNumbers(org.whatsapp_numbers?.length > 0 ? org.whatsapp_numbers : (org.whatsapp_number ? [org.whatsapp_number] : []));
+      
+      // Sync cover media, with fallback to legacy cover_image_url
+      if (org.cover_media && Array.isArray(org.cover_media) && org.cover_media.length > 0) {
+        setCoverMedia(org.cover_media);
+      } else if (org.cover_image_url) {
+        setCoverMedia([{ type: "image", url: org.cover_image_url, order: 0 }]);
+      } else {
+        setCoverMedia([]);
+      }
     }
   }, [organization]);
   
@@ -299,6 +309,10 @@ export function OrganizationSettings() {
           facebook_url: data.facebook_url || null,
           instagram_url: data.instagram_url || null,
           tiktok_url: data.tiktok_url || null,
+          // Cover media array - use JSON.parse/stringify to satisfy Json type
+          cover_media: JSON.parse(JSON.stringify(coverMedia)),
+          // Keep legacy field updated with first image for backwards compatibility
+          cover_image_url: coverMedia.find(m => m.type === "image")?.url || null,
         })
         .eq("id", organization.id);
 
@@ -362,52 +376,10 @@ export function OrganizationSettings() {
     }
   };
 
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !organization?.id) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("La imagen de portada debe ser menor a 5MB");
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Solo se permiten imágenes");
-      return;
-    }
-
-    setIsUploadingCover(true);
-    try {
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${organization.id}/cover.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("payment-proofs")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("payment-proofs")
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from("organizations")
-        .update({ cover_image_url: publicUrl })
-        .eq("id", organization.id);
-
-      if (updateError) throw updateError;
-
-      toast.success("Imagen de portada actualizada");
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
-    } catch (error: any) {
-      toast.error("Error al subir imagen: " + error.message);
-    } finally {
-      setIsUploadingCover(false);
-    }
+  // Handle cover media changes
+  const handleCoverMediaChange = (newMedia: CoverMediaItem[]) => {
+    setCoverMedia(newMedia);
   };
-
-  const coverImageUrl = (organization as any)?.cover_image_url;
 
   return (
     <div className="space-y-6">
@@ -456,41 +428,20 @@ export function OrganizationSettings() {
             </div>
           </div>
 
-          {/* Cover Image */}
+          {/* Cover Media (Multiple Images/Videos) */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Imagen de Portada</Label>
-            <div 
-              className="relative h-32 w-full rounded-lg overflow-hidden bg-muted border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer"
-              onClick={() => document.getElementById("cover-upload")?.click()}
-            >
-              {coverImageUrl ? (
-                <img 
-                  src={coverImageUrl} 
-                  alt="Cover" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
-                  <Image className="h-8 w-8" />
-                  <span className="text-sm">Click para subir imagen de portada</span>
-                </div>
-              )}
-              {isUploadingCover && (
-                <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                </div>
-              )}
-            </div>
-            <input
-              id="cover-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleCoverUpload}
-            />
-            <p className="text-xs text-muted-foreground">
-              Recomendado: 1920x400px. Máximo 5MB.
+            <Label className="text-sm font-medium">Medios de Portada</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Agrega imágenes y videos que se mostrarán como slideshow en tu página pública
             </p>
+            {organization?.id && (
+              <CoverMediaUploader
+                organizationId={organization.id}
+                media={coverMedia}
+                onChange={handleCoverMediaChange}
+                maxItems={10}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
