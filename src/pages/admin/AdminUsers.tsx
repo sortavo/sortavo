@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { SimulateUserModal } from "@/components/admin/SimulateUserModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
@@ -15,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Users, Mail, Building2 } from "lucide-react";
+import { Search, Users, Mail, Building2, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -52,6 +54,8 @@ const roleLabels: Record<string, string> = {
 
 export default function AdminUsers() {
   const [search, setSearch] = useState("");
+  const [simulateModalOpen, setSimulateModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
 
   const { data: profiles, isLoading: profilesLoading } = useQuery({
     queryKey: ["admin-profiles"],
@@ -153,6 +157,7 @@ export default function AdminUsers() {
                   <TableHead>Rol</TableHead>
                   <TableHead className="hidden lg:table-cell">Registrado</TableHead>
                   <TableHead className="hidden lg:table-cell">Último acceso</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -172,11 +177,12 @@ export default function AdminUsers() {
                       <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                       <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                       <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                     </TableRow>
                   ))
                 ) : filteredProfiles?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                       No se encontraron usuarios
                     </TableCell>
                   </TableRow>
@@ -234,6 +240,22 @@ export default function AdminUsers() {
                             ? format(new Date(profile.last_login), "d MMM yyyy", { locale: es })
                             : "Nunca"}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(profile);
+                              setSimulateModalOpen(true);
+                            }}
+                            className="h-8"
+                            disabled={!profile.organization_id}
+                            title={!profile.organization_id ? "Usuario sin organización" : "Simular usuario"}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Simular
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })
@@ -243,6 +265,12 @@ export default function AdminUsers() {
           </div>
         </CardContent>
       </Card>
+
+      <SimulateUserModal
+        open={simulateModalOpen}
+        onOpenChange={setSimulateModalOpen}
+        user={selectedUser}
+      />
     </AdminLayout>
   );
 }
