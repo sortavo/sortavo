@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Ticket, CheckCircle, XCircle, UserPlus } from "lucide-react";
+import { Loader2, Trophy, CheckCircle, XCircle, UserPlus, Users, Sparkles } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { motion } from "framer-motion";
 
 interface Invitation {
   id: string;
@@ -225,8 +226,8 @@ export default function AcceptInvite() {
 
   if (isLoading || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 via-white to-indigo-50">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
       </div>
     );
   }
@@ -237,19 +238,36 @@ export default function AcceptInvite() {
         <Helmet>
           <title>Invitación - Sortavo</title>
         </Helmet>
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <Card className="w-full max-w-md">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="p-3 rounded-full bg-destructive/10 mb-4">
-                  <XCircle className="h-8 w-8 text-destructive" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 via-white to-indigo-50 p-4 relative overflow-hidden">
+          {/* Background blobs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+          </div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative z-10"
+          >
+            <Card className="w-full max-w-md shadow-xl shadow-violet-500/10 border-violet-100">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-4 rounded-full bg-gradient-to-br from-red-100 to-rose-100 mb-4">
+                    <XCircle className="h-8 w-8 text-red-500" />
+                  </div>
+                  <h2 className="text-xl font-bold mb-2 text-gray-900">Invitación Inválida</h2>
+                  <p className="text-gray-600 mb-6">{error}</p>
+                  <Button 
+                    onClick={() => navigate("/")}
+                    className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 shadow-lg shadow-violet-500/25"
+                  >
+                    Ir al Inicio
+                  </Button>
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Invitación Inválida</h2>
-                <p className="text-muted-foreground mb-6">{error}</p>
-                <Button onClick={() => navigate("/")}>Ir al Inicio</Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </>
     );
@@ -264,165 +282,203 @@ export default function AcceptInvite() {
       <Helmet>
         <title>Aceptar Invitación - Sortavo</title>
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Ticket className="h-8 w-8 text-primary" />
-              </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 via-white to-indigo-50 p-4 relative overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10 w-full max-w-md"
+        >
+          {/* Logo */}
+          <Link to="/" className="flex items-center justify-center gap-2 mb-8">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+              <Trophy className="w-5 h-5 text-white" />
             </div>
-            <CardTitle className="text-2xl">¡Has sido invitado!</CardTitle>
-            <CardDescription className="text-base mt-2">
-              Te han invitado a unirte a <strong>{invitation.organization.name}</strong> como <strong>{roleLabel}</strong>
-            </CardDescription>
-          </CardHeader>
+            <span className="text-xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              Sortavo
+            </span>
+          </Link>
 
-          <CardContent className="space-y-6">
-            {user ? (
-              // User is logged in
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-muted text-center">
-                  <p className="text-sm text-muted-foreground mb-1">Sesión iniciada como</p>
-                  <p className="font-medium">{user.email}</p>
+          <Card className="shadow-xl shadow-violet-500/10 border-violet-100 overflow-hidden">
+            <CardHeader className="text-center pb-4 bg-gradient-to-br from-violet-50 to-indigo-50/50">
+              <div className="flex justify-center mb-4">
+                <motion.div 
+                  className="p-4 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 relative"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                >
+                  <Users className="h-8 w-8 text-violet-600" />
+                  <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-amber-500" />
+                </motion.div>
+              </div>
+              <CardTitle className="text-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                ¡Has sido invitado!
+              </CardTitle>
+              <CardDescription className="text-base mt-2 text-gray-600">
+                Te han invitado a unirte a <strong className="text-violet-700">{invitation.organization.name}</strong> como <strong className="text-violet-700">{roleLabel}</strong>
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-6 pt-6">
+              {user ? (
+                // User is logged in
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 text-center">
+                    <p className="text-sm text-gray-600 mb-1">Sesión iniciada como</p>
+                    <p className="font-semibold text-gray-900">{user.email}</p>
+                  </div>
+
+                  {user.email === invitation.email ? (
+                    <Button
+                      onClick={handleAcceptAsExistingUser}
+                      disabled={isAccepting}
+                      className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 shadow-lg shadow-violet-500/25 hover:-translate-y-0.5 transition-all duration-300"
+                      size="lg"
+                    >
+                      {isAccepting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                      )}
+                      Aceptar Invitación
+                    </Button>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-sm text-red-600 text-center bg-red-50 p-3 rounded-lg border border-red-100">
+                        Esta invitación es para <strong>{invitation.email}</strong>. 
+                        Inicia sesión con esa cuenta para aceptarla.
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          supabase.auth.signOut();
+                          navigate(`/auth?redirect=/invite/${token}`);
+                        }}
+                        className="w-full border-violet-200 hover:bg-violet-50"
+                      >
+                        Cambiar de Cuenta
+                      </Button>
+                    </div>
+                  )}
                 </div>
+              ) : showRegistration ? (
+                // Registration form
+                <form onSubmit={handleRegisterAndAccept} className="space-y-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 text-center">
+                    <p className="text-sm font-medium text-gray-900">{invitation.email}</p>
+                  </div>
 
-                {user.email === invitation.email ? (
-                  <Button
-                    onClick={handleAcceptAsExistingUser}
-                    disabled={isAccepting}
-                    className="w-full"
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-gray-700">Nombre Completo</Label>
+                    <Input
+                      id="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Tu nombre"
+                      required
+                      className="border-violet-200 focus:border-violet-400 focus:ring-violet-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-gray-700">Contraseña</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      required
+                      className="border-violet-200 focus:border-violet-400 focus:ring-violet-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-gray-700">Confirmar Contraseña</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Repite tu contraseña"
+                      required
+                      className="border-violet-200 focus:border-violet-400 focus:ring-violet-400"
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    disabled={isAccepting} 
+                    className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 shadow-lg shadow-violet-500/25 hover:-translate-y-0.5 transition-all duration-300" 
                     size="lg"
                   >
                     {isAccepting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <CheckCircle className="mr-2 h-4 w-4" />
+                      <UserPlus className="mr-2 h-4 w-4" />
                     )}
-                    Aceptar Invitación
+                    Crear Cuenta y Unirme
                   </Button>
-                ) : (
-                  <div className="space-y-4">
-                    <p className="text-sm text-destructive text-center">
-                      Esta invitación es para <strong>{invitation.email}</strong>. 
-                      Inicia sesión con esa cuenta para aceptarla.
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        supabase.auth.signOut();
-                        navigate(`/auth?redirect=/invite/${token}`);
-                      }}
-                      className="w-full"
-                    >
-                      Cambiar de Cuenta
-                    </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowRegistration(false)}
+                    className="w-full text-gray-600 hover:text-violet-600"
+                  >
+                    Volver
+                  </Button>
+                </form>
+              ) : (
+                // Initial options
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 text-center">
+                    <p className="text-sm text-gray-600">Invitación para</p>
+                    <p className="font-semibold text-gray-900">{invitation.email}</p>
                   </div>
-                )}
-              </div>
-            ) : showRegistration ? (
-              // Registration form
-              <form onSubmit={handleRegisterAndAccept} className="space-y-4">
-                <div className="p-3 rounded-lg bg-muted text-center">
-                  <p className="text-sm font-medium">{invitation.email}</p>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Nombre Completo</Label>
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Tu nombre"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repite tu contraseña"
-                    required
-                  />
-                </div>
-
-                <Button type="submit" disabled={isAccepting} className="w-full" size="lg">
-                  {isAccepting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
+                  <Button
+                    onClick={() => setShowRegistration(true)}
+                    className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-700 hover:via-purple-700 hover:to-indigo-700 shadow-lg shadow-violet-500/25 hover:-translate-y-0.5 transition-all duration-300"
+                    size="lg"
+                  >
                     <UserPlus className="mr-2 h-4 w-4" />
-                  )}
-                  Crear Cuenta y Unirme
-                </Button>
+                    Crear Cuenta Nueva
+                  </Button>
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setShowRegistration(false)}
-                  className="w-full"
-                >
-                  Volver
-                </Button>
-              </form>
-            ) : (
-              // Initial options
-              <div className="space-y-4">
-                <div className="p-3 rounded-lg bg-muted text-center">
-                  <p className="text-sm text-muted-foreground">Invitación para</p>
-                  <p className="font-medium">{invitation.email}</p>
-                </div>
-
-                <Button
-                  onClick={() => setShowRegistration(true)}
-                  className="w-full"
-                  size="lg"
-                >
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Crear Cuenta Nueva
-                </Button>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-violet-200" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-gray-500">
+                        o si ya tienes cuenta
+                      </span>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      o si ya tienes cuenta
-                    </span>
-                  </div>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/auth?redirect=/invite/${token}`)}
+                    className="w-full border-violet-200 hover:bg-violet-50 hover:border-violet-300"
+                  >
+                    Iniciar Sesión
+                  </Button>
                 </div>
+              )}
 
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(`/auth?redirect=/invite/${token}`)}
-                  className="w-full"
-                >
-                  Iniciar Sesión
-                </Button>
-              </div>
-            )}
-
-            <p className="text-xs text-center text-muted-foreground">
-              Al aceptar, te unes al equipo de {invitation.organization.name} y aceptas nuestros términos de servicio.
-            </p>
-          </CardContent>
-        </Card>
+              <p className="text-xs text-center text-gray-500 pt-2">
+                Al aceptar, te unes al equipo de {invitation.organization.name} y aceptas nuestros términos de servicio.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </>
   );
