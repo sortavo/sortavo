@@ -18,6 +18,7 @@ import { SlotMachineAnimation } from "./SlotMachineAnimation";
 import { LuckyNumbersInput } from "./LuckyNumbersInput";
 import { ProbabilityStats } from "./ProbabilityStats";
 import { toast } from "sonner";
+import { LoadMoreTrigger } from "@/components/ui/LoadMoreTrigger";
 import { 
   Loader2, 
   Search, 
@@ -86,6 +87,9 @@ export function TicketSelector({
   const [manualResults, setManualResults] = useState<{ id: string; ticket_number: string; status: string }[]>([]);
   const [hasManualSearched, setHasManualSearched] = useState(false);
   const [isManualSearching, setIsManualSearching] = useState(false);
+  const [manualOffset, setManualOffset] = useState(0);
+  const [hasMoreManual, setHasMoreManual] = useState(false);
+  const [isLoadingMoreManual, setIsLoadingMoreManual] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -133,6 +137,7 @@ export function TicketSelector({
     const performManualSearch = async () => {
       if (debouncedManual.trim().length > 0) {
         setIsManualSearching(true);
+        setManualOffset(0);
         try {
           const { data, error } = await supabase
             .from('tickets')
@@ -140,11 +145,12 @@ export function TicketSelector({
             .eq('raffle_id', raffleId)
             .ilike('ticket_number', `%${debouncedManual.trim()}%`)
             .order('ticket_number', { ascending: true })
-            .limit(100);
+            .range(0, 99);
 
           if (!error && data) {
             setManualResults(data);
             setHasManualSearched(true);
+            setHasMoreManual(data.length === 100);
           }
         } catch {
           // Error handled silently for auto-search
@@ -154,11 +160,40 @@ export function TicketSelector({
       } else {
         setManualResults([]);
         setHasManualSearched(false);
+        setHasMoreManual(false);
       }
     };
 
     performManualSearch();
   }, [debouncedManual, raffleId, mode]);
+
+  // Load more manual results
+  const handleLoadMoreManual = useCallback(async () => {
+    if (isLoadingMoreManual || !hasMoreManual || !debouncedManual.trim()) return;
+    
+    setIsLoadingMoreManual(true);
+    const newOffset = manualOffset + 100;
+    
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('id, ticket_number, status')
+        .eq('raffle_id', raffleId)
+        .ilike('ticket_number', `%${debouncedManual.trim()}%`)
+        .order('ticket_number', { ascending: true })
+        .range(newOffset, newOffset + 99);
+
+      if (!error && data) {
+        setManualResults(prev => [...prev, ...data]);
+        setManualOffset(newOffset);
+        setHasMoreManual(data.length === 100);
+      }
+    } catch {
+      // Error handled silently
+    } finally {
+      setIsLoadingMoreManual(false);
+    }
+  }, [isLoadingMoreManual, hasMoreManual, debouncedManual, manualOffset, raffleId]);
 
   // Auto-search when debounced value changes - only when in search mode
   useEffect(() => {
@@ -628,8 +663,8 @@ export function TicketSelector({
                         )}
                       </div>
 
-                      {/* Results grid */}
-                      <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[200px] overflow-y-auto p-1">
+                      {/* Results grid with infinite scroll */}
+                      <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto p-1">
                         {manualResults.map((ticket) => {
                           const isAvailable = ticket.status === 'available';
                           const isSelected = selectedTickets.includes(ticket.ticket_number);
@@ -657,13 +692,23 @@ export function TicketSelector({
                             </motion.button>
                           );
                         })}
+                        
+                        {/* Infinite scroll trigger */}
+                        {hasMoreManual && (
+                          <div className="col-span-full">
+                            <LoadMoreTrigger
+                              onLoadMore={handleLoadMoreManual}
+                              remaining={hasMoreManual ? 100 : 0}
+                              enabled={hasMoreManual && !isLoadingMoreManual}
+                            />
+                          </div>
+                        )}
                       </div>
 
-                      {manualResults.length >= 100 && (
-                        <p className="text-xs text-muted-foreground text-center">
-                          Mostrando los primeros 100 resultados.
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground text-center">
+                        {manualResults.length} boleto{manualResults.length !== 1 ? 's' : ''} cargados
+                        {hasMoreManual && ' • Desplaza para ver más'}
+                      </p>
                     </>
                   )}
                 </div>
