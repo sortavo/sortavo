@@ -68,10 +68,10 @@ export function getOrganizationRelativePath(organizationSlug: string): string {
 
 /**
  * Reserved slugs that cannot be used as organization slugs
- * These are all routes and system paths used by the application
+ * These are exact route matches used by the application
  */
 export const RESERVED_SLUGS = [
-  // App routes
+  // App routes (exact matches only)
   "auth", "dashboard", "onboarding", "pricing", "help", "my-tickets", "ticket", "invite",
   "terms", "privacy", "r",
   // System/reserved
@@ -83,19 +83,15 @@ export const RESERVED_SLUGS = [
   "cdn", "media", "images", "files", "uploads", "downloads", "docs", "blog",
   "news", "about", "contact", "faq", "search", "sitemap", "robots", "favicon",
   // Platform-specific
-  "sortavo", "sorteo", "sorteos", "rifa", "rifas", "boleto", "boletos",
+  "sortavo",
 ];
 
 /**
- * Check if a slug is reserved by the system
+ * Check if a slug is reserved by the system (exact match only)
  */
 export function isReservedSlug(slug: string): boolean {
   const lowerSlug = slug.toLowerCase();
-  return RESERVED_SLUGS.some(reserved => 
-    lowerSlug === reserved || 
-    lowerSlug.startsWith(`${reserved}-`) || 
-    lowerSlug.endsWith(`-${reserved}`)
-  );
+  return RESERVED_SLUGS.includes(lowerSlug);
 }
 
 /**
