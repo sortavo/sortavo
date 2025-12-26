@@ -5,11 +5,12 @@ import { DashboardSidebar } from "./DashboardSidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Ticket, Eye, LogOut } from "lucide-react";
+import { Ticket, Eye, LogOut, Users } from "lucide-react";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { TrialBanner } from "./TrialBanner";
 import { useSimulation } from "@/contexts/SimulationContext";
+import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { isSimulating, simulatedUser, mode, endSimulation, toggleMode } = useSimulation();
+  const { isPlatformAdmin } = useIsPlatformAdmin();
 
   const getInitials = (name: string | null, email: string) => {
     if (name) {
@@ -63,6 +65,17 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
             <span className="text-lg font-extrabold">SORTAVO</span>
           </Link>
           <div className="flex items-center gap-2">
+            {isPlatformAdmin && !isSimulating && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-7 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                onClick={() => navigate('/admin/users')}
+              >
+                <Users className="h-3 w-3" />
+                Simular
+              </Button>
+            )}
             {isSimulating && simulatedUser && (
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700">
                 <Eye className="h-3 w-3 text-amber-600 dark:text-amber-400" />
@@ -96,7 +109,18 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
             </Breadcrumb>
           )}
           
-          {/* Simulation Indicator */}
+          {/* Simulation Button / Indicator */}
+          {isPlatformAdmin && !isSimulating && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="ml-2 gap-2 border-primary/30 text-primary hover:bg-primary/10"
+              onClick={() => navigate('/admin/users')}
+            >
+              <Users className="h-4 w-4" />
+              Simular Usuario
+            </Button>
+          )}
           {isSimulating && simulatedUser && (
             <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700">
               <Eye className="h-4 w-4 text-amber-600 dark:text-amber-400" />
