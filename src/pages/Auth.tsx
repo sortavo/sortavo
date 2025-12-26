@@ -109,7 +109,10 @@ export default function Auth() {
       toast.success("¡Cuenta creada exitosamente!", {
         description: "Completa tu perfil para continuar.",
       });
-      navigate("/onboarding");
+      // Pass the plan parameter to onboarding if it exists
+      const plan = searchParams.get("plan");
+      const onboardingUrl = plan ? `/onboarding?plan=${plan}` : "/onboarding";
+      navigate(onboardingUrl);
     }
   };
 

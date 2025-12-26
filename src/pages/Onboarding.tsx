@@ -43,8 +43,11 @@ export default function Onboarding() {
   const [accountNumber, setAccountNumber] = useState("");
   const [clabeNumber, setClabeNumber] = useState("");
   
-  // Step 3: Plan Selection
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("pro");
+  // Step 3: Plan Selection - Get plan from URL if provided
+  const urlPlan = searchParams.get("plan") as PlanKey | null;
+  const validPlans: PlanKey[] = ["basic", "pro", "premium"];
+  const initialPlan = urlPlan && validPlans.includes(urlPlan) ? urlPlan : "pro";
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>(initialPlan);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
 
   useEffect(() => {
