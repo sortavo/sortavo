@@ -323,42 +323,6 @@ export function OrganizationSettings() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Current Active URL */}
-          {hasExistingSlug && organization?.slug && (
-            <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-lg space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-green-700 dark:text-green-400">URL Activa</p>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleCopyUrl(getOrganizationPublicUrl(organization.slug!))}
-                    className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                  >
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copiar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                  >
-                    <a href={getOrganizationPublicUrl(organization.slug!)} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Visitar
-                    </a>
-                  </Button>
-                </div>
-              </div>
-              <code className="text-sm text-green-700 dark:text-green-400 break-all block">
-                {getOrganizationPublicUrl(organization.slug!)}
-              </code>
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="slug">Identificador único (slug)</Label>
             <div className="flex gap-2">
@@ -385,7 +349,60 @@ export function OrganizationSettings() {
               Solo letras minúsculas, números y guiones. Ejemplo: mi-organizacion
             </p>
             
-            {/* Slug suggestion */}
+            {/* URL Preview - Always show when there's a valid slug */}
+            {slugInput && isValidSlug(slugInput) && (
+              <div className={`p-3 rounded-lg border ${
+                slugInput === organization?.slug 
+                  ? 'bg-green-500/10 border-green-500/30' 
+                  : 'bg-muted border-border'
+              }`}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant={slugInput === organization?.slug ? "default" : "secondary"}
+                      className={slugInput === organization?.slug ? "bg-green-600" : ""}
+                    >
+                      {slugInput === organization?.slug ? "URL Activa" : "Vista previa"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopyUrl(getOrganizationPublicUrl(slugInput))}
+                      className="h-7 px-2"
+                    >
+                      <Copy className="h-3.5 w-3.5 mr-1" />
+                      Copiar
+                    </Button>
+                    {slugInput === organization?.slug && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="h-7 px-2"
+                      >
+                        <a href={getOrganizationPublicUrl(slugInput)} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                          Visitar
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <code className={`text-sm break-all block ${
+                  slugInput === organization?.slug 
+                    ? 'text-green-700 dark:text-green-400' 
+                    : 'text-foreground'
+                }`}>
+                  {getOrganizationPublicUrl(slugInput)}
+                </code>
+              </div>
+            )}
+            
+            {/* Slug suggestion - only when empty */}
             {!slugInput && suggestedSlug && (
               <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
                 <Sparkles className="h-4 w-4 text-primary shrink-0" />
@@ -433,31 +450,6 @@ export function OrganizationSettings() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* URL Preview for new/changed slug */}
-          {slugInput && isValidSlug(slugInput) && !isChangingSlug && (
-            <div className="p-4 bg-muted rounded-lg space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Preview de tu URL pública:</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleCopyUrl(getOrganizationPublicUrl(slugInput))}
-                  className="h-8 px-2"
-                >
-                  <Copy className="h-4 w-4 mr-1" />
-                  Copiar
-                </Button>
-              </div>
-              <code className="text-sm text-primary break-all block">
-                {getOrganizationPublicUrl(slugInput)}
-              </code>
-              <p className="text-xs text-muted-foreground">
-                Tus sorteos estarán disponibles en: {getOrganizationPublicUrl(slugInput)}/nombre-del-sorteo
-              </p>
             </div>
           )}
         </CardContent>
