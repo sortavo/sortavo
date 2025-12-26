@@ -92,7 +92,9 @@ export function TicketSelector({
   const [pendingNumbers, setPendingNumbers] = useState<string[]>([]);
   const pendingNumbersRef = useRef<string[]>([]);
   const [highlightedTicket, setHighlightedTicket] = useState<string | null>(null);
+  const [pendingHighlightTicket, setPendingHighlightTicket] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const ticketRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   const pageSize = 100;
   const totalPages = Math.ceil(totalTickets / pageSize);
@@ -163,11 +165,27 @@ export function TicketSelector({
     return tickets.filter(t => t.status === 'available');
   }, [tickets, showOnlyAvailable]);
 
-  // Local filtering for Manual tab - filters current page tickets
-  const manuallyFilteredTickets = useMemo(() => {
-    if (!manualFilter.trim()) return filteredTickets;
-    return filteredTickets.filter(t => t.ticket_number.includes(manualFilter.trim()));
-  }, [filteredTickets, manualFilter]);
+  // Effect to handle pending highlight after page change
+  useEffect(() => {
+    if (pendingHighlightTicket && tickets.length > 0) {
+      const ticketExists = tickets.some(t => t.ticket_number === pendingHighlightTicket);
+      if (ticketExists) {
+        setHighlightedTicket(pendingHighlightTicket);
+        setPendingHighlightTicket(null);
+        
+        // Scroll to the highlighted ticket after a short delay for DOM to update
+        setTimeout(() => {
+          const ticketElement = ticketRefs.current.get(pendingHighlightTicket);
+          if (ticketElement) {
+            ticketElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+        
+        // Remove highlight after 4 seconds
+        setTimeout(() => setHighlightedTicket(null), 4000);
+      }
+    }
+  }, [pendingHighlightTicket, tickets]);
 
   const handleTicketClick = useCallback((ticketNumber: string, status: string) => {
     if (status !== 'available') return;
@@ -268,27 +286,24 @@ export function TicketSelector({
         return;
       }
       
-      // Calculate page where ticket is located
+      // Calculate page where ticket is located (ticket numbers are 1-indexed)
       const ticketIndex = parseInt(ticketNum, 10);
       const targetPage = Math.ceil(ticketIndex / pageSize);
       
+      // Clear input first
+      setManualFilter('');
+      
+      // Set pending highlight (will be applied once tickets load)
+      setPendingHighlightTicket(ticketNum);
+      
       // Navigate to that page
       setPage(targetPage);
-      
-      // Highlight the ticket
-      setHighlightedTicket(ticketNum);
-      
-      // Clear filter so we see the full page
-      setManualFilter('');
       
       toast.success(`Navegando al boleto ${ticketNum}`, {
         description: data.status === 'available' ? 'Disponible' : 
                      data.status === 'sold' ? 'Vendido' : 
                      data.status === 'reserved' ? 'Reservado' : 'No disponible'
       });
-      
-      // Remove highlight after 4 seconds
-      setTimeout(() => setHighlightedTicket(null), 4000);
     } catch {
       toast.error('Error al buscar el boleto');
     } finally {
@@ -503,6 +518,9 @@ export function TicketSelector({
                   )}
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground -mt-2">
+                Escribe el número y presiona Enter para ir directamente al boleto. Para buscar coincidencias usa la pestaña "Buscar".
+              </p>
               
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
@@ -585,23 +603,13 @@ export function TicketSelector({
               <div className="flex justify-center py-16">
                 <Loader2 className="h-10 w-10 animate-spin text-violet-600" />
               </div>
-            ) : manuallyFilteredTickets.length === 0 && manualFilter ? (
-              <div className="p-6 bg-muted rounded-xl text-center">
-                <Ticket className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-lg font-semibold text-muted-foreground">
-                  No se encontró "{manualFilter}" en esta página
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Usa la pestaña <strong>"Buscar"</strong> para buscar en todos los boletos
-                </p>
-              </div>
             ) : (
               <motion.div 
                 className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2"
                 {...swipeHandlers}
               >
                 <AnimatePresence>
-                  {manuallyFilteredTickets.map((ticket) => (
+                  {filteredTickets.map((ticket) => (
                     <TicketButton
                       key={ticket.id}
                       ticketNumber={ticket.ticket_number}
@@ -609,8 +617,12 @@ export function TicketSelector({
                       isSelected={selectedTickets.includes(ticket.ticket_number)}
                       onClick={() => handleTicketClick(ticket.ticket_number, ticket.status)}
                       disabled={ticket.status !== 'available'}
-                      isLastFew={ticket.status === 'available' && manuallyFilteredTickets.filter(t => t.status === 'available').length <= 10}
+                      isLastFew={ticket.status === 'available' && filteredTickets.filter(t => t.status === 'available').length <= 10}
                       isHighlighted={highlightedTicket === ticket.ticket_number}
+                      ref={(el) => {
+                        if (el) ticketRefs.current.set(ticket.ticket_number, el);
+                        else ticketRefs.current.delete(ticket.ticket_number);
+                      }}
                     />
                   ))}
                 </AnimatePresence>
