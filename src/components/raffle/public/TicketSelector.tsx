@@ -82,6 +82,11 @@ export function TicketSelector({
   const [randomCount, setRandomCount] = useState(1);
   // Separate states for Manual tab (local filter) and Search tab (backend search)
   const [manualFilter, setManualFilter] = useState('');
+  const [debouncedManual, setDebouncedManual] = useState('');
+  const [manualResults, setManualResults] = useState<{ id: string; ticket_number: string; status: string }[]>([]);
+  const [hasManualSearched, setHasManualSearched] = useState(false);
+  const [isManualSearching, setIsManualSearching] = useState(false);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [searchResults, setSearchResults] = useState<{ id: string; ticket_number: string; status: string }[]>([]);
@@ -104,6 +109,14 @@ export function TicketSelector({
   const checkAvailabilityMutation = useCheckTicketsAvailability();
   const [isSearching, setIsSearching] = useState(false);
 
+  // Debounce for Manual tab
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedManual(manualFilter);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [manualFilter]);
+
   // Debounce search input - only for Search tab
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -112,6 +125,40 @@ export function TicketSelector({
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Auto-search when manual debounced value changes - only when in manual mode
+  useEffect(() => {
+    if (mode !== 'manual') return;
+
+    const performManualSearch = async () => {
+      if (debouncedManual.trim().length > 0) {
+        setIsManualSearching(true);
+        try {
+          const { data, error } = await supabase
+            .from('tickets')
+            .select('id, ticket_number, status')
+            .eq('raffle_id', raffleId)
+            .ilike('ticket_number', `%${debouncedManual.trim()}%`)
+            .order('ticket_number', { ascending: true })
+            .limit(100);
+
+          if (!error && data) {
+            setManualResults(data);
+            setHasManualSearched(true);
+          }
+        } catch {
+          // Error handled silently for auto-search
+        } finally {
+          setIsManualSearching(false);
+        }
+      } else {
+        setManualResults([]);
+        setHasManualSearched(false);
+      }
+    };
+
+    performManualSearch();
+  }, [debouncedManual, raffleId, mode]);
 
   // Auto-search when debounced value changes - only when in search mode
   useEffect(() => {
@@ -482,20 +529,24 @@ export function TicketSelector({
               </div>
             )}
 
-            {/* Go to ticket input - simplified structure matching Search tab */}
+            {/* Go to ticket input - with live search matching Search tab */}
             <div className="flex flex-col gap-4">
               <div className="flex gap-2">
                 <div className="flex-1 relative">
                   <Input
                     type="text"
                     inputMode="numeric"
-                    placeholder="Ir al boleto... (ej: 42)"
+                    placeholder="Buscar boleto... (ej: 7 para ver 7, 17, 27...)"
                     value={manualFilter}
                     onChange={(e) => setManualFilter(e.target.value.replace(/[^0-9]/g, ''))}
                     onKeyDown={handleManualKeyDown}
-                    className="h-12 text-lg border-2 pr-10"
+                    className="h-12 text-lg border-2 pr-12"
                   />
-                  {manualFilter && (
+                  {isManualSearching ? (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : manualFilter ? (
                     <button
                       type="button"
                       onClick={() => setManualFilter('')}
@@ -503,7 +554,7 @@ export function TicketSelector({
                     >
                       ✕
                     </button>
-                  )}
+                  ) : null}
                 </div>
                 <Button
                   onClick={handleGoToTicket}
@@ -520,9 +571,103 @@ export function TicketSelector({
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Escribe el número y presiona Enter para ir directamente al boleto.
-              </p>
+
+              {/* Live search results - matching Search tab behavior */}
+              {hasManualSearched && (
+                <div className="space-y-4">
+                  {manualResults.length === 0 ? (
+                    <div className="p-4 bg-muted rounded-xl text-center">
+                      <Ticket className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm font-medium text-muted-foreground">
+                        No se encontraron boletos con "{manualFilter}"
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Results summary */}
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                        <div className="flex items-center gap-3 text-sm">
+                          <span className="font-medium">
+                            {manualResults.length} encontrados
+                          </span>
+                          <span className="text-green-600">
+                            ✓ {manualResults.filter(t => t.status === 'available').length} disponibles
+                          </span>
+                        </div>
+                        {manualResults.some(t => t.status === 'available') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const availableResults = manualResults
+                                .filter(t => t.status === 'available')
+                                .map(t => t.ticket_number);
+                              
+                              if (availableResults.length === 0) return;
+
+                              const newTickets = availableResults.filter(t => !selectedTickets.includes(t));
+                              
+                              if (maxPerPurchase > 0 && selectedTickets.length + newTickets.length > maxPerPurchase) {
+                                const canAdd = maxPerPurchase - selectedTickets.length;
+                                if (canAdd <= 0) {
+                                  toast.warning(`Ya alcanzaste el máximo de ${maxPerPurchase} boletos`);
+                                  return;
+                                }
+                                setSelectedTickets(prev => [...prev, ...newTickets.slice(0, canAdd)]);
+                                toast.success(`Se agregaron ${canAdd} boletos (límite alcanzado)`);
+                              } else {
+                                setSelectedTickets(prev => [...prev, ...newTickets]);
+                                toast.success(`${newTickets.length} boletos agregados`);
+                              }
+                            }}
+                            className="text-xs"
+                          >
+                            <Check className="w-3 h-3 mr-1" />
+                            Seleccionar
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Results grid */}
+                      <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[200px] overflow-y-auto p-1">
+                        {manualResults.map((ticket) => {
+                          const isAvailable = ticket.status === 'available';
+                          const isSelected = selectedTickets.includes(ticket.ticket_number);
+                          
+                          return (
+                            <motion.button
+                              key={ticket.id}
+                              whileHover={isAvailable ? { scale: 1.05 } : {}}
+                              whileTap={isAvailable ? { scale: 0.95 } : {}}
+                              onClick={() => handleSelectSearchResult(ticket.ticket_number, ticket.status)}
+                              disabled={!isAvailable}
+                              className={cn(
+                                "relative p-2 rounded-lg text-xs font-mono font-bold transition-all border-2",
+                                isAvailable && !isSelected && "bg-green-50 border-green-300 text-green-700 hover:bg-green-100 cursor-pointer",
+                                isAvailable && isSelected && "bg-green-500 border-green-600 text-white ring-2 ring-green-400 ring-offset-1",
+                                !isAvailable && "bg-muted border-muted text-muted-foreground cursor-not-allowed opacity-60"
+                              )}
+                            >
+                              {ticket.ticket_number}
+                              {isSelected && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-green-600" />
+                                </span>
+                              )}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+
+                      {manualResults.length >= 100 && (
+                        <p className="text-xs text-muted-foreground text-center">
+                          Mostrando los primeros 100 resultados.
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
               
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
