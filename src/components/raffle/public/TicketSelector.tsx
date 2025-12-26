@@ -79,7 +79,9 @@ export function TicketSelector({
   const [page, setPage] = useState(1);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [randomCount, setRandomCount] = useState(1);
-  const [searchNumber, setSearchNumber] = useState('');
+  // Separate states for Manual tab (local filter) and Search tab (backend search)
+  const [manualFilter, setManualFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [searchResults, setSearchResults] = useState<{ id: string; ticket_number: string; status: string }[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -97,17 +99,20 @@ export function TicketSelector({
   const checkAvailabilityMutation = useCheckTicketsAvailability();
   const [isSearching, setIsSearching] = useState(false);
 
-  // Debounce search input
+  // Debounce search input - only for Search tab
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchNumber);
+      setDebouncedSearch(searchTerm);
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchNumber]);
+  }, [searchTerm]);
 
-  // Auto-search when debounced value changes
+  // Auto-search when debounced value changes - only when in search mode
   useEffect(() => {
+    // Only run backend search when in search mode
+    if (mode !== 'search') return;
+
     const performSearch = async () => {
       if (debouncedSearch.trim().length > 0) {
         setIsSearching(true);
@@ -136,7 +141,7 @@ export function TicketSelector({
     };
 
     performSearch();
-  }, [debouncedSearch, raffleId]);
+  }, [debouncedSearch, raffleId, mode]);
 
   // Calculate max digits from total tickets
   const maxDigits = totalTickets.toString().length;
@@ -154,6 +159,12 @@ export function TicketSelector({
     if (!showOnlyAvailable) return tickets;
     return tickets.filter(t => t.status === 'available');
   }, [tickets, showOnlyAvailable]);
+
+  // Local filtering for Manual tab - filters current page tickets
+  const manuallyFilteredTickets = useMemo(() => {
+    if (!manualFilter.trim()) return filteredTickets;
+    return filteredTickets.filter(t => t.ticket_number.includes(manualFilter.trim()));
+  }, [filteredTickets, manualFilter]);
 
   const handleTicketClick = useCallback((ticketNumber: string, status: string) => {
     if (status !== 'available') return;
@@ -233,14 +244,14 @@ export function TicketSelector({
   }, [raffleId, checkAvailabilityMutation]);
 
   const handleSearchTicket = async () => {
-    if (!searchNumber.trim()) return;
+    if (!searchTerm.trim()) return;
     
     try {
       const { data, error } = await supabase
         .from('tickets')
         .select('id, ticket_number, status')
         .eq('raffle_id', raffleId)
-        .ilike('ticket_number', `%${searchNumber.trim()}%`)
+        .ilike('ticket_number', `%${searchTerm.trim()}%`)
         .order('ticket_number', { ascending: true })
         .limit(100);
 
@@ -401,11 +412,19 @@ export function TicketSelector({
               <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
-                  placeholder="Buscar número específico..."
-                  value={searchNumber}
-                  onChange={(e) => setSearchNumber(e.target.value)}
+                  placeholder="Filtrar en esta página..."
+                  value={manualFilter}
+                  onChange={(e) => setManualFilter(e.target.value.replace(/[^0-9]/g, ''))}
                   className="pl-12 h-12 text-lg border-2 focus:border-violet-600 rounded-xl"
                 />
+                {manualFilter && (
+                  <button
+                    onClick={() => setManualFilter('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
               
               <div className="flex items-center gap-4">
@@ -489,13 +508,23 @@ export function TicketSelector({
               <div className="flex justify-center py-16">
                 <Loader2 className="h-10 w-10 animate-spin text-violet-600" />
               </div>
+            ) : manuallyFilteredTickets.length === 0 && manualFilter ? (
+              <div className="p-6 bg-muted rounded-xl text-center">
+                <Ticket className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-lg font-semibold text-muted-foreground">
+                  No se encontró "{manualFilter}" en esta página
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Usa la pestaña <strong>"Buscar"</strong> para buscar en todos los boletos
+                </p>
+              </div>
             ) : (
               <motion.div 
                 className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2"
                 {...swipeHandlers}
               >
                 <AnimatePresence>
-                  {filteredTickets.map((ticket, index) => (
+                  {manuallyFilteredTickets.map((ticket) => (
                     <TicketButton
                       key={ticket.id}
                       ticketNumber={ticket.ticket_number}
@@ -503,7 +532,7 @@ export function TicketSelector({
                       isSelected={selectedTickets.includes(ticket.ticket_number)}
                       onClick={() => handleTicketClick(ticket.ticket_number, ticket.status)}
                       disabled={ticket.status !== 'available'}
-                      isLastFew={ticket.status === 'available' && filteredTickets.filter(t => t.status === 'available').length <= 10}
+                      isLastFew={ticket.status === 'available' && manuallyFilteredTickets.filter(t => t.status === 'available').length <= 10}
                     />
                   ))}
                 </AnimatePresence>
@@ -746,8 +775,8 @@ export function TicketSelector({
                 <div className="relative">
                   <Input
                     placeholder="Ej: 7 para ver 7, 17, 27, 70, 77..."
-                    value={searchNumber}
-                    onChange={(e) => setSearchNumber(e.target.value.replace(/[^0-9]/g, ''))}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value.replace(/[^0-9]/g, ''))}
                     className="h-12 text-lg border-2 pr-12"
                   />
                   {isSearching && (
@@ -763,7 +792,7 @@ export function TicketSelector({
                       <div className="p-6 bg-muted rounded-xl text-center">
                         <Ticket className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                         <p className="text-lg font-semibold text-muted-foreground">
-                          No se encontraron boletos con "{searchNumber}"
+                          No se encontraron boletos con "{searchTerm}"
                         </p>
                         <p className="text-sm text-muted-foreground mt-2">
                           Prueba con otro número
