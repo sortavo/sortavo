@@ -166,9 +166,14 @@ export const useRaffles = () => {
       if (error) throw error;
       return raffle;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['raffles'] });
       queryClient.invalidateQueries({ queryKey: ['raffle', variables.id] });
+      // Also invalidate public raffle cache so changes reflect immediately
+      if (data?.slug) {
+        queryClient.invalidateQueries({ queryKey: ['public-raffle', data.slug] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['public-raffle'] });
     },
     onError: (error) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
