@@ -420,3 +420,29 @@ export function useRepairTickets() {
     },
   });
 }
+
+export function useSearchTickets() {
+  return useMutation({
+    mutationFn: async ({
+      raffleId,
+      searchTerm,
+    }: {
+      raffleId: string;
+      searchTerm: string;
+    }) => {
+      if (!searchTerm || searchTerm.trim() === '') return [];
+
+      // Search for all tickets that CONTAIN the searched number
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('id, ticket_number, status')
+        .eq('raffle_id', raffleId)
+        .ilike('ticket_number', `%${searchTerm.trim()}%`)
+        .order('ticket_number', { ascending: true })
+        .limit(100);
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}

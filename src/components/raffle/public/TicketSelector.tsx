@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency-utils";
-import { usePublicTickets, useRandomAvailableTickets, useCheckTicketsAvailability } from "@/hooks/usePublicRaffle";
+import { usePublicTickets, useRandomAvailableTickets, useCheckTicketsAvailability, useSearchTickets } from "@/hooks/usePublicRaffle";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { TicketButton } from "./TicketButton";
 import { FloatingCartButton } from "./FloatingCartButton";
@@ -79,6 +79,8 @@ export function TicketSelector({
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [randomCount, setRandomCount] = useState(1);
   const [searchNumber, setSearchNumber] = useState('');
+  const [searchResults, setSearchResults] = useState<{ id: string; ticket_number: string; status: string }[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [generatedNumbers, setGeneratedNumbers] = useState<string[]>([]);
   const [regenerateCount, setRegenerateCount] = useState(0);
   const [isSlotSpinning, setIsSlotSpinning] = useState(false);
@@ -91,6 +93,7 @@ export function TicketSelector({
   const { data, isLoading } = usePublicTickets(raffleId, page, pageSize);
   const randomMutation = useRandomAvailableTickets();
   const checkAvailabilityMutation = useCheckTicketsAvailability();
+  const searchMutation = useSearchTickets();
 
   // Calculate max digits from total tickets
   const maxDigits = totalTickets.toString().length;
@@ -186,18 +189,70 @@ export function TicketSelector({
     return checkAvailabilityMutation.mutateAsync({ raffleId, ticketNumbers: numbers });
   }, [raffleId, checkAvailabilityMutation]);
 
-  const handleSearchTicket = () => {
-    const ticket = tickets.find(t => t.ticket_number === searchNumber);
-    if (ticket && ticket.status === 'available') {
-      if (!selectedTickets.includes(searchNumber)) {
-        setSelectedTickets(prev => [...prev, searchNumber]);
-        toast.success(`Boleto ${searchNumber} agregado`);
+  const handleSearchTicket = async () => {
+    if (!searchNumber.trim()) {
+      toast.error('Ingresa un número para buscar');
+      return;
+    }
+    
+    try {
+      const results = await searchMutation.mutateAsync({
+        raffleId,
+        searchTerm: searchNumber.trim(),
+      });
+      setSearchResults(results);
+      setHasSearched(true);
+      
+      if (results.length === 0) {
+        toast.info(`No se encontraron boletos con "${searchNumber}"`);
+      } else {
+        toast.success(`Se encontraron ${results.length} boletos`);
       }
-      setSearchNumber('');
-    } else if (ticket) {
-      toast.error(`El boleto ${searchNumber} no está disponible`);
+    } catch (error) {
+      toast.error('Error al buscar boletos');
+    }
+  };
+
+  const handleSelectSearchResult = (ticketNumber: string, status: string) => {
+    if (status !== 'available') return;
+    
+    setSelectedTickets(prev => {
+      if (prev.includes(ticketNumber)) {
+        toast.info(`Boleto ${ticketNumber} removido`);
+        return prev.filter(t => t !== ticketNumber);
+      }
+      if (maxPerPurchase > 0 && prev.length >= maxPerPurchase) {
+        toast.warning(`Máximo ${maxPerPurchase} boletos por compra`);
+        return prev;
+      }
+      toast.success(`Boleto ${ticketNumber} seleccionado`);
+      return [...prev, ticketNumber];
+    });
+  };
+
+  const handleSelectAllAvailableResults = () => {
+    const availableResults = searchResults
+      .filter(t => t.status === 'available')
+      .map(t => t.ticket_number);
+    
+    if (availableResults.length === 0) {
+      toast.info('No hay boletos disponibles en los resultados');
+      return;
+    }
+
+    const newTickets = availableResults.filter(t => !selectedTickets.includes(t));
+    
+    if (maxPerPurchase > 0 && selectedTickets.length + newTickets.length > maxPerPurchase) {
+      const canAdd = maxPerPurchase - selectedTickets.length;
+      if (canAdd <= 0) {
+        toast.warning(`Ya alcanzaste el máximo de ${maxPerPurchase} boletos`);
+        return;
+      }
+      setSelectedTickets(prev => [...prev, ...newTickets.slice(0, canAdd)]);
+      toast.success(`Se agregaron ${canAdd} boletos (límite alcanzado)`);
     } else {
-      toast.error(`Boleto ${searchNumber} no encontrado en esta página`);
+      setSelectedTickets(prev => [...prev, ...newTickets]);
+      toast.success(`${newTickets.length} boletos agregados`);
     }
   };
 
@@ -645,50 +700,111 @@ export function TicketSelector({
                     <Search className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Buscar Número</h3>
-                  <p className="text-gray-600">¿Tienes un número de la suerte? Búscalo aquí</p>
+                  <p className="text-gray-600">Busca todos los boletos que contengan ciertos dígitos</p>
                 </div>
 
                 <div className="flex gap-3">
                   <Input
-                    placeholder="Escribe el número que buscas..."
+                    placeholder="Ej: 7 para ver 7, 17, 27, 70, 77..."
                     value={searchNumber}
-                    onChange={(e) => setSearchNumber(e.target.value)}
+                    onChange={(e) => {
+                      setSearchNumber(e.target.value.replace(/[^0-9]/g, ''));
+                      setHasSearched(false);
+                    }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchTicket()}
                     className="h-12 text-lg border-2"
                   />
                   <Button 
                     onClick={handleSearchTicket}
                     size="lg"
+                    disabled={searchMutation.isPending}
                     className="bg-gradient-to-r from-violet-600 to-indigo-600 h-12 px-6"
                   >
-                    <Search className="h-5 w-5" />
+                    {searchMutation.isPending ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Search className="h-5 w-5" />
+                    )}
                   </Button>
                 </div>
 
-                {searchNumber && (
-                  <div>
-                    {tickets.find(t => t.ticket_number === searchNumber)?.status === 'available' ? (
-                      <div className="p-6 bg-green-50 rounded-xl border-2 border-green-200 text-center">
-                        <Check className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                        <p className="text-lg font-semibold text-green-700">
-                          ¡El boleto #{searchNumber} está disponible!
+                {hasSearched && (
+                  <div className="space-y-4">
+                    {searchResults.length === 0 ? (
+                      <div className="p-6 bg-muted rounded-xl text-center">
+                        <Ticket className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-lg font-semibold text-muted-foreground">
+                          No se encontraron boletos con "{searchNumber}"
                         </p>
-                        <Button
-                          onClick={() => setSelectedTickets([searchNumber])}
-                          className="mt-4 bg-green-600 hover:bg-green-700"
-                        >
-                          Seleccionar este boleto
-                        </Button>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Prueba con otro número
+                        </p>
                       </div>
                     ) : (
-                      <div className="p-6 bg-red-50 rounded-xl border-2 border-red-200 text-center">
-                        <Ticket className="w-12 h-12 text-red-400 mx-auto mb-3" />
-                        <p className="text-lg font-semibold text-red-700">
-                          El boleto #{searchNumber} no está disponible
-                        </p>
-                        <p className="text-sm text-red-600 mt-2">
-                          Prueba con otro número o usa la selección aleatoria
-                        </p>
-                      </div>
+                      <>
+                        {/* Results summary */}
+                        <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="font-medium">
+                              {searchResults.length} boletos encontrados
+                            </span>
+                            <span className="text-green-600">
+                              ✓ {searchResults.filter(t => t.status === 'available').length} disponibles
+                            </span>
+                            <span className="text-muted-foreground">
+                              • {searchResults.filter(t => t.status !== 'available').length} no disponibles
+                            </span>
+                          </div>
+                          {searchResults.some(t => t.status === 'available') && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleSelectAllAvailableResults}
+                              className="text-xs"
+                            >
+                              <Check className="w-3 h-3 mr-1" />
+                              Seleccionar disponibles
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Results grid */}
+                        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto p-1">
+                          {searchResults.map((ticket) => {
+                            const isAvailable = ticket.status === 'available';
+                            const isSelected = selectedTickets.includes(ticket.ticket_number);
+                            
+                            return (
+                              <motion.button
+                                key={ticket.id}
+                                whileHover={isAvailable ? { scale: 1.05 } : {}}
+                                whileTap={isAvailable ? { scale: 0.95 } : {}}
+                                onClick={() => handleSelectSearchResult(ticket.ticket_number, ticket.status)}
+                                disabled={!isAvailable}
+                                className={cn(
+                                  "relative p-2 rounded-lg text-xs font-mono font-bold transition-all border-2",
+                                  isAvailable && !isSelected && "bg-green-50 border-green-300 text-green-700 hover:bg-green-100 cursor-pointer",
+                                  isAvailable && isSelected && "bg-green-500 border-green-600 text-white ring-2 ring-green-400 ring-offset-1",
+                                  !isAvailable && "bg-muted border-muted text-muted-foreground cursor-not-allowed opacity-60"
+                                )}
+                              >
+                                {ticket.ticket_number}
+                                {isSelected && (
+                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                                    <Check className="w-3 h-3 text-green-600" />
+                                  </span>
+                                )}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+
+                        {searchResults.length >= 100 && (
+                          <p className="text-xs text-muted-foreground text-center">
+                            Mostrando los primeros 100 resultados. Refina tu búsqueda para ver más.
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
