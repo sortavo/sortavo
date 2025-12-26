@@ -9,6 +9,8 @@ import { Ticket } from "lucide-react";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { TrialBanner } from "./TrialBanner";
+import { useSimulation } from "@/contexts/SimulationContext";
+import { cn } from "@/lib/utils";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,9 +28,12 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
+  const { isSimulating } = useSimulation();
 
   return (
     <SidebarProvider>
+      {/* Spacer for simulation banner */}
+      {isSimulating && <div className="h-12" />}
       {/* Desktop Sidebar - hidden on mobile */}
       <div className="hidden md:block">
         <DashboardSidebar />

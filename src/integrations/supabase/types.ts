@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_simulations: {
+        Row: {
+          actions_taken: Json | null
+          admin_user_id: string
+          created_at: string | null
+          ended_at: string | null
+          id: string
+          mode: string
+          simulated_org_id: string
+          simulated_user_id: string
+          started_at: string | null
+        }
+        Insert: {
+          actions_taken?: Json | null
+          admin_user_id: string
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          simulated_org_id: string
+          simulated_user_id: string
+          started_at?: string | null
+        }
+        Update: {
+          actions_taken?: Json | null
+          admin_user_id?: string
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          simulated_org_id?: string
+          simulated_user_id?: string
+          started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_simulations_simulated_org_id_fkey"
+            columns: ["simulated_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           created_at: string | null

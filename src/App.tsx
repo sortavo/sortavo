@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SimulationProvider } from "@/contexts/SimulationContext";
+import { SimulationBanner } from "@/components/admin/SimulationBanner";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
@@ -50,10 +52,12 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <ScrollToTop />
-            
-            <InstallPrompt />
-            <Routes>
+            <SimulationProvider>
+              <ScrollToTop />
+              <SimulationBanner />
+              
+              <InstallPrompt />
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -91,6 +95,7 @@ const App = () => (
               <Route path="/:orgSlug/:slug/payment" element={<PaymentInstructions />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </SimulationProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
