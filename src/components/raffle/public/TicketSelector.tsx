@@ -12,11 +12,13 @@ import { formatCurrency } from "@/lib/currency-utils";
 import { usePublicTickets, useRandomAvailableTickets, useCheckTicketsAvailability } from "@/hooks/usePublicRaffle";
 import { supabase } from "@/integrations/supabase/client";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TicketButton } from "./TicketButton";
 import { FloatingCartButton } from "./FloatingCartButton";
 import { SlotMachineAnimation } from "./SlotMachineAnimation";
 import { LuckyNumbersInput } from "./LuckyNumbersInput";
 import { ProbabilityStats } from "./ProbabilityStats";
+import { VirtualizedTicketGrid } from "./VirtualizedTicketGrid";
 import { toast } from "sonner";
 import { LoadMoreTrigger } from "@/components/ui/LoadMoreTrigger";
 import { 
@@ -76,6 +78,7 @@ export function TicketSelector({
   ticketsSold = 0,
   ticketsAvailable = 0,
 }: TicketSelectorProps) {
+  const isMobile = useIsMobile();
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
   const [mode, setMode] = useState<'manual' | 'random' | 'search' | 'lucky'>('manual');
   const [page, setPage] = useState(1);
@@ -663,51 +666,61 @@ export function TicketSelector({
                         )}
                       </div>
 
-                      {/* Results grid with infinite scroll */}
-                      <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto p-1">
-                        {manualResults.map((ticket) => {
-                          const isAvailable = ticket.status === 'available';
-                          const isSelected = selectedTickets.includes(ticket.ticket_number);
-                          
-                          return (
-                            <motion.button
-                              key={ticket.id}
-                              whileHover={isAvailable ? { scale: 1.05 } : {}}
-                              whileTap={isAvailable ? { scale: 0.95 } : {}}
-                              onClick={() => handleSelectSearchResult(ticket.ticket_number, ticket.status)}
-                              disabled={!isAvailable}
-                              className={cn(
-                                "relative p-2 rounded-lg text-xs font-mono font-bold transition-all border-2",
-                                isAvailable && !isSelected && "bg-green-50 border-green-300 text-green-700 hover:bg-green-100 cursor-pointer",
-                                isAvailable && isSelected && "bg-green-500 border-green-600 text-white ring-2 ring-green-400 ring-offset-1",
-                                !isAvailable && "bg-muted border-muted text-muted-foreground cursor-not-allowed opacity-60"
-                              )}
-                            >
-                              {ticket.ticket_number}
-                              {isSelected && (
-                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                                  <Check className="w-3 h-3 text-green-600" />
-                                </span>
-                              )}
-                            </motion.button>
-                          );
-                        })}
-                        
-                        {/* Infinite scroll trigger */}
-                        {hasMoreManual && (
-                          <div className="col-span-full">
-                            <LoadMoreTrigger
-                              onLoadMore={handleLoadMoreManual}
-                              remaining={hasMoreManual ? 100 : 0}
-                              enabled={hasMoreManual && !isLoadingMoreManual}
-                            />
-                          </div>
-                        )}
-                      </div>
+                      {/* Results grid - virtualized for large lists (>300 items) */}
+                      {manualResults.length > 300 ? (
+                        <VirtualizedTicketGrid
+                          tickets={manualResults}
+                          selectedTickets={selectedTickets}
+                          onTicketClick={handleSelectSearchResult}
+                          columnCount={isMobile ? 5 : 10}
+                          height={300}
+                          width={isMobile ? 260 : 520}
+                        />
+                      ) : (
+                        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto p-1">
+                          {manualResults.map((ticket) => {
+                            const isAvailable = ticket.status === 'available';
+                            const isSelected = selectedTickets.includes(ticket.ticket_number);
+                            
+                            return (
+                              <motion.button
+                                key={ticket.id}
+                                whileHover={isAvailable ? { scale: 1.05 } : {}}
+                                whileTap={isAvailable ? { scale: 0.95 } : {}}
+                                onClick={() => handleSelectSearchResult(ticket.ticket_number, ticket.status)}
+                                disabled={!isAvailable}
+                                className={cn(
+                                  "relative p-2 rounded-lg text-xs font-mono font-bold transition-all border-2",
+                                  isAvailable && !isSelected && "bg-green-50 border-green-300 text-green-700 hover:bg-green-100 cursor-pointer",
+                                  isAvailable && isSelected && "bg-green-500 border-green-600 text-white ring-2 ring-green-400 ring-offset-1",
+                                  !isAvailable && "bg-muted border-muted text-muted-foreground cursor-not-allowed opacity-60"
+                                )}
+                              >
+                                {ticket.ticket_number}
+                                {isSelected && (
+                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                                    <Check className="w-3 h-3 text-green-600" />
+                                  </span>
+                                )}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
+                      {/* Infinite scroll trigger */}
+                      {hasMoreManual && (
+                        <LoadMoreTrigger
+                          onLoadMore={handleLoadMoreManual}
+                          remaining={hasMoreManual ? 100 : 0}
+                          enabled={hasMoreManual && !isLoadingMoreManual}
+                        />
+                      )}
 
                       <p className="text-xs text-muted-foreground text-center">
                         {manualResults.length} boleto{manualResults.length !== 1 ? 's' : ''} cargados
                         {hasMoreManual && ' • Desplaza para ver más'}
+                        {manualResults.length > 300 && ' • Vista optimizada'}
                       </p>
                     </>
                   )}
