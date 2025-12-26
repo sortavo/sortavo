@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency-utils";
-import { usePublicTickets, useRandomAvailableTickets, useCheckTicketsAvailability, useSearchTickets } from "@/hooks/usePublicRaffle";
+import { usePublicTickets, useRandomAvailableTickets, useCheckTicketsAvailability } from "@/hooks/usePublicRaffle";
+import { supabase } from "@/integrations/supabase/client";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { TicketButton } from "./TicketButton";
 import { FloatingCartButton } from "./FloatingCartButton";
@@ -94,7 +95,7 @@ export function TicketSelector({
   const { data, isLoading } = usePublicTickets(raffleId, page, pageSize);
   const randomMutation = useRandomAvailableTickets();
   const checkAvailabilityMutation = useCheckTicketsAvailability();
-  const searchMutation = useSearchTickets();
+  const [isSearching, setIsSearching] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -107,20 +108,34 @@ export function TicketSelector({
 
   // Auto-search when debounced value changes
   useEffect(() => {
-    if (debouncedSearch.trim().length > 0) {
-      searchMutation.mutateAsync({
-        raffleId,
-        searchTerm: debouncedSearch.trim(),
-      }).then(results => {
-        setSearchResults(results);
-        setHasSearched(true);
-      }).catch(() => {
-        // Error handled silently for auto-search
-      });
-    } else {
-      setSearchResults([]);
-      setHasSearched(false);
-    }
+    const performSearch = async () => {
+      if (debouncedSearch.trim().length > 0) {
+        setIsSearching(true);
+        try {
+          const { data, error } = await supabase
+            .from('tickets')
+            .select('id, ticket_number, status')
+            .eq('raffle_id', raffleId)
+            .ilike('ticket_number', `%${debouncedSearch.trim()}%`)
+            .order('ticket_number', { ascending: true })
+            .limit(100);
+
+          if (!error && data) {
+            setSearchResults(data);
+            setHasSearched(true);
+          }
+        } catch {
+          // Error handled silently for auto-search
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setHasSearched(false);
+      }
+    };
+
+    performSearch();
   }, [debouncedSearch, raffleId]);
 
   // Calculate max digits from total tickets
@@ -221,13 +236,19 @@ export function TicketSelector({
     if (!searchNumber.trim()) return;
     
     try {
-      const results = await searchMutation.mutateAsync({
-        raffleId,
-        searchTerm: searchNumber.trim(),
-      });
-      setSearchResults(results);
-      setHasSearched(true);
-    } catch (error) {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('id, ticket_number, status')
+        .eq('raffle_id', raffleId)
+        .ilike('ticket_number', `%${searchNumber.trim()}%`)
+        .order('ticket_number', { ascending: true })
+        .limit(100);
+
+      if (!error && data) {
+        setSearchResults(data);
+        setHasSearched(true);
+      }
+    } catch {
       // Error handled silently
     }
   };
@@ -729,7 +750,7 @@ export function TicketSelector({
                     onChange={(e) => setSearchNumber(e.target.value.replace(/[^0-9]/g, ''))}
                     className="h-12 text-lg border-2 pr-12"
                   />
-                  {searchMutation.isPending && (
+                  {isSearching && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
