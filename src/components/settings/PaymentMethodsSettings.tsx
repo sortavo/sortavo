@@ -69,6 +69,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BankBadge, BankSelectItem } from "@/components/ui/BankBadge";
+import { BANK_NAMES, getBankConfig } from "@/lib/bank-config";
 
 // Payment subtypes with categories
 const PAYMENT_SUBTYPES = [
@@ -88,28 +90,8 @@ const PAYMENT_SUBTYPES = [
 
 type PaymentSubtype = typeof PAYMENT_SUBTYPES[number]['id'];
 
-// Mexican banks
-const MEXICAN_BANKS = [
-  'BBVA México',
-  'Santander México',
-  'Banorte',
-  'HSBC México',
-  'Citibanamex',
-  'Scotiabank',
-  'Banco Azteca',
-  'Banco Inbursa',
-  'BanCoppel',
-  'Banregio',
-  'Afirme',
-  'Banco del Bajío',
-  'Banco Autofin',
-  'Compartamos Banco',
-  'Hey Banco',
-  'Nu México',
-  'Klar',
-  'Stori',
-  'Otro',
-] as const;
+// Mexican banks list (for iteration)
+const MEXICAN_BANKS_LIST = [...BANK_NAMES, 'Otro'] as const;
 
 interface EditingMethod {
   id?: string;
@@ -243,16 +225,16 @@ function SortableMethodCard({ method, onEdit, onDelete, onToggle, isToggling }: 
             </span>
           </div>
           
-          {/* Bank info */}
+          {/* Bank info with badge */}
           {(subtype === 'bank_transfer' || subtype === 'bank_deposit' || method.type === 'bank_transfer') && (
             <>
               {method.bank_name && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {method.bank_name}
-                </p>
+                <div className="mt-1">
+                  <BankBadge bankName={method.bank_name} size="sm" />
+                </div>
               )}
               {method.clabe && (
-                <p className="text-sm text-muted-foreground font-mono">
+                <p className="text-sm text-muted-foreground font-mono mt-1">
                   CLABE: {method.clabe}
                 </p>
               )}
@@ -487,7 +469,7 @@ export function PaymentMethodsSettings() {
       location: m.location || "",
       schedule: m.schedule || "",
     });
-    setCustomBankName(method.bank_name && !MEXICAN_BANKS.includes(method.bank_name as any) ? method.bank_name : '');
+    setCustomBankName(method.bank_name && !BANK_NAMES.includes(method.bank_name) ? method.bank_name : '');
     setValidationErrors({});
   };
 
@@ -540,7 +522,7 @@ export function PaymentMethodsSettings() {
 
     // Bank transfer / deposit fields
     if (subtype === 'bank_transfer' || subtype === 'bank_deposit') {
-      const isOtroBank = editingMethod.bank_name && !MEXICAN_BANKS.slice(0, -1).includes(editingMethod.bank_name as any);
+      const isOtroBank = editingMethod.bank_name && !BANK_NAMES.includes(editingMethod.bank_name);
       
       return (
         <>
@@ -551,15 +533,27 @@ export function PaymentMethodsSettings() {
               onValueChange={handleBankSelect}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona un banco" />
+                <SelectValue placeholder="Selecciona un banco">
+                  {editingMethod.bank_name && !isOtroBank && (
+                    <BankSelectItem bankName={editingMethod.bank_name} />
+                  )}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {MEXICAN_BANKS.map(bank => (
-                  <SelectItem key={bank} value={bank}>{bank}</SelectItem>
+                {MEXICAN_BANKS_LIST.map(bank => (
+                  <SelectItem key={bank} value={bank}>
+                    <BankSelectItem bankName={bank} />
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {(isOtroBank || editingMethod.bank_name === '' && customBankName) && (
+            {editingMethod.bank_name && !isOtroBank && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm text-muted-foreground">Vista previa:</span>
+                <BankBadge bankName={editingMethod.bank_name} size="md" />
+              </div>
+            )}
+            {(isOtroBank || (editingMethod.bank_name === '' && customBankName)) && (
               <Input
                 placeholder="Nombre del banco"
                 value={customBankName}
@@ -659,11 +653,17 @@ export function PaymentMethodsSettings() {
             <Label>Banco de la Tarjeta (opcional)</Label>
             <Select value={editingMethod.bank_name || ''} onValueChange={(v) => setEditingMethod({ ...editingMethod, bank_name: v })}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona un banco" />
+                <SelectValue placeholder="Selecciona un banco">
+                  {editingMethod.bank_name && (
+                    <BankSelectItem bankName={editingMethod.bank_name} />
+                  )}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {MEXICAN_BANKS.map(bank => (
-                  <SelectItem key={bank} value={bank}>{bank}</SelectItem>
+                {MEXICAN_BANKS_LIST.map(bank => (
+                  <SelectItem key={bank} value={bank}>
+                    <BankSelectItem bankName={bank} />
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
