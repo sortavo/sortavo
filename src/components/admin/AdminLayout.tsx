@@ -1,8 +1,9 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 import { AdminSidebar } from "./AdminSidebar";
+import { AdminSidebarContent } from "./AdminSidebarContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shield, Menu, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,15 +16,17 @@ interface AdminLayoutProps {
 }
 
 function AdminMobileNav() {
+  const [open, setOpen] = useState(false);
+  
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
-        <AdminSidebar />
+        <AdminSidebarContent onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );
