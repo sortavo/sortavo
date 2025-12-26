@@ -1,16 +1,19 @@
 import { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Ticket } from "lucide-react";
+import { Ticket, Eye, LogOut } from "lucide-react";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { TrialBanner } from "./TrialBanner";
 import { useSimulation } from "@/contexts/SimulationContext";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -28,7 +31,20 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
-  const { isSimulating } = useSimulation();
+  const navigate = useNavigate();
+  const { isSimulating, simulatedUser, mode, endSimulation } = useSimulation();
+
+  const getInitials = (name: string | null, email: string) => {
+    if (name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return email.slice(0, 2).toUpperCase();
+  };
+
+  const handleExitSimulation = async () => {
+    await endSimulation();
+    navigate('/admin/users');
+  };
 
   return (
     <SidebarProvider>
@@ -46,7 +62,17 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
             <Ticket className="h-5 w-5 text-primary" />
             <span className="text-lg font-extrabold">SORTAVO</span>
           </Link>
-          <NotificationCenter />
+          <div className="flex items-center gap-2">
+            {isSimulating && simulatedUser && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700">
+                <Eye className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs font-medium text-amber-800 dark:text-amber-300 truncate max-w-16">
+                  {simulatedUser.full_name?.split(' ')[0] || simulatedUser.email.split('@')[0]}
+                </span>
+              </div>
+            )}
+            <NotificationCenter />
+          </div>
         </header>
 
         {/* Desktop Header */}
@@ -69,6 +95,41 @@ export function DashboardLayout({ children, title, breadcrumbs }: DashboardLayou
               </BreadcrumbList>
             </Breadcrumb>
           )}
+          
+          {/* Simulation Indicator */}
+          {isSimulating && simulatedUser && (
+            <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700">
+              <Eye className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <Avatar className="h-5 w-5">
+                <AvatarFallback className="text-[10px] bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200">
+                  {getInitials(simulatedUser.full_name, simulatedUser.email)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-amber-800 dark:text-amber-300 max-w-32 truncate">
+                {simulatedUser.full_name || simulatedUser.email}
+              </span>
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "text-[10px] px-1.5 py-0",
+                  mode === 'readonly' 
+                    ? "border-amber-500 text-amber-700 dark:text-amber-300" 
+                    : "border-red-500 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20"
+                )}
+              >
+                {mode === 'readonly' ? 'R/O' : 'FULL'}
+              </Badge>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-6 w-6 p-0 hover:bg-amber-200 dark:hover:bg-amber-800"
+                onClick={handleExitSimulation}
+              >
+                <LogOut className="h-3 w-3 text-amber-700 dark:text-amber-300" />
+              </Button>
+            </div>
+          )}
+          
           <div className="flex-1 flex justify-center px-4">
             <GlobalSearch />
           </div>
