@@ -107,10 +107,10 @@ export default function AdminOverview() {
 
       {/* Period Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
+        <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-purple-500" />
+              <Calendar className="h-5 w-5 text-accent" />
               <div>
                 <p className="text-sm text-muted-foreground">Nuevas Orgs</p>
                 {isLoading ? (
@@ -122,10 +122,10 @@ export default function AdminOverview() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-blue-500" />
+              <Users className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Nuevos Usuarios</p>
                 {isLoading ? (
@@ -137,10 +137,10 @@ export default function AdminOverview() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+        <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
+              <TrendingUp className="h-5 w-5 text-success" />
               <div>
                 <p className="text-sm text-muted-foreground">Nuevos Sorteos</p>
                 {isLoading ? (
@@ -152,10 +152,10 @@ export default function AdminOverview() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20">
+        <Card className="bg-gradient-to-br from-warning/10 to-warning/5 border-warning/20">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <Ticket className="h-5 w-5 text-amber-500" />
+              <Ticket className="h-5 w-5 text-warning" />
               <div>
                 <p className="text-sm text-muted-foreground">Boletos Vendidos</p>
                 {isLoading ? (
@@ -180,21 +180,21 @@ export default function AdminOverview() {
               tier="Basic"
               count={stats?.subscriptionStats.basic || 0}
               icon={Sparkles}
-              color="bg-slate-500"
+              color="bg-muted-foreground"
               loading={isLoading}
             />
             <SubscriptionCard
               tier="Pro"
               count={stats?.subscriptionStats.pro || 0}
               icon={Crown}
-              color="bg-blue-600"
+              color="bg-primary"
               loading={isLoading}
             />
             <SubscriptionCard
               tier="Premium"
               count={stats?.subscriptionStats.premium || 0}
               icon={Gem}
-              color="bg-purple-600"
+              color="bg-accent"
               loading={isLoading}
             />
           </CardContent>
@@ -207,7 +207,7 @@ export default function AdminOverview() {
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between p-4 rounded-lg border border-border">
               <div className="flex items-center gap-3">
-                <div className="h-3 w-3 rounded-full bg-amber-500" />
+                <div className="h-3 w-3 rounded-full bg-warning" />
                 <span className="font-medium">En Prueba (Trial)</span>
               </div>
               {isLoading ? (
@@ -220,7 +220,7 @@ export default function AdminOverview() {
             </div>
             <div className="flex items-center justify-between p-4 rounded-lg border border-border">
               <div className="flex items-center gap-3">
-                <div className="h-3 w-3 rounded-full bg-emerald-500" />
+                <div className="h-3 w-3 rounded-full bg-success" />
                 <span className="font-medium">Suscripción Activa</span>
               </div>
               {isLoading ? (

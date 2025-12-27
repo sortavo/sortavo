@@ -31,12 +31,12 @@ const eventTypeLabels: Record<string, string> = {
 };
 
 const eventTypeColors: Record<string, string> = {
-  ticket_sold: "bg-emerald-500",
-  ticket_reserved: "bg-amber-500",
-  ticket_released: "bg-slate-500",
-  ticket_canceled: "bg-red-500",
-  raffle_view: "bg-blue-500",
-  page_view: "bg-purple-500",
+  ticket_sold: "bg-success",
+  ticket_reserved: "bg-warning",
+  ticket_released: "bg-muted-foreground",
+  ticket_canceled: "bg-destructive",
+  raffle_view: "bg-primary",
+  page_view: "bg-accent",
 };
 
 export default function AdminActivity() {
@@ -105,7 +105,7 @@ export default function AdminActivity() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
+              <Trophy className="h-5 w-5 text-warning" />
               Sorteos con Más Ventas
             </CardTitle>
           </CardHeader>
@@ -160,7 +160,7 @@ export default function AdminActivity() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-500" />
+              <Activity className="h-5 w-5 text-primary" />
               Eventos Recientes
             </CardTitle>
           </CardHeader>
@@ -188,7 +188,7 @@ export default function AdminActivity() {
                     >
                       <div
                         className={`h-2 w-2 rounded-full mt-2 flex-shrink-0 ${
-                          eventTypeColors[event.type] || "bg-slate-400"
+                          eventTypeColors[event.type] || "bg-muted-foreground"
                         }`}
                       />
                       <div className="flex-1 min-w-0">

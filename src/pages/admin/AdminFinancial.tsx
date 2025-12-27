@@ -40,22 +40,22 @@ export default function AdminFinancial() {
       tier: "Basic", 
       revenue: stats?.revenueByTier.basic || 0, 
       icon: Sparkles, 
-      color: "bg-slate-500",
-      barColor: "bg-slate-500"
+      color: "bg-muted-foreground",
+      barColor: "bg-muted-foreground"
     },
     { 
       tier: "Pro", 
       revenue: stats?.revenueByTier.pro || 0, 
       icon: Crown, 
-      color: "bg-blue-600",
-      barColor: "bg-blue-600"
+      color: "bg-primary",
+      barColor: "bg-primary"
     },
     { 
       tier: "Premium", 
       revenue: stats?.revenueByTier.premium || 0, 
       icon: Gem, 
-      color: "bg-purple-600",
-      barColor: "bg-purple-600"
+      color: "bg-accent",
+      barColor: "bg-accent"
     },
   ];
 
@@ -156,43 +156,43 @@ export default function AdminFinancial() {
             <CardTitle className="text-lg">Estado de Suscripciones</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-emerald-500/5">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-success/5">
               <div className="flex items-center gap-3">
-                <div className="h-3 w-3 rounded-full bg-emerald-500" />
+                <div className="h-3 w-3 rounded-full bg-success" />
                 <span className="font-medium">Activas</span>
               </div>
               {isLoading ? (
                 <Skeleton className="h-7 w-16" />
               ) : (
-                <span className="text-2xl font-bold text-emerald-600">
+                <span className="text-2xl font-bold text-success">
                   {stats?.activeSubscriptions || 0}
                 </span>
               )}
             </div>
             
-            <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-red-500/5">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-destructive/5">
               <div className="flex items-center gap-3">
-                <div className="h-3 w-3 rounded-full bg-red-500" />
+                <div className="h-3 w-3 rounded-full bg-destructive" />
                 <span className="font-medium">Canceladas</span>
               </div>
               {isLoading ? (
                 <Skeleton className="h-7 w-16" />
               ) : (
-                <span className="text-2xl font-bold text-red-500">
+                <span className="text-2xl font-bold text-destructive">
                   {stats?.canceledSubscriptions || 0}
                 </span>
               )}
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-amber-500/5">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-warning/5">
               <div className="flex items-center gap-3">
-                <div className="h-3 w-3 rounded-full bg-amber-500" />
+                <div className="h-3 w-3 rounded-full bg-warning" />
                 <span className="font-medium">Conversiones Trial → Pago</span>
               </div>
               {isLoading ? (
                 <Skeleton className="h-7 w-16" />
               ) : (
-                <span className="text-2xl font-bold text-amber-600">
+                <span className="text-2xl font-bold text-warning">
                   {stats?.trialConversions || 0}
                 </span>
               )}
