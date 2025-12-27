@@ -37,6 +37,7 @@ import Analytics from "./pages/dashboard/Analytics";
 import Subscription from "./pages/dashboard/Subscription";
 import Contact from "./pages/Contact";
 import SystemStatus from "./pages/SystemStatus";
+import ColorPalette from "./components/design-system/ColorPalette";
 
 // Admin pages
 import AdminOverview from "./pages/admin/AdminOverview";
@@ -100,6 +101,7 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/status" element={<SystemStatus />} />
+              <Route path="/design-system" element={<ColorPalette />} />
               {/* Redirects for common reserved slugs */}
               <Route path="/login" element={<Navigate to="/auth" replace />} />
               <Route path="/signup" element={<Navigate to="/auth" replace />} />
