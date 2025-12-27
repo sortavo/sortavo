@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.generate-tickets]
 verify_jwt = false
 
+[functions.health-check]
+verify_jwt = false
+
 [functions.notify-pending-approvals]
 verify_jwt = false
 
