@@ -378,21 +378,88 @@ export function useRandomAvailableTickets() {
       raffleId: string;
       count: number;
     }) => {
-      const { data, error } = await supabase
+      // For large raffles, use a smarter approach:
+      // 1. Get total count of available tickets
+      // 2. Generate random offsets and fetch tickets at those positions
+      const { count: availableCount, error: countError } = await supabase
         .from('tickets')
-        .select('ticket_number')
+        .select('*', { count: 'exact', head: true })
         .eq('raffle_id', raffleId)
-        .eq('status', 'available')
-        .limit(count * 3); // Get more than needed for randomization
+        .eq('status', 'available');
 
-      if (error) throw error;
-      if (!data || data.length < count) {
-        throw new Error(`Solo hay ${data?.length || 0} boletos disponibles`);
+      if (countError) throw countError;
+      if (!availableCount || availableCount < count) {
+        throw new Error(`Solo hay ${availableCount || 0} boletos disponibles`);
       }
 
-      // Cryptographically secure shuffle using Fisher-Yates algorithm
-      const shuffled = secureShuffleArray(data);
-      return shuffled.slice(0, count).map(t => t.ticket_number);
+      // For small counts (< 10000 available), use the original approach
+      if (availableCount <= 10000) {
+        const { data, error } = await supabase
+          .from('tickets')
+          .select('ticket_number')
+          .eq('raffle_id', raffleId)
+          .eq('status', 'available')
+          .limit(count * 3);
+
+        if (error) throw error;
+        if (!data || data.length < count) {
+          throw new Error(`Solo hay ${data?.length || 0} boletos disponibles`);
+        }
+
+        const shuffled = secureShuffleArray(data);
+        return shuffled.slice(0, count).map(t => t.ticket_number);
+      }
+
+      // For large raffles (> 10000 available), generate random offsets
+      // and fetch individual tickets to avoid loading too much data
+      const selectedNumbers: string[] = [];
+      const usedOffsets = new Set<number>();
+      const maxAttempts = count * 5;
+      let attempts = 0;
+
+      while (selectedNumbers.length < count && attempts < maxAttempts) {
+        // Generate a batch of random offsets
+        const batchSize = Math.min(count - selectedNumbers.length, 50);
+        const offsets: number[] = [];
+        
+        for (let i = 0; i < batchSize * 2; i++) {
+          const offset = secureRandomInt(availableCount);
+          if (!usedOffsets.has(offset)) {
+            usedOffsets.add(offset);
+            offsets.push(offset);
+            if (offsets.length >= batchSize) break;
+          }
+        }
+
+        // Fetch tickets at these random offsets
+        const promises = offsets.map(offset =>
+          supabase
+            .from('tickets')
+            .select('ticket_number')
+            .eq('raffle_id', raffleId)
+            .eq('status', 'available')
+            .order('ticket_number', { ascending: true })
+            .range(offset, offset)
+            .single()
+        );
+
+        const results = await Promise.all(promises);
+        
+        for (const result of results) {
+          if (result.data && !selectedNumbers.includes(result.data.ticket_number)) {
+            selectedNumbers.push(result.data.ticket_number);
+            if (selectedNumbers.length >= count) break;
+          }
+        }
+
+        attempts += batchSize;
+      }
+
+      if (selectedNumbers.length < count) {
+        throw new Error(`No se pudieron seleccionar suficientes boletos aleatorios`);
+      }
+
+      return selectedNumbers;
     },
   });
 }
@@ -464,20 +531,35 @@ export function useSearchTickets() {
     mutationFn: async ({
       raffleId,
       searchTerm,
+      limit = 100,
     }: {
       raffleId: string;
       searchTerm: string;
+      limit?: number;
     }) => {
       if (!searchTerm || searchTerm.trim() === '') return [];
 
-      // Search for all tickets that CONTAIN the searched number
-      const { data, error } = await supabase
+      const term = searchTerm.trim();
+      
+      // Optimize search: use prefix match when possible (much faster with index)
+      // Only use ILIKE with leading wildcard for short search terms
+      let query = supabase
         .from('tickets')
         .select('id, ticket_number, status')
-        .eq('raffle_id', raffleId)
-        .ilike('ticket_number', `%${searchTerm.trim()}%`)
+        .eq('raffle_id', raffleId);
+
+      // If the search term looks like a ticket number (padded), use exact or prefix match
+      if (term.length >= 3) {
+        // Use prefix matching for longer terms (faster with btree index)
+        query = query.gte('ticket_number', term).lt('ticket_number', term + 'z');
+      } else {
+        // For short terms, use ILIKE but with suffix match (no leading wildcard = uses index)
+        query = query.like('ticket_number', `%${term}`);
+      }
+
+      const { data, error } = await query
         .order('ticket_number', { ascending: true })
-        .limit(100);
+        .limit(limit);
 
       if (error) throw error;
       return data || [];

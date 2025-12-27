@@ -19,6 +19,7 @@ import { SlotMachineAnimation } from "./SlotMachineAnimation";
 import { LuckyNumbersInput } from "./LuckyNumbersInput";
 import { ProbabilityStats } from "./ProbabilityStats";
 import { VirtualizedTicketGrid } from "./VirtualizedTicketGrid";
+import { LargeRaffleNotice, LARGE_RAFFLE_THRESHOLD } from "./LargeRaffleNotice";
 import { toast } from "sonner";
 import { LoadMoreTrigger } from "@/components/ui/LoadMoreTrigger";
 import { 
@@ -110,6 +111,11 @@ export function TicketSelector({
 
   const pageSize = 100;
   const totalPages = Math.ceil(totalTickets / pageSize);
+
+  // Detect large raffle and limit grid display
+  const isLargeRaffle = totalTickets > LARGE_RAFFLE_THRESHOLD;
+  const maxGridPages = isLargeRaffle ? Math.ceil(100000 / pageSize) : totalPages; // Limit grid to 100K tickets max
+  const effectiveTotalPages = Math.min(totalPages, maxGridPages);
 
   const { data, isLoading } = usePublicTickets(raffleId, page, pageSize);
   const randomMutation = useRandomAvailableTickets();
@@ -240,7 +246,7 @@ export function TicketSelector({
 
   // Swipe gestures for mobile pagination
   const swipeHandlers = useSwipeGesture({
-    onSwipeLeft: () => setPage(p => Math.min(totalPages, p + 1)),
+    onSwipeLeft: () => setPage(p => Math.min(effectiveTotalPages, p + 1)),
     onSwipeRight: () => setPage(p => Math.max(1, p - 1)),
     minSwipeDistance: 75
   });
@@ -533,6 +539,17 @@ export function TicketSelector({
               Buscar
             </TabsTrigger>
           </TabsList>
+
+          {/* Large raffle notice - shown only once at the top */}
+          {isLargeRaffle && mode === 'manual' && (
+            <div className="mb-6">
+              <LargeRaffleNotice
+                totalTickets={totalTickets}
+                onUseSearch={() => setMode('search')}
+                onUseRandom={() => setMode('random')}
+              />
+            </div>
+          )}
 
           <TabsContent value="manual" className="space-y-6">
             {/* Packages quick select */}
@@ -837,7 +854,12 @@ export function TicketSelector({
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <div className="text-sm text-gray-500">
-                Página {page} de {totalPages}
+                Página {page} de {effectiveTotalPages}
+                {isLargeRaffle && effectiveTotalPages < totalPages && (
+                  <span className="text-amber-600 ml-2">
+                    (usa búsqueda para ver más)
+                  </span>
+                )}
               </div>
               
               <div className="flex items-center gap-1">
@@ -865,7 +887,7 @@ export function TicketSelector({
                   onChange={(e) => setPage(Number(e.target.value))}
                   className="h-10 px-3 rounded-lg border-2 border-gray-200 bg-white text-sm min-w-[70px]"
                 >
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  {Array.from({ length: effectiveTotalPages }, (_, i) => i + 1).map(p => (
                     <option key={p} value={p}>{p}</option>
                   ))}
                 </select>
@@ -873,8 +895,8 @@ export function TicketSelector({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
+                  onClick={() => setPage(p => Math.min(effectiveTotalPages, p + 1))}
+                  disabled={page === effectiveTotalPages}
                   className="h-10 w-10 border-2"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -882,8 +904,8 @@ export function TicketSelector({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPage(totalPages)}
-                  disabled={page === totalPages}
+                  onClick={() => setPage(effectiveTotalPages)}
+                  disabled={page === effectiveTotalPages}
                   className="h-10 w-10 border-2"
                 >
                   <ChevronsRight className="h-4 w-4" />
