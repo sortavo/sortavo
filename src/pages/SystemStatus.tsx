@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Footer } from '@/components/layout/Footer';
 import { toast } from 'sonner';
+import { useSystemStatus, ServiceHealth, ServiceStatus } from '@/hooks/useSystemStatus';
 import { 
   Trophy, 
   ArrowLeft, 
@@ -20,19 +21,10 @@ import {
   Database,
   Shield,
   Globe,
-  Activity
+  Activity,
+  HardDrive,
+  Loader2
 } from 'lucide-react';
-
-type ServiceStatus = 'operational' | 'degraded' | 'outage';
-
-interface Service {
-  name: string;
-  icon: React.ElementType;
-  status: ServiceStatus;
-  uptime: string;
-  responseTime: string;
-  description: string;
-}
 
 interface Incident {
   id: string;
@@ -43,83 +35,34 @@ interface Incident {
   updates: { time: string; message: string }[];
 }
 
-const services: Service[] = [
-  {
-    name: "Plataforma Web",
-    icon: Globe,
-    status: "operational",
-    uptime: "99.99%",
-    responseTime: "45ms",
-    description: "Aplicación web principal y dashboard"
-  },
-  {
-    name: "API",
-    icon: Server,
-    status: "operational",
-    uptime: "99.98%",
-    responseTime: "120ms",
-    description: "Servicios de backend y endpoints"
-  },
-  {
-    name: "Pagos",
-    icon: CreditCard,
-    status: "operational",
-    uptime: "99.99%",
-    responseTime: "200ms",
-    description: "Procesamiento de pagos con Stripe"
-  },
-  {
-    name: "Base de Datos",
-    icon: Database,
-    status: "operational",
-    uptime: "99.99%",
-    responseTime: "15ms",
-    description: "Almacenamiento y consultas de datos"
-  },
-  {
-    name: "Email",
-    icon: Mail,
-    status: "operational",
-    uptime: "99.95%",
-    responseTime: "350ms",
-    description: "Envío de notificaciones por correo"
-  },
-  {
-    name: "Autenticación",
-    icon: Shield,
-    status: "operational",
-    uptime: "99.99%",
-    responseTime: "80ms",
-    description: "Sistema de login y registro"
-  }
-];
+// Static incidents - could be connected to a database in the future
+const recentIncidents: Incident[] = [];
 
-const recentIncidents: Incident[] = [
-  {
-    id: "inc-001",
-    title: "Mantenimiento programado completado",
-    status: "resolved",
-    date: "2024-12-20",
-    description: "Actualización de infraestructura para mejorar el rendimiento.",
-    updates: [
-      { time: "06:00", message: "Mantenimiento completado exitosamente." },
-      { time: "04:00", message: "Iniciando proceso de actualización." },
-      { time: "03:30", message: "Preparando servidores para mantenimiento." }
-    ]
-  },
-  {
-    id: "inc-002",
-    title: "Latencia elevada en API",
-    status: "resolved",
-    date: "2024-12-15",
-    description: "Se detectó un aumento temporal en los tiempos de respuesta de la API.",
-    updates: [
-      { time: "14:30", message: "Tiempos de respuesta normalizados." },
-      { time: "14:00", message: "Implementando optimizaciones." },
-      { time: "13:30", message: "Investigando causa raíz del problema." }
-    ]
-  }
-];
+const getServiceIcon = (serviceName: string) => {
+  const iconMap: Record<string, React.ElementType> = {
+    'Base de Datos': Database,
+    'Pagos (Stripe)': CreditCard,
+    'API / Edge Functions': Server,
+    'Autenticación': Shield,
+    'Email': Mail,
+    'Almacenamiento': HardDrive,
+    'Plataforma Web': Globe,
+  };
+  return iconMap[serviceName] || Activity;
+};
+
+const getServiceDescription = (serviceName: string) => {
+  const descMap: Record<string, string> = {
+    'Base de Datos': 'Almacenamiento y consultas de datos',
+    'Pagos (Stripe)': 'Procesamiento de pagos con Stripe',
+    'API / Edge Functions': 'Servicios de backend y endpoints',
+    'Autenticación': 'Sistema de login y registro',
+    'Email': 'Envío de notificaciones por correo',
+    'Almacenamiento': 'Almacenamiento de archivos e imágenes',
+    'Plataforma Web': 'Aplicación web principal y dashboard',
+  };
+  return descMap[serviceName] || 'Servicio del sistema';
+};
 
 const getStatusColor = (status: ServiceStatus) => {
   switch (status) {
@@ -193,19 +136,25 @@ const getIncidentStatusText = (status: Incident['status']) => {
 export default function SystemStatus() {
   const [email, setEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [expandedIncident, setExpandedIncident] = useState<string | null>(null);
-
-  const overallStatus = services.every(s => s.status === 'operational') 
-    ? 'operational' 
-    : services.some(s => s.status === 'outage') 
-      ? 'outage' 
-      : 'degraded';
+  
+  const { 
+    services, 
+    overallStatus, 
+    isLoading, 
+    error, 
+    lastRefresh, 
+    refresh 
+  } = useSystemStatus({ 
+    autoRefresh: true, 
+    refreshInterval: 60000 
+  });
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubscribing(true);
     
+    // TODO: Save email to database for status alerts
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     toast.success('¡Suscrito a alertas!', {
@@ -216,18 +165,11 @@ export default function SystemStatus() {
     setIsSubscribing(false);
   };
 
-  const handleRefresh = () => {
-    setLastUpdated(new Date());
-    toast.info('Estado actualizado');
+  const handleRefresh = async () => {
+    toast.info('Actualizando estado...');
+    await refresh();
+    toast.success('Estado actualizado');
   };
-
-  // Auto-refresh every 60 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLastUpdated(new Date());
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <>
@@ -257,15 +199,19 @@ export default function SystemStatus() {
 
         {/* Overall Status Banner */}
         <section className={`py-12 ${
-          overallStatus === 'operational' 
-            ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
-            : overallStatus === 'degraded'
-              ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
-              : 'bg-gradient-to-r from-red-500 to-rose-500'
+          isLoading 
+            ? 'bg-gradient-to-r from-gray-400 to-gray-500'
+            : overallStatus === 'operational' 
+              ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+              : overallStatus === 'degraded'
+                ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
+                : 'bg-gradient-to-r from-red-500 to-rose-500'
         }`}>
           <div className="max-w-7xl mx-auto px-4 text-center text-white">
             <div className="flex items-center justify-center gap-3 mb-4">
-              {overallStatus === 'operational' ? (
+              {isLoading ? (
+                <Loader2 className="w-12 h-12 animate-spin" />
+              ) : overallStatus === 'operational' ? (
                 <CheckCircle2 className="w-12 h-12" />
               ) : overallStatus === 'degraded' ? (
                 <AlertTriangle className="w-12 h-12" />
@@ -274,16 +220,23 @@ export default function SystemStatus() {
               )}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              {overallStatus === 'operational' 
-                ? 'Todos los sistemas operativos' 
-                : overallStatus === 'degraded'
-                  ? 'Algunos sistemas degradados'
-                  : 'Interrupción del servicio'
+              {isLoading 
+                ? 'Verificando estado...'
+                : overallStatus === 'operational' 
+                  ? 'Todos los sistemas operativos' 
+                  : overallStatus === 'degraded'
+                    ? 'Algunos sistemas degradados'
+                    : 'Interrupción del servicio'
               }
             </h1>
             <p className="text-white/80">
-              Última actualización: {lastUpdated.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+              Última actualización: {lastRefresh.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </p>
+            {error && (
+              <p className="mt-2 text-white/60 text-sm">
+                ⚠️ Error al obtener estado: {error}
+              </p>
+            )}
           </div>
         </section>
 
@@ -294,10 +247,11 @@ export default function SystemStatus() {
               <Button
                 variant="outline"
                 onClick={handleRefresh}
+                disabled={isLoading}
                 className="flex items-center gap-2"
               >
-                <RefreshCw className="w-4 h-4" />
-                Actualizar Estado
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                {isLoading ? 'Actualizando...' : 'Actualizar Estado'}
               </Button>
               
               <form onSubmit={handleSubscribe} className="flex gap-2 w-full sm:w-auto">
@@ -327,101 +281,75 @@ export default function SystemStatus() {
           <div className="max-w-7xl mx-auto px-4">
             <h2 className="text-2xl font-bold text-gray-900 mb-8">Estado de Servicios</h2>
             
-            <div className="grid gap-4">
-              {services.map((service, index) => {
-                const StatusIcon = getStatusIcon(service.status);
-                return (
-                  <div
-                    key={index}
-                    className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
-                          <service.icon className="w-6 h-6 text-gray-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{service.name}</h3>
-                          <p className="text-sm text-gray-500">{service.description}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-6">
-                        <div className="hidden md:flex gap-8 text-sm">
-                          <div className="text-center">
-                            <div className="text-gray-500">Uptime</div>
-                            <div className="font-semibold text-gray-900">{service.uptime}</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-gray-500">Respuesta</div>
-                            <div className="font-semibold text-gray-900">{service.responseTime}</div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${getStatusColor(service.status)} animate-pulse`}></div>
-                          <span className={`font-medium ${
-                            service.status === 'operational' ? 'text-green-600' :
-                            service.status === 'degraded' ? 'text-yellow-600' : 'text-red-600'
-                          }`}>
-                            {getStatusText(service.status)}
-                          </span>
-                        </div>
+            {isLoading && services.length === 0 ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 animate-pulse">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gray-200" />
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-1/4 mb-2" />
+                        <div className="h-3 bg-gray-100 rounded w-1/3" />
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Uptime Chart Placeholder */}
-        <section className="py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">Historial de Disponibilidad - Últimos 90 días</h2>
-            
-            <div className="grid gap-6">
-              {services.slice(0, 3).map((service, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-700">{service.name}</span>
-                    <span className="text-sm text-green-600 font-semibold">{service.uptime} uptime</span>
-                  </div>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 90 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={`flex-1 h-8 rounded-sm ${
-                          Math.random() > 0.02 ? 'bg-green-400 hover:bg-green-500' : 'bg-yellow-400 hover:bg-yellow-500'
-                        } transition-colors cursor-pointer`}
-                        title={`Día ${90 - i}: ${Math.random() > 0.02 ? '100%' : '99.5%'} disponible`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex items-center gap-6 mt-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-green-400"></div>
-                <span className="text-gray-600">Sin incidentes</span>
+                ))}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-yellow-400"></div>
-                <span className="text-gray-600">Incidente menor</span>
+            ) : (
+              <div className="grid gap-4">
+                {services.map((service, index) => {
+                  const ServiceIcon = getServiceIcon(service.name);
+                  const StatusIcon = getStatusIcon(service.status);
+                  return (
+                    <div
+                      key={index}
+                      className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
+                            <ServiceIcon className="w-6 h-6 text-gray-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{service.name}</h3>
+                            <p className="text-sm text-gray-500">{getServiceDescription(service.name)}</p>
+                            {service.message && (
+                              <p className="text-xs text-red-500 mt-1">{service.message}</p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-6">
+                          <div className="hidden md:flex gap-8 text-sm">
+                            <div className="text-center">
+                              <div className="text-gray-500">Respuesta</div>
+                              <div className="font-semibold text-gray-900">
+                                {service.responseTime > 0 ? `${service.responseTime}ms` : '-'}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${getStatusColor(service.status)} ${service.status === 'operational' ? 'animate-pulse' : ''}`}></div>
+                            <span className={`font-medium ${
+                              service.status === 'operational' ? 'text-green-600' :
+                              service.status === 'degraded' ? 'text-yellow-600' : 'text-red-600'
+                            }`}>
+                              {getStatusText(service.status)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-red-400"></div>
-                <span className="text-gray-600">Interrupción</span>
-              </div>
-            </div>
+            )}
           </div>
         </section>
 
         {/* Recent Incidents */}
-        <section className="py-12">
+        <section className="py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4">
             <h2 className="text-2xl font-bold text-gray-900 mb-8">Incidentes Recientes</h2>
             
@@ -430,11 +358,11 @@ export default function SystemStatus() {
                 {recentIncidents.map((incident) => (
                   <div
                     key={incident.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+                    className="bg-gray-50 rounded-xl shadow-sm border border-gray-100 overflow-hidden"
                   >
                     <button
                       onClick={() => setExpandedIncident(expandedIncident === incident.id ? null : incident.id)}
-                      className="w-full p-6 text-left hover:bg-gray-50 transition-colors"
+                      className="w-full p-6 text-left hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
@@ -461,7 +389,7 @@ export default function SystemStatus() {
                     </button>
                     
                     {expandedIncident === incident.id && (
-                      <div className="px-6 pb-6 border-t border-gray-100 pt-4 animate-fade-in">
+                      <div className="px-6 pb-6 border-t border-gray-200 pt-4 animate-fade-in">
                         <h4 className="font-medium text-gray-700 mb-3">Actualizaciones</h4>
                         <div className="space-y-3">
                           {incident.updates.map((update, i) => (
@@ -477,7 +405,7 @@ export default function SystemStatus() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl p-12 text-center border border-gray-100">
+              <div className="bg-gray-50 rounded-xl p-12 text-center border border-gray-100">
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Sin incidentes recientes</h3>
                 <p className="text-gray-500">No ha habido incidentes en los últimos 90 días.</p>
