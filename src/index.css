@@ -100,118 +100,134 @@
 
 @layer base {
   :root {
-    /* Primary: Blue-600 (#2563EB) */
-    --primary: 217 91% 60%;
+    /* =============================================
+       SORTAVO Premium Palette: Black & Emerald
+       ============================================= */
+    
+    /* Primary: Emerald (#059669) - Prosperity, luck, winning */
+    --primary: 160 84% 30%;
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary/Accent: Orange-500 (#F97316) */
-    --secondary: 25 95% 53%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary: Gold (#D4A016) - Premium, success, reward */
+    --secondary: 45 80% 46%;
+    --secondary-foreground: 0 0% 7%;
     
-    /* Background: Gray-100 (#F3F4F6) */
-    --background: 220 14% 96%;
-    --foreground: 221 39% 11%;
+    /* Background: Warm off-white (#FAFAF9) */
+    --background: 60 9% 98%;
+    --foreground: 0 0% 7%;
     
-    /* Card: White */
+    /* Card: Pure white with warmth */
     --card: 0 0% 100%;
-    --card-foreground: 221 39% 11%;
+    --card-foreground: 0 0% 7%;
     
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 221 39% 11%;
+    --popover-foreground: 0 0% 7%;
     
-    /* Muted: Gray-200 */
-    --muted: 220 14% 92%;
-    --muted-foreground: 220 9% 46%;
+    /* Muted: Warm gray */
+    --muted: 60 5% 94%;
+    --muted-foreground: 0 0% 40%;
     
-    /* Accent */
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent: Gold for highlights */
+    --accent: 45 80% 46%;
+    --accent-foreground: 0 0% 7%;
     
-    /* Destructive: Red-500 (#EF4444) */
-    --destructive: 0 84% 60%;
+    /* Destructive: Ruby red */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Success: Green-500 (#10B981) */
+    /* Success: Bright emerald */
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     
-    /* Warning: Yellow-400 (#FBBF24) */
-    --warning: 45 93% 56%;
-    --warning-foreground: 221 39% 11%;
+    /* Warning: Amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 7%;
     
     /* Border & Input */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 160 84% 30%;
     
     /* Radius */
-    --radius: 0.5rem;
-    --radius-sm: 0.25rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
+    --radius: 0.625rem;
+    --radius-sm: 0.375rem;
+    --radius-lg: 0.875rem;
+    --radius-xl: 1.25rem;
     
-    /* Sidebar */
+    /* Sidebar - Light mode */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 221 39% 11%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-foreground: 0 0% 7%;
+    --sidebar-primary: 160 84% 30%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 221 39% 11%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 60 5% 96%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-ring: 160 84% 30%;
     
-    /* Chart colors */
-    --chart-1: 217 91% 60%;
-    --chart-2: 25 95% 53%;
-    --chart-3: 160 84% 39%;
-    --chart-4: 45 93% 56%;
-    --chart-5: 0 84% 60%;
+    /* Chart colors - Premium palette */
+    --chart-1: 160 84% 30%;
+    --chart-2: 45 80% 46%;
+    --chart-3: 160 84% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 51%;
   }
 
   .dark {
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary: Bright Emerald */
+    --primary: 160 84% 45%;
+    --primary-foreground: 0 0% 7%;
     
-    --secondary: 25 95% 53%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary: Bright Gold */
+    --secondary: 45 85% 55%;
+    --secondary-foreground: 0 0% 7%;
     
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* Background: Deep black with warmth */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
     
-    --card: 222 47% 14%;
-    --card-foreground: 210 40% 98%;
+    /* Card: Rich dark */
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 96%;
     
-    --popover: 222 47% 14%;
-    --popover-foreground: 210 40% 98%;
+    /* Popover */
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 96%;
     
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    /* Muted */
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
     
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent: Gold */
+    --accent: 45 85% 55%;
+    --accent-foreground: 0 0% 7%;
     
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive */
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 0 0% 96%;
     
-    --success: 160 84% 39%;
-    --success-foreground: 0 0% 100%;
+    /* Success */
+    --success: 160 84% 45%;
+    --success-foreground: 0 0% 7%;
     
-    --warning: 45 93% 56%;
-    --warning-foreground: 221 39% 11%;
+    /* Warning */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 7%;
     
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    /* Border & Input */
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 160 84% 45%;
     
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 217 91% 60%;
+    /* Sidebar - Dark mode */
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 160 84% 45%;
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 160 84% 45%;
   }
 }
 
@@ -379,34 +395,70 @@
     @apply bg-card rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300;
   }
   
-  /* Gradient backgrounds */
+  /* =============================================
+     Premium Gradient System - Black & Emerald
+     ============================================= */
+  
+  /* Primary emerald gradient */
   .gradient-primary {
-    @apply bg-gradient-to-br from-primary via-primary/90 to-primary/80;
+    @apply bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500;
   }
   
-  .gradient-violet {
-    @apply bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600;
+  /* Premium black with emerald accent */
+  .gradient-premium {
+    background: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(160 30% 10%) 100%);
   }
   
+  /* Gold accent gradient */
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(45 80% 46%) 0%, hsl(38 92% 50%) 100%);
+  }
+  
+  /* Emerald to gold - winner gradient */
+  .gradient-winner {
+    background: linear-gradient(135deg, hsl(160 84% 30%) 0%, hsl(45 80% 46%) 100%);
+  }
+  
+  /* Dark luxury gradient */
+  .gradient-luxury {
+    background: linear-gradient(180deg, hsl(0 0% 3%) 0%, hsl(160 20% 8%) 100%);
+  }
+  
+  /* Success gradient */
   .gradient-success {
     @apply bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500;
   }
   
+  /* Warning gradient */
   .gradient-warning {
-    @apply bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-500;
+    @apply bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-400;
   }
   
+  /* Danger gradient */
   .gradient-danger {
     @apply bg-gradient-to-br from-red-500 via-rose-500 to-pink-500;
   }
   
-  /* Gradient text utility */
+  /* Text gradients */
   .gradient-text {
-    @apply bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 bg-clip-text text-transparent;
   }
   
   .gradient-text-primary {
-    @apply bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent;
+  }
+  
+  .gradient-text-gold {
+    @apply bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 bg-clip-text text-transparent;
+  }
+  
+  /* Glow effects */
+  .glow-emerald {
+    box-shadow: 0 0 40px hsla(160, 84%, 30%, 0.3);
+  }
+  
+  .glow-gold {
+    box-shadow: 0 0 40px hsla(45, 80%, 46%, 0.3);
   }
 }
 
