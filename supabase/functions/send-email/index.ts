@@ -37,6 +37,7 @@ const templates: Record<string, (data: any) => string> = {
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }
         .content { background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; }
+        .reference-badge { display: inline-block; background: #e0e7ff; border: 1px solid #a5b4fc; color: #4338ca; padding: 8px 16px; border-radius: 8px; font-family: monospace; font-weight: 700; font-size: 18px; margin: 10px 0; }
         .tickets { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }
         .ticket-number { display: inline-block; background: #e0e7ff; color: #4f46e5; padding: 5px 12px; border-radius: 20px; margin: 3px; font-weight: 600; }
         .total { font-size: 24px; font-weight: bold; color: #4f46e5; }
@@ -54,6 +55,13 @@ const templates: Record<string, (data: any) => string> = {
           <p>Hola <strong>${data.buyer_name}</strong>,</p>
           <p>Has reservado los siguientes boletos para <strong>${data.raffle_title}</strong>:</p>
           
+          ${data.reference_code ? `
+          <div style="text-align: center; margin: 20px 0;">
+            <p style="margin: 0 0 5px 0; color: #6b7280; font-size: 14px;">Tu clave de reservación:</p>
+            <span class="reference-badge">${data.reference_code}</span>
+          </div>
+          ` : ''}
+          
           <div class="tickets">
             ${(data.ticket_numbers || []).map((n: string) => `<span class="ticket-number">#${n}</span>`).join('')}
           </div>
@@ -63,6 +71,7 @@ const templates: Record<string, (data: any) => string> = {
           <div class="warning">
             ⏰ <strong>Tu reservación expira en ${data.timer_minutes || 15} minutos.</strong><br>
             Completa tu pago y sube tu comprobante para confirmar tus boletos.
+            ${data.reference_code ? `<br><br>📋 <strong>Usa la clave ${data.reference_code} como referencia en tu pago.</strong>` : ''}
           </div>
           
           <center>

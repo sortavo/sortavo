@@ -35,6 +35,7 @@ export function useEmails() {
     amount: number;
     currency: string;
     timerMinutes: number;
+    referenceCode?: string;
   }) => {
     return sendEmail.mutateAsync({
       to: params.to,
@@ -47,6 +48,7 @@ export function useEmails() {
         currency: params.currency,
         timer_minutes: params.timerMinutes,
         payment_url: `${window.location.origin}/r/${params.raffleSlug}/payment`,
+        reference_code: params.referenceCode,
       },
     });
   };
