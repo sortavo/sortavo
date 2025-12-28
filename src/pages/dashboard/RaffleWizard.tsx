@@ -21,6 +21,7 @@ import { Step5Design } from '@/components/raffle/wizard/Step5Design';
 import { RafflePreview } from '@/components/raffle/wizard/RafflePreview';
 import { UpgradePlanModal } from '@/components/raffle/UpgradePlanModal';
 import { checkRaffleLimit, checkTicketLimit, getSubscriptionLimits, SubscriptionTier } from '@/lib/subscription-limits';
+import { parsePrizes, serializePrizes } from '@/types/prize';
 import type { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 const STEPS = [
@@ -79,6 +80,7 @@ export default function RaffleWizard() {
       prize_images: [] as string[],
       prize_video_url: '',
       prize_terms: '',
+      prizes: [] as Array<{ id: string; name: string; value?: number | null; currency?: string | null }>,
       total_tickets: 100,
       ticket_price: 100,
       currency_code: organization?.currency_code || 'MXN',
@@ -167,11 +169,19 @@ export default function RaffleWizard() {
         ...existingCustomization,
       };
       
+      // Parse prizes from JSONB or fallback to legacy fields
+      const parsedPrizes = parsePrizes(
+        raffleData.prizes,
+        raffleData.prize_name,
+        raffleData.prize_value
+      );
+      
       form.reset({
         ...raffleData,
         customization: mergedCustomization,
+        prizes: parsedPrizes,
         packages: [],
-      });
+      } as any);
     }
   }, [existingRaffle, form]);
 
@@ -240,12 +250,20 @@ export default function RaffleWizard() {
   const handleSaveDraft = async () => {
     try {
       const values = form.getValues();
-      const { packages, ...data } = values;
+      const { packages, prizes, ...data } = values;
+      
+      // Serialize prizes and sync with legacy fields
+      const serializedPrizes = serializePrizes(prizes || []);
+      const firstPrize = serializedPrizes[0];
       
       // Ensure customization is properly built with explicit values
       const cleanedData = {
         ...data,
         customization: buildCustomizationForSave(data.customization),
+        prizes: serializedPrizes,
+        // Sync legacy fields with first prize
+        prize_name: firstPrize?.name || data.prize_name || '',
+        prize_value: firstPrize?.value ?? data.prize_value ?? 0,
       };
       
       if (isEditing && id) {
@@ -312,8 +330,10 @@ export default function RaffleWizard() {
       return;
     }
 
-    // Validate required fields
-    if (!values.title || !values.prize_name || !values.ticket_price) {
+    // Validate required fields - check prizes array instead of just prize_name
+    const prizes = values.prizes || [];
+    const firstPrizeName = prizes[0]?.name?.trim();
+    if (!values.title || !firstPrizeName || !values.ticket_price) {
       toast({ 
         title: 'Campos requeridos', 
         description: 'Completa los campos obligatorios antes de publicar',
@@ -345,12 +365,20 @@ export default function RaffleWizard() {
 
     try {
       let raffleId = id;
-      const { packages, ...data } = values;
+      const { packages, prizes: formPrizes, ...data } = values;
+      
+      // Serialize prizes and sync with legacy fields
+      const serializedPrizes = serializePrizes(formPrizes || []);
+      const firstPrize = serializedPrizes[0];
       
       // Ensure customization is properly built with explicit values
       const cleanedData = {
         ...data,
         customization: buildCustomizationForSave(data.customization),
+        prizes: serializedPrizes,
+        // Sync legacy fields with first prize
+        prize_name: firstPrize?.name || data.prize_name || '',
+        prize_value: firstPrize?.value ?? data.prize_value ?? 0,
       };
       
       if (!isEditing) {

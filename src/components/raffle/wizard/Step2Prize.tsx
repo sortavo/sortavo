@@ -5,10 +5,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES } from '@/lib/currency-utils';
-import { ImagePlus, Video, X, Loader2, GripVertical } from 'lucide-react';
+import { ImagePlus, Video, X, Loader2, GripVertical, Plus, Trash2, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { REQUIRED_FIELDS } from '@/hooks/useWizardValidation';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Prize, createEmptyPrize, parsePrizes } from '@/types/prize';
 
 interface SortableImageProps {
   id: string;
@@ -103,32 +103,53 @@ const MAX_IMAGES = 10;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export const Step2Prize = ({ form }: Step2Props) => {
-  const currency = form.watch('currency_code') || 'MXN';
-  const currencyData = CURRENCIES.find(c => c.code === currency);
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const defaultCurrency = form.watch('currency_code') || 'MXN';
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const prizeImages = form.watch('prize_images') || [];
+  const prizes: Prize[] = form.watch('prizes') || [];
 
-  const handleBlur = (field: string) => {
-    setTouchedFields(prev => ({ ...prev, [field]: true }));
-  };
+  // Initialize prizes from legacy fields if empty
+  useEffect(() => {
+    const currentPrizes = form.getValues('prizes');
+    if (!currentPrizes || (Array.isArray(currentPrizes) && currentPrizes.length === 0)) {
+      const prizeName = form.getValues('prize_name');
+      const prizeValue = form.getValues('prize_value');
+      const initialPrizes = parsePrizes([], prizeName, prizeValue);
+      form.setValue('prizes', initialPrizes);
+    }
+  }, [form]);
 
-  const getFieldError = (field: string): string | null => {
-    if (!touchedFields[field]) return null;
-    const value = form.watch(field);
-    
-    if (field === 'prize_name') {
-      if (!value || value.trim().length === 0) {
-        return REQUIRED_FIELDS.prize_name.message;
+  const updatePrize = (index: number, field: keyof Prize, value: string | number | null) => {
+    const currentPrizes = [...(form.getValues('prizes') || [])];
+    if (currentPrizes[index]) {
+      currentPrizes[index] = { ...currentPrizes[index], [field]: value };
+      form.setValue('prizes', currentPrizes);
+      
+      // Sync first prize with legacy fields
+      if (index === 0) {
+        if (field === 'name') {
+          form.setValue('prize_name', value as string);
+        } else if (field === 'value') {
+          form.setValue('prize_value', value as number);
+        }
       }
     }
-    return null;
   };
 
-  const prizeNameError = getFieldError('prize_name');
+  const addPrize = () => {
+    const currentPrizes = form.getValues('prizes') || [];
+    form.setValue('prizes', [...currentPrizes, createEmptyPrize()]);
+  };
+
+  const removePrize = (index: number) => {
+    if (index === 0) return; // Can't remove first prize
+    const currentPrizes = [...(form.getValues('prizes') || [])];
+    currentPrizes.splice(index, 1);
+    form.setValue('prizes', currentPrizes);
+  };
 
   const uploadImage = async (file: File): Promise<string | null> => {
     if (file.size > MAX_FILE_SIZE) {
@@ -243,90 +264,117 @@ export const Step2Prize = ({ form }: Step2Props) => {
     fileInputRef.current?.click();
   };
 
+  const firstPrizeHasName = prizes[0]?.name?.trim().length > 0;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configuración del Premio</CardTitle>
-        <CardDescription>Define qué van a ganar los participantes</CardDescription>
+        <CardTitle>Configuración de Premios</CardTitle>
+        <CardDescription>Define los premios que van a ganar los participantes</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <FormField
-          control={form.control}
-          name="prize_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-1">
-                Nombre del Premio
-                <span className="text-destructive">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="Ej: Toyota Corolla 2024" 
-                  {...field} 
-                  onBlur={() => handleBlur('prize_name')}
-                  className={cn(prizeNameError && "border-destructive focus-visible:ring-destructive")}
-                />
-              </FormControl>
-              {prizeNameError && (
-                <p className="text-sm font-medium text-destructive">{prizeNameError}</p>
-              )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="prize_value"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Valor del Premio</FormLabel>
-                <FormControl>
+        {/* Prize Rows */}
+        <div className="space-y-4">
+          <FormLabel className="flex items-center gap-2">
+            <Gift className="h-4 w-4" />
+            Premios del Sorteo
+          </FormLabel>
+          
+          <div className="space-y-3">
+            {prizes.map((prize, index) => (
+              <div 
+                key={prize.id} 
+                className={cn(
+                  "grid gap-3 p-4 rounded-lg border bg-muted/30",
+                  index === 0 && !firstPrizeHasName && "border-destructive/50"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Premio {index + 1} {index === 0 && <span className="text-destructive">*</span>}
+                  </span>
+                  {index > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removePrize(index)}
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-[1fr,120px,100px] gap-3">
+                  {/* Prize Name */}
+                  <Input
+                    placeholder="Nombre del premio (ej: iPhone 16 Pro Max)"
+                    value={prize.name || ''}
+                    onChange={(e) => updatePrize(index, 'name', e.target.value)}
+                    className={cn(
+                      index === 0 && !firstPrizeHasName && "border-destructive focus-visible:ring-destructive"
+                    )}
+                  />
+                  
+                  {/* Prize Value */}
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      {currencyData?.symbol || '$'}
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      $
                     </span>
-                    <Input 
-                      type="number" 
-                      placeholder="0.00" 
-                      className="pl-8"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    <Input
+                      type="number"
+                      placeholder="Valor"
+                      className="pl-7"
+                      value={prize.value ?? ''}
+                      onChange={(e) => updatePrize(index, 'value', e.target.value ? parseFloat(e.target.value) : null)}
                     />
                   </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="currency_code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Moneda</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || 'MXN'}>
-                  <FormControl>
+                  
+                  {/* Currency */}
+                  <Select 
+                    value={prize.currency || defaultCurrency} 
+                    onValueChange={(value) => updatePrize(index, 'currency', value)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {CURRENCIES.map((curr) => (
-                      <SelectItem key={curr.code} value={curr.code}>
-                        {curr.flag} {curr.code} - {curr.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    <SelectContent>
+                      {CURRENCIES.map((curr) => (
+                        <SelectItem key={curr.code} value={curr.code}>
+                          {curr.flag} {curr.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add Prize Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addPrize}
+            className="w-full border-dashed"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar otro premio
+          </Button>
+
+          {!firstPrizeHasName && (
+            <p className="text-sm text-destructive">
+              El primer premio es requerido
+            </p>
+          )}
+          
+          <FormDescription>
+            El valor y la moneda son opcionales. Puedes agregar tantos premios como desees.
+          </FormDescription>
         </div>
 
+        {/* Prize Images */}
         <FormField
           control={form.control}
           name="prize_images"

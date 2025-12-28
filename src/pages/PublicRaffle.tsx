@@ -343,6 +343,18 @@ export default function PublicRaffle() {
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 leading-tight">
                     {raffle.prize_name}
                   </h1>
+                  
+                  {/* Show additional prizes from prizes array */}
+                  {Array.isArray((raffle as any).prizes) && (raffle as any).prizes.length > 1 && (
+                    <div className="flex flex-wrap gap-2">
+                      {(raffle as any).prizes.slice(1).map((prize: any, idx: number) => (
+                        <span key={prize.id || idx} className="text-sm bg-muted px-3 py-1 rounded-full text-muted-foreground">
+                          + {prize.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
                   <p className="text-base sm:text-lg lg:text-xl text-gray-600">
                     {raffle.title}
                   </p>
