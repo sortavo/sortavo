@@ -125,6 +125,22 @@ export const CLOSE_SALE_OPTIONS = [
   { value: 48, label: '48 horas antes' },
 ];
 
+export const CLOSE_SALE_TIME_UNITS = [
+  { value: 'hours', label: 'Horas', multiplier: 1 },
+  { value: 'days', label: 'Días', multiplier: 24 },
+];
+
+export const MAX_CLOSE_SALE_HOURS = 168; // Máximo 7 días
+
+export const formatCloseSaleTime = (hours: number): string => {
+  if (hours === 0) return 'Sin límite';
+  if (hours >= 24 && hours % 24 === 0) {
+    const days = hours / 24;
+    return `${days} día${days > 1 ? 's' : ''} antes`;
+  }
+  return `${hours} hora${hours > 1 ? 's' : ''} antes`;
+};
+
 export const RESERVATION_TIME_OPTIONS = [
   { value: 15, label: '15 minutos', description: 'Rápido - Ideal para rifas pequeñas' },
   { value: 30, label: '30 minutos', description: 'Estándar - Tiempo suficiente para transferencias' },
