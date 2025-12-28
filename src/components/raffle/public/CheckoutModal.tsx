@@ -211,6 +211,7 @@ export function CheckoutModal({
         amount: total,
         currency: raffle.currency_code || 'MXN',
         timerMinutes: raffle.reservation_time_minutes || 15,
+        referenceCode: result.referenceCode,
       }).catch(console.error);
 
       // Notify organizer about pending payment (non-blocking)
