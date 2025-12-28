@@ -153,14 +153,183 @@ export const formatReservationTime = (minutes: number): string => {
 
 export const MAX_RESERVATION_MINUTES = 10080; // 7 days
 
-export const RAFFLE_TEMPLATES = [
-  { id: 'modern', name: 'Moderno', description: 'Diseño limpio y contemporáneo' },
-  { id: 'classic', name: 'Clásico', description: 'Estilo tradicional elegante' },
-  { id: 'minimal', name: 'Minimalista', description: 'Simple y enfocado' },
-  { id: 'festive', name: 'Festivo', description: 'Colorido y celebratorio' },
-  { id: 'elegant', name: 'Elegante', description: 'Sofisticado y lujoso' },
-  { id: 'sports', name: 'Deportivo', description: 'Dinámico y energético' },
+export interface RaffleTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    cardBg: string;
+    text: string;
+    textMuted: string;
+  };
+  fonts: {
+    title: string;
+    body: string;
+  };
+  effects: {
+    borderRadius: string;
+    shadow: string;
+    gradient: string;
+    pattern?: string;
+  };
+}
+
+export const RAFFLE_TEMPLATES: RaffleTemplate[] = [
+  {
+    id: 'modern',
+    name: 'Moderno',
+    description: 'Diseño limpio y contemporáneo',
+    icon: '🎯',
+    colors: {
+      primary: '#2563EB',
+      secondary: '#3B82F6',
+      accent: '#F59E0B',
+      background: '#FFFFFF',
+      cardBg: '#F8FAFC',
+      text: '#0F172A',
+      textMuted: '#64748B',
+    },
+    fonts: {
+      title: 'Montserrat',
+      body: 'Inter',
+    },
+    effects: {
+      borderRadius: '1rem',
+      shadow: '0 10px 40px -10px rgba(0,0,0,0.15)',
+      gradient: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)',
+    },
+  },
+  {
+    id: 'classic',
+    name: 'Clásico',
+    description: 'Estilo tradicional elegante',
+    icon: '🏛️',
+    colors: {
+      primary: '#7C3AED',
+      secondary: '#8B5CF6',
+      accent: '#D97706',
+      background: '#FFFBF5',
+      cardBg: '#FEF7ED',
+      text: '#1C1917',
+      textMuted: '#78716C',
+    },
+    fonts: {
+      title: 'Playfair Display',
+      body: 'Lora',
+    },
+    effects: {
+      borderRadius: '0.5rem',
+      shadow: '0 4px 20px rgba(0,0,0,0.1)',
+      gradient: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
+    },
+  },
+  {
+    id: 'minimal',
+    name: 'Minimalista',
+    description: 'Simple y enfocado',
+    icon: '⬜',
+    colors: {
+      primary: '#18181B',
+      secondary: '#27272A',
+      accent: '#EF4444',
+      background: '#FFFFFF',
+      cardBg: '#FAFAFA',
+      text: '#09090B',
+      textMuted: '#71717A',
+    },
+    fonts: {
+      title: 'Inter',
+      body: 'Inter',
+    },
+    effects: {
+      borderRadius: '0.375rem',
+      shadow: '0 1px 3px rgba(0,0,0,0.08)',
+      gradient: 'linear-gradient(135deg, #18181B 0%, #3F3F46 100%)',
+    },
+  },
+  {
+    id: 'festive',
+    name: 'Festivo',
+    description: 'Colorido y celebratorio',
+    icon: '🎉',
+    colors: {
+      primary: '#E11D48',
+      secondary: '#F43F5E',
+      accent: '#FBBF24',
+      background: '#FFF7ED',
+      cardBg: '#FFFBEB',
+      text: '#1F2937',
+      textMuted: '#6B7280',
+    },
+    fonts: {
+      title: 'Poppins',
+      body: 'Nunito',
+    },
+    effects: {
+      borderRadius: '1.5rem',
+      shadow: '0 20px 50px -15px rgba(225,29,72,0.25)',
+      gradient: 'linear-gradient(135deg, #E11D48 0%, #FB7185 50%, #FBBF24 100%)',
+      pattern: 'radial-gradient(circle at 2px 2px, rgba(251,191,36,0.3) 1px, transparent 0)',
+    },
+  },
+  {
+    id: 'elegant',
+    name: 'Elegante',
+    description: 'Sofisticado y lujoso',
+    icon: '✨',
+    colors: {
+      primary: '#0F172A',
+      secondary: '#1E293B',
+      accent: '#D4AF37',
+      background: '#0F172A',
+      cardBg: '#1E293B',
+      text: '#F8FAFC',
+      textMuted: '#94A3B8',
+    },
+    fonts: {
+      title: 'Cormorant Garamond',
+      body: 'Raleway',
+    },
+    effects: {
+      borderRadius: '0.25rem',
+      shadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+      gradient: 'linear-gradient(135deg, #D4AF37 0%, #F5E6A3 50%, #D4AF37 100%)',
+    },
+  },
+  {
+    id: 'sports',
+    name: 'Deportivo',
+    description: 'Dinámico y energético',
+    icon: '⚡',
+    colors: {
+      primary: '#16A34A',
+      secondary: '#22C55E',
+      accent: '#EA580C',
+      background: '#ECFDF5',
+      cardBg: '#F0FDF4',
+      text: '#14532D',
+      textMuted: '#4D7C0F',
+    },
+    fonts: {
+      title: 'Bebas Neue',
+      body: 'Roboto',
+    },
+    effects: {
+      borderRadius: '0.75rem',
+      shadow: '0 10px 30px -5px rgba(22,163,74,0.3)',
+      gradient: 'linear-gradient(135deg, #16A34A 0%, #22C55E 50%, #EA580C 100%)',
+    },
+  },
 ];
+
+export const getTemplateById = (templateId: string | null | undefined): RaffleTemplate => {
+  return RAFFLE_TEMPLATES.find(t => t.id === templateId) || RAFFLE_TEMPLATES[0];
+};
 
 export const GOOGLE_FONTS_TITLES = [
   'Montserrat',
