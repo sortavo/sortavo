@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { RafflePreview } from '@/components/raffle/wizard/RafflePreview';
 import { UpgradePlanModal } from '@/components/raffle/UpgradePlanModal';
 import { checkRaffleLimit, checkTicketLimit, getSubscriptionLimits, SubscriptionTier } from '@/lib/subscription-limits';
 import { parsePrizes, serializePrizes } from '@/types/prize';
+import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 const STEPS = [
@@ -55,6 +57,28 @@ export default function RaffleWizard() {
   const { methods: paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods();
   
   const { data: existingRaffle, isLoading: isLoadingRaffle } = useRaffleById(id);
+  
+  // Query para cargar paquetes existentes
+  const { data: existingPackages } = useQuery({
+    queryKey: ['raffle-packages', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase
+        .from('raffle_packages')
+        .select('*')
+        .eq('raffle_id', id)
+        .order('display_order');
+      if (error) throw error;
+      return data.map(pkg => ({
+        quantity: pkg.quantity,
+        price: Number(pkg.price),
+        discount_percent: Number(pkg.discount_percent) || 0,
+        label: pkg.label || '',
+        display_order: pkg.display_order || 0,
+      }));
+    },
+    enabled: !!id,
+  });
   
   const [currentStep, setCurrentStep] = useState(1);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -179,10 +203,10 @@ export default function RaffleWizard() {
         ...raffleData,
         customization: mergedCustomization,
         prizes: parsedPrizes,
-        packages: [],
+        packages: existingPackages || [],
       } as any);
     }
-  }, [existingRaffle, form]);
+  }, [existingRaffle, existingPackages, form]);
 
   const handleNext = () => {
     if (currentStep < 5) {
@@ -265,13 +289,42 @@ export default function RaffleWizard() {
         prize_value: firstPrize?.value ?? data.prize_value ?? 0,
       };
       
+      let raffleId = id;
+      
       if (isEditing && id) {
         await updateRaffle.mutateAsync({ id, data: cleanedData as unknown as TablesUpdate<'raffles'> });
-        toast({ title: 'Cambios guardados', description: 'La configuración se actualizó correctamente' });
       } else {
         const result = await createRaffle.mutateAsync(cleanedData as unknown as TablesInsert<'raffles'>);
+        raffleId = result.id;
+      }
+      
+      // Guardar paquetes de boletos
+      if (raffleId && packages && packages.length > 0) {
+        // Eliminar paquetes existentes
+        await supabase.from('raffle_packages').delete().eq('raffle_id', raffleId);
+        
+        // Insertar nuevos paquetes
+        const packagesToInsert = packages
+          .filter((pkg: any) => pkg.quantity > 0 && pkg.price > 0)
+          .map((pkg: any, idx: number) => ({
+            raffle_id: raffleId,
+            quantity: pkg.quantity,
+            price: pkg.price,
+            discount_percent: pkg.discount_percent || 0,
+            label: pkg.label || null,
+            display_order: idx,
+          }));
+        
+        if (packagesToInsert.length > 0) {
+          await supabase.from('raffle_packages').insert(packagesToInsert);
+        }
+      }
+      
+      if (isEditing && id) {
+        toast({ title: 'Cambios guardados', description: 'La configuración se actualizó correctamente' });
+      } else {
         toast({ title: 'Borrador guardado' });
-        navigate(`/dashboard/raffles/${result.id}/edit`);
+        navigate(`/dashboard/raffles/${raffleId}/edit`);
       }
     } catch (error) {
       console.error('Error saving draft:', error);
@@ -385,6 +438,28 @@ export default function RaffleWizard() {
         raffleId = result.id;
       } else {
         await updateRaffle.mutateAsync({ id: id!, data: cleanedData as unknown as TablesUpdate<'raffles'> });
+      }
+
+      // Guardar paquetes de boletos antes de publicar
+      if (raffleId && packages && packages.length > 0) {
+        // Eliminar paquetes existentes
+        await supabase.from('raffle_packages').delete().eq('raffle_id', raffleId);
+        
+        // Insertar nuevos paquetes
+        const packagesToInsert = packages
+          .filter((pkg: any) => pkg.quantity > 0 && pkg.price > 0)
+          .map((pkg: any, idx: number) => ({
+            raffle_id: raffleId,
+            quantity: pkg.quantity,
+            price: pkg.price,
+            discount_percent: pkg.discount_percent || 0,
+            label: pkg.label || null,
+            display_order: idx,
+          }));
+        
+        if (packagesToInsert.length > 0) {
+          await supabase.from('raffle_packages').insert(packagesToInsert);
+        }
       }
 
       await publishRaffle.mutateAsync(raffleId!);
