@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.subscription-status]
 verify_jwt = false
+
+[functions.backfill-order-totals]
+verify_jwt = false
