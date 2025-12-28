@@ -18,6 +18,8 @@ import {
 import { CURRENCIES } from '@/lib/currency-utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { REQUIRED_FIELDS } from '@/hooks/useWizardValidation';
 
 interface Step3Props {
   form: UseFormReturn<any>;
@@ -39,11 +41,36 @@ export const Step3Tickets = ({ form }: Step3Props) => {
     { quantity: 5, price: 0, discount_percent: 15, label: 'Popular', display_order: 1 },
     { quantity: 10, price: 0, discount_percent: 20, label: 'Mejor Valor', display_order: 2 },
   ]);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   const currency = form.watch('currency_code') || 'MXN';
   const currencyData = CURRENCIES.find(c => c.code === currency);
   const basePrice = form.watch('ticket_price') || 0;
   const reservationTime = form.watch('reservation_time_minutes') || 15;
+  
+  const handleBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+  };
+
+  const getFieldError = (field: string): string | null => {
+    if (!touchedFields[field]) return null;
+    const value = form.watch(field);
+    
+    if (field === 'ticket_price') {
+      if (typeof value !== 'number' || value <= 0) {
+        return REQUIRED_FIELDS.ticket_price.message;
+      }
+    }
+    if (field === 'total_tickets') {
+      if (typeof value !== 'number' || value <= 0) {
+        return REQUIRED_FIELDS.total_tickets.message;
+      }
+    }
+    return null;
+  };
+
+  const ticketPriceError = getFieldError('ticket_price');
+  const totalTicketsError = getFieldError('total_tickets');
   
   // Custom reservation time state
   const [isCustomTime, setIsCustomTime] = useState(false);
@@ -137,13 +164,19 @@ export const Step3Tickets = ({ form }: Step3Props) => {
               name="total_tickets"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Total de Boletos *</FormLabel>
+                  <FormLabel className="flex items-center gap-1">
+                    Total de Boletos
+                    <span className="text-destructive">*</span>
+                  </FormLabel>
                   <Select 
-                    onValueChange={(v) => field.onChange(parseInt(v))} 
+                    onValueChange={(v) => {
+                      field.onChange(parseInt(v));
+                      handleBlur('total_tickets');
+                    }} 
                     defaultValue={field.value?.toString()}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className={cn(totalTicketsError && "border-destructive")}>
                         <SelectValue placeholder="Selecciona cantidad" />
                       </SelectTrigger>
                     </FormControl>
@@ -158,6 +191,9 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                   <FormDescription>
                     Tu plan permite hasta {ticketLimit.toLocaleString()} boletos
                   </FormDescription>
+                  {totalTicketsError && (
+                    <p className="text-sm font-medium text-destructive">{totalTicketsError}</p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -168,7 +204,10 @@ export const Step3Tickets = ({ form }: Step3Props) => {
               name="ticket_price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Precio por Boleto *</FormLabel>
+                  <FormLabel className="flex items-center gap-1">
+                    Precio por Boleto
+                    <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -177,12 +216,16 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                       <Input 
                         type="number" 
                         placeholder="100" 
-                        className="pl-8"
+                        className={cn("pl-8", ticketPriceError && "border-destructive focus-visible:ring-destructive")}
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onBlur={() => handleBlur('ticket_price')}
                       />
                     </div>
                   </FormControl>
+                  {ticketPriceError && (
+                    <p className="text-sm font-medium text-destructive">{ticketPriceError}</p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

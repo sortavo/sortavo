@@ -1,11 +1,14 @@
 import { UseFormReturn } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RAFFLE_CATEGORIES, generateSlug } from '@/lib/raffle-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { REQUIRED_FIELDS } from '@/hooks/useWizardValidation';
+import { useState } from 'react';
 
 interface Step1Props {
   form: UseFormReturn<any>;
@@ -14,6 +17,7 @@ interface Step1Props {
 export const Step1BasicInfo = ({ form }: Step1Props) => {
   const { id } = useParams();
   const isEditing = !!id;
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   const handleTitleChange = (value: string) => {
     form.setValue('title', value);
@@ -22,6 +26,24 @@ export const Step1BasicInfo = ({ form }: Step1Props) => {
       form.setValue('slug', generateSlug(value));
     }
   };
+
+  const handleBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+  };
+
+  const getFieldError = (field: string): string | null => {
+    if (!touchedFields[field]) return null;
+    const value = form.watch(field);
+    
+    if (field === 'title') {
+      if (!value || value.trim().length < 3) {
+        return REQUIRED_FIELDS.title.message;
+      }
+    }
+    return null;
+  };
+
+  const titleError = getFieldError('title');
 
   return (
     <Card>
@@ -35,17 +57,25 @@ export const Step1BasicInfo = ({ form }: Step1Props) => {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Título del Sorteo *</FormLabel>
+              <FormLabel className="flex items-center gap-1">
+                Título del Sorteo
+                <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Ej: Gran Sorteo de Navidad" 
                   {...field}
                   onChange={(e) => handleTitleChange(e.target.value)}
+                  onBlur={() => handleBlur('title')}
+                  className={cn(titleError && "border-destructive focus-visible:ring-destructive")}
                 />
               </FormControl>
               <FormDescription>
                 URL: sortavo.com/r/{form.watch('slug') || 'tu-sorteo'}
               </FormDescription>
+              {titleError && (
+                <p className="text-sm font-medium text-destructive">{titleError}</p>
+              )}
               <FormMessage />
             </FormItem>
           )}

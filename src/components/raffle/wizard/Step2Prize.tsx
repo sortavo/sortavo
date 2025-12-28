@@ -6,6 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES } from '@/lib/currency-utils';
 import { ImagePlus, Video } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { REQUIRED_FIELDS } from '@/hooks/useWizardValidation';
+import { useState } from 'react';
 
 interface Step2Props {
   form: UseFormReturn<any>;
@@ -14,6 +17,25 @@ interface Step2Props {
 export const Step2Prize = ({ form }: Step2Props) => {
   const currency = form.watch('currency_code') || 'MXN';
   const currencyData = CURRENCIES.find(c => c.code === currency);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const handleBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+  };
+
+  const getFieldError = (field: string): string | null => {
+    if (!touchedFields[field]) return null;
+    const value = form.watch(field);
+    
+    if (field === 'prize_name') {
+      if (!value || value.trim().length === 0) {
+        return REQUIRED_FIELDS.prize_name.message;
+      }
+    }
+    return null;
+  };
+
+  const prizeNameError = getFieldError('prize_name');
 
   return (
     <Card>
@@ -27,10 +49,21 @@ export const Step2Prize = ({ form }: Step2Props) => {
           name="prize_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nombre del Premio *</FormLabel>
+              <FormLabel className="flex items-center gap-1">
+                Nombre del Premio
+                <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Ej: Toyota Corolla 2024" {...field} />
+                <Input 
+                  placeholder="Ej: Toyota Corolla 2024" 
+                  {...field} 
+                  onBlur={() => handleBlur('prize_name')}
+                  className={cn(prizeNameError && "border-destructive focus-visible:ring-destructive")}
+                />
               </FormControl>
+              {prizeNameError && (
+                <p className="text-sm font-medium text-destructive">{prizeNameError}</p>
+              )}
               <FormMessage />
             </FormItem>
           )}
