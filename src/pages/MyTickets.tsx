@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { VirtualizedTicketList } from "@/components/ui/VirtualizedTicketList";
 import { useMyTickets } from "@/hooks/usePublicRaffle";
+import { useBulkTicketDownload } from "@/hooks/useBulkTicketDownload";
 import { useAuth } from "@/hooks/useAuth";
 import { TicketQRCode } from "@/components/ticket/TicketQRCode";
 import { DownloadableTicket } from "@/components/ticket/DownloadableTicket";
@@ -14,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Loader2, Ticket, Search, QrCode, ChevronRight, Calendar, Trophy, 
   Clock, CheckCircle2, AlertCircle, Download, Eye, Mail, User, MapPin,
-  Hourglass, Hash
+  Hourglass, Hash, FileDown
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -63,6 +64,7 @@ export default function MyTickets() {
   const [ticketSearch, setTicketSearch] = useState('');
 
   const { data: tickets, isLoading } = useMyTickets(searchValue, searchType);
+  const { generatePDF, isGenerating } = useBulkTicketDownload();
 
   const handleSearch = () => {
     const trimmed = searchInput.trim();
@@ -263,6 +265,21 @@ export default function MyTickets() {
                   <p className="text-xs text-muted-foreground">Pendientes</p>
                 </button>
               </div>
+
+              {/* Download All Button */}
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => generatePDF(tickets || [])}
+                disabled={isGenerating || !tickets?.length}
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4" />
+                )}
+                {isGenerating ? 'Generando PDF...' : `Descargar todos (${tickets?.length || 0} boletos)`}
+              </Button>
 
               {/* Ticket Number Search */}
               <div className="relative">
