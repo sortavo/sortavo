@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -73,7 +74,19 @@ export function ApprovalsTab({ raffleId, raffleTitle = '', raffleSlug = '', tick
 
   const reservedTickets = ticketsData?.tickets || [];
 
-  // Group tickets by reference code into orders
+  const { data: rafflePackages = [] } = useQuery({
+    queryKey: ['raffle-packages', raffleId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('raffle_packages')
+        .select('quantity, price')
+        .eq('raffle_id', raffleId)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const orderGroups = useMemo(() => {
     const groups: Record<string, OrderGroup> = {};
     
@@ -261,10 +274,13 @@ export function ApprovalsTab({ raffleId, raffleTitle = '', raffleSlug = '', tick
     const isExpired = timeRemaining === 'Expirado';
     const isExpanded = expandedOrders.has(order.referenceCode);
     const ticketCount = order.tickets.length;
-    // Use saved orderTotal (with discount) if available, otherwise calculate from price
-    const totalAmount = order.orderTotal ?? (ticketCount * ticketPrice);
+    const unitTotal = ticketCount * ticketPrice;
+    const packagePrice = (rafflePackages as any[]).find(p => p.quantity === ticketCount)?.price;
+    const packageTotal = packagePrice != null ? Number(packagePrice) : unitTotal;
 
-    return (
+    // Use saved orderTotal (with discount) if available, otherwise package pricing, otherwise unit pricing
+    const totalAmount = order.orderTotal ?? packageTotal;
+
       <Card className={cn(
         'transition-all',
         isExpired && 'border-destructive/50'

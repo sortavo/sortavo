@@ -177,8 +177,17 @@ export default function PaymentInstructions() {
     );
   }
 
-  // Use passed totalAmount (with package discount) or fallback to recalculating
-  const totalAmount = passedTotalAmount ?? tickets.length * Number(raffle!.ticket_price);
+  // Prefer package pricing when ticket count matches a package (covers old reservations too)
+  const ticketCount = tickets.length;
+  const unitTotal = ticketCount * Number(raffle!.ticket_price);
+  const packagePrice = raffle?.packages?.find((p: any) => p.quantity === ticketCount)?.price;
+  const packageTotal = packagePrice != null ? Number(packagePrice) : unitTotal;
+
+  let totalAmount = passedTotalAmount ?? packageTotal;
+  // If we received the full unitTotal but a package exists, correct it to the package total
+  if (packagePrice != null && totalAmount === unitTotal) {
+    totalAmount = packageTotal;
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
