@@ -5,19 +5,30 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES } from '@/lib/currency-utils';
-import { ImagePlus, Video } from 'lucide-react';
+import { ImagePlus, Video, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { REQUIRED_FIELDS } from '@/hooks/useWizardValidation';
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 
 interface Step2Props {
   form: UseFormReturn<any>;
 }
 
+const MAX_IMAGES = 10;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 export const Step2Prize = ({ form }: Step2Props) => {
   const currency = form.watch('currency_code') || 'MXN';
   const currencyData = CURRENCIES.find(c => c.code === currency);
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const prizeImages = form.watch('prize_images') || [];
 
   const handleBlur = (field: string) => {
     setTouchedFields(prev => ({ ...prev, [field]: true }));
@@ -36,6 +47,95 @@ export const Step2Prize = ({ form }: Step2Props) => {
   };
 
   const prizeNameError = getFieldError('prize_name');
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`${file.name} es muy grande. Máximo 5MB.`);
+      return null;
+    }
+
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    
+    if (!fileExt || !allowedExts.includes(fileExt)) {
+      toast.error(`${file.name} no es un formato válido. Use JPG, PNG, WebP o GIF.`);
+      return null;
+    }
+
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `prizes/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('prize-images')
+      .upload(filePath, file);
+
+    if (error) {
+      console.error('Upload error:', error);
+      toast.error(`Error al subir ${file.name}`);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('prize-images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const handleFilesSelected = useCallback(async (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const currentImages = form.getValues('prize_images') || [];
+    
+    if (currentImages.length + fileArray.length > MAX_IMAGES) {
+      toast.error(`Máximo ${MAX_IMAGES} imágenes permitidas`);
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const uploadedUrls: string[] = [];
+    
+    for (let i = 0; i < fileArray.length; i++) {
+      const url = await uploadImage(fileArray[i]);
+      if (url) {
+        uploadedUrls.push(url);
+      }
+      setUploadProgress(((i + 1) / fileArray.length) * 100);
+    }
+
+    if (uploadedUrls.length > 0) {
+      form.setValue('prize_images', [...currentImages, ...uploadedUrls]);
+      toast.success(`${uploadedUrls.length} imagen(es) subida(s)`);
+    }
+
+    setIsUploading(false);
+    setUploadProgress(0);
+  }, [form]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFilesSelected(e.dataTransfer.files);
+    }
+  }, [handleFilesSelected]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleRemoveImage = (index: number) => {
+    const currentImages = [...(form.getValues('prize_images') || [])];
+    currentImages.splice(index, 1);
+    form.setValue('prize_images', currentImages);
+  };
+
+  const handleDropZoneClick = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <Card>
@@ -128,18 +228,75 @@ export const Step2Prize = ({ form }: Step2Props) => {
             <FormItem>
               <FormLabel>Imágenes del Premio</FormLabel>
               <FormControl>
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                  <ImagePlus className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Arrastra imágenes aquí o haz clic para seleccionar
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Máximo 10 imágenes, 5MB cada una
-                  </p>
+                <div className="space-y-4">
+                  {/* Image preview grid */}
+                  {prizeImages.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {prizeImages.map((url: string, index: number) => (
+                        <div key={index} className="relative group aspect-square">
+                          <img
+                            src={url}
+                            alt={`Premio ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Upload dropzone */}
+                  {prizeImages.length < MAX_IMAGES && (
+                    <div
+                      onClick={handleDropZoneClick}
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      className={cn(
+                        "border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer",
+                        isUploading && "pointer-events-none opacity-50"
+                      )}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => e.target.files && handleFilesSelected(e.target.files)}
+                      />
+                      
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-12 h-12 mx-auto text-primary mb-3 animate-spin" />
+                          <p className="text-sm text-muted-foreground">
+                            Subiendo imágenes... {Math.round(uploadProgress)}%
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <ImagePlus className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                          <p className="text-sm text-muted-foreground">
+                            Arrastra imágenes aquí o haz clic para seleccionar
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Máximo {MAX_IMAGES} imágenes, 5MB cada una
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </FormControl>
               <FormDescription>
-                Las imágenes se mostrarán en la galería del sorteo
+                Las imágenes se mostrarán en la galería del sorteo ({prizeImages.length}/{MAX_IMAGES})
               </FormDescription>
               <FormMessage />
             </FormItem>
