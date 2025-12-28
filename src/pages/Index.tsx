@@ -181,7 +181,7 @@ const Index = () => {
 
             <div className="hidden md:flex items-center gap-3">
               <Link to="/auth">
-                <Button variant="ghost" className="font-medium">
+                <Button variant="ghost" className="font-medium text-gray-200 hover:text-white hover:bg-white/10">
                   Iniciar Sesión
                 </Button>
               </Link>
