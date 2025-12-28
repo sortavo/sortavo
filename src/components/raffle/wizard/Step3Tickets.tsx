@@ -43,22 +43,35 @@ export const Step3Tickets = ({ form }: Step3Props) => {
     { quantity: 5, price: 0, discount_percent: 0, label: '', display_order: 1 },
     { quantity: 10, price: 0, discount_percent: 0, label: '', display_order: 2 },
   ]);
+  const [packagesInitialized, setPackagesInitialized] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   const currency = form.watch('currency_code') || 'MXN';
   const currencyData = CURRENCIES.find(c => c.code === currency);
   const basePrice = form.watch('ticket_price') || 0;
   const reservationTime = form.watch('reservation_time_minutes') || 15;
+  const formPackages = form.watch('packages');
   
-  // Initialize package prices when basePrice changes
+  // Sincronizar estado local con paquetes del form (cargados de la BD)
   useEffect(() => {
-    if (basePrice > 0) {
+    if (!packagesInitialized && formPackages && Array.isArray(formPackages) && formPackages.length > 0) {
+      const validPackages = formPackages.filter((pkg: Package) => pkg.quantity > 0);
+      if (validPackages.length > 0) {
+        setPackages(validPackages);
+        setPackagesInitialized(true);
+      }
+    }
+  }, [formPackages, packagesInitialized]);
+  
+  // Initialize package prices when basePrice changes (solo para paquetes nuevos sin precio)
+  useEffect(() => {
+    if (basePrice > 0 && !packagesInitialized) {
       setPackages(prev => prev.map(pkg => ({
         ...pkg,
         price: pkg.price === 0 ? basePrice * pkg.quantity : pkg.price
       })));
     }
-  }, [basePrice]);
+  }, [basePrice, packagesInitialized]);
 
   const handleBlur = (field: string) => {
     setTouchedFields(prev => ({ ...prev, [field]: true }));
