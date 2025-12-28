@@ -157,7 +157,7 @@ export const Step3Tickets = ({ form }: Step3Props) => {
       updated[index].price = Math.round(newNormalPrice * (1 - currentDiscount / 100));
     }
     
-    // Si cambia el precio final, recalcular el descuento
+    // Si cambia el precio final → recalcular el descuento
     if (field === 'price') {
       const finalPrice = Number(value);
       if (normalPrice > 0 && finalPrice < normalPrice) {
@@ -165,6 +165,13 @@ export const Step3Tickets = ({ form }: Step3Props) => {
       } else {
         updated[index].discount_percent = 0;
       }
+    }
+    
+    // Si cambia el descuento → recalcular el precio final
+    if (field === 'discount_percent') {
+      const discount = Math.min(99, Math.max(0, Number(value)));
+      updated[index].discount_percent = discount;
+      updated[index].price = Math.round(normalPrice * (1 - discount / 100));
     }
     
     setPackages(updated);
@@ -435,10 +442,11 @@ export const Step3Tickets = ({ form }: Step3Props) => {
         <CardContent>
           <div className="space-y-4">
             {/* Desktop header */}
-            <div className="hidden sm:grid grid-cols-12 gap-2 text-sm font-medium text-muted-foreground px-1">
+            <div className="hidden sm:grid grid-cols-14 gap-2 text-sm font-medium text-muted-foreground px-1">
               <div className="col-span-2">Cantidad</div>
               <div className="col-span-2">P. Normal</div>
               <div className="col-span-2">P. Final</div>
+              <div className="col-span-2">Descuento</div>
               <div className="col-span-2">Ahorro</div>
               <div className="col-span-3">
                 <div className="flex items-center gap-1">
@@ -470,7 +478,7 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                       </Button>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label className="text-xs text-muted-foreground">Cantidad</label>
                         <Input
@@ -492,6 +500,22 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                             onChange={(e) => updatePackage(index, 'price', parseFloat(e.target.value) || 0)}
                             className="pl-6"
                           />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground">Descuento</label>
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            value={pkg.discount_percent || 0}
+                            onChange={(e) => updatePackage(index, 'discount_percent', parseFloat(e.target.value) || 0)}
+                            min={0}
+                            max={99}
+                            className="pr-6"
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                            %
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -518,7 +542,7 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                   </div>
 
                   {/* Desktop: Grid layout */}
-                  <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
+                  <div className="hidden sm:grid grid-cols-14 gap-2 items-center">
                     <div className="col-span-2">
                       <Input
                         type="number"
@@ -546,6 +570,21 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                           onChange={(e) => updatePackage(index, 'price', parseFloat(e.target.value) || 0)}
                           className="pl-6"
                         />
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          value={pkg.discount_percent || 0}
+                          onChange={(e) => updatePackage(index, 'discount_percent', parseFloat(e.target.value) || 0)}
+                          min={0}
+                          max={99}
+                          className="pr-6"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                          %
+                        </span>
                       </div>
                     </div>
                     <div className="col-span-2">
