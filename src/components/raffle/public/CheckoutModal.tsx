@@ -193,6 +193,7 @@ export function CheckoutModal({
           city: data.city?.trim(),
         },
         reservationMinutes: raffle.reservation_time_minutes || 15,
+        orderTotal: total,
       });
 
       // Store reserved tickets info

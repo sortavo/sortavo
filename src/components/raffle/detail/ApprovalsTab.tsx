@@ -53,6 +53,7 @@ interface OrderGroup {
   reservedUntil: string | null;
   hasProof: boolean;
   proofUrl: string | null;
+  orderTotal: number | null;
 }
 
 export function ApprovalsTab({ raffleId, raffleTitle = '', raffleSlug = '', ticketPrice = 0, currencyCode = 'MXN' }: ApprovalsTabProps) {
@@ -89,6 +90,7 @@ export function ApprovalsTab({ raffleId, raffleTitle = '', raffleSlug = '', tick
           reservedUntil: ticket.reserved_until,
           hasProof: !!ticket.payment_proof_url,
           proofUrl: ticket.payment_proof_url,
+          orderTotal: ticket.order_total ?? null,
         };
       }
       
@@ -98,6 +100,11 @@ export function ApprovalsTab({ raffleId, raffleTitle = '', raffleSlug = '', tick
       if (ticket.payment_proof_url) {
         groups[refCode].hasProof = true;
         groups[refCode].proofUrl = ticket.payment_proof_url;
+      }
+      
+      // Capture order_total from any ticket if not already set
+      if (ticket.order_total && !groups[refCode].orderTotal) {
+        groups[refCode].orderTotal = ticket.order_total;
       }
     });
     
@@ -254,7 +261,8 @@ export function ApprovalsTab({ raffleId, raffleTitle = '', raffleSlug = '', tick
     const isExpired = timeRemaining === 'Expirado';
     const isExpanded = expandedOrders.has(order.referenceCode);
     const ticketCount = order.tickets.length;
-    const totalAmount = ticketCount * ticketPrice;
+    // Use saved orderTotal (with discount) if available, otherwise calculate from price
+    const totalAmount = order.orderTotal ?? (ticketCount * ticketPrice);
 
     return (
       <Card className={cn(
