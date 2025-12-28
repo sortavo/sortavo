@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, Clock, Video, Dices, Globe, Hand } from 'lucide-react';
-import { CLOSE_SALE_OPTIONS } from '@/lib/raffle-utils';
+import { CLOSE_SALE_OPTIONS, CLOSE_SALE_TIME_UNITS, MAX_CLOSE_SALE_HOURS, formatCloseSaleTime } from '@/lib/raffle-utils';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { REQUIRED_FIELDS } from '@/hooks/useWizardValidation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Step4Props {
   form: UseFormReturn<any>;
@@ -22,6 +22,27 @@ export const Step4Draw = ({ form }: Step4Props) => {
   const { organization } = useAuth();
   const drawMethod = form.watch('draw_method') || 'manual';
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  
+  // Estado para tiempo de cierre personalizado
+  const [isCustomCloseSale, setIsCustomCloseSale] = useState(false);
+  const [customCloseSaleValue, setCustomCloseSaleValue] = useState(24);
+  const [customCloseSaleUnit, setCustomCloseSaleUnit] = useState<'hours' | 'days'>('hours');
+  const closeSaleHours = form.watch('close_sale_hours_before') || 0;
+
+  // Detectar si el valor actual es personalizado
+  useEffect(() => {
+    const matchesPreset = CLOSE_SALE_OPTIONS.some(opt => opt.value === closeSaleHours);
+    if (!matchesPreset && closeSaleHours > 0) {
+      setIsCustomCloseSale(true);
+      if (closeSaleHours >= 24 && closeSaleHours % 24 === 0) {
+        setCustomCloseSaleValue(closeSaleHours / 24);
+        setCustomCloseSaleUnit('days');
+      } else {
+        setCustomCloseSaleValue(closeSaleHours);
+        setCustomCloseSaleUnit('hours');
+      }
+    }
+  }, []);
 
   const handleBlur = (field: string) => {
     setTouchedFields(prev => ({ ...prev, [field]: true }));
@@ -49,6 +70,27 @@ export const Step4Draw = ({ form }: Step4Props) => {
       }
     }
     return null;
+  };
+
+  const handleCloseSaleChange = (value: string) => {
+    if (value === 'custom') {
+      setIsCustomCloseSale(true);
+      form.setValue('close_sale_hours_before', 24);
+      setCustomCloseSaleValue(24);
+      setCustomCloseSaleUnit('hours');
+    } else {
+      setIsCustomCloseSale(false);
+      form.setValue('close_sale_hours_before', parseInt(value));
+    }
+  };
+
+  const handleCustomCloseSaleChange = (value: number, unit: 'hours' | 'days') => {
+    const multiplier = unit === 'days' ? 24 : 1;
+    const hours = value * multiplier;
+    const clampedHours = Math.min(Math.max(1, hours), MAX_CLOSE_SALE_HOURS);
+    form.setValue('close_sale_hours_before', clampedHours);
+    setCustomCloseSaleValue(value);
+    setCustomCloseSaleUnit(unit);
   };
 
   const drawDateError = getFieldError('draw_date');
@@ -131,23 +173,67 @@ export const Step4Draw = ({ form }: Step4Props) => {
                   <Clock className="w-4 h-4" />
                   Cerrar ventas antes del sorteo
                 </FormLabel>
-                <Select 
-                  onValueChange={(v) => field.onChange(parseInt(v))} 
-                  defaultValue={field.value?.toString() || '0'}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {CLOSE_SALE_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value.toString()}>
-                        {opt.label}
+                <div className="space-y-3">
+                  <Select
+                    value={isCustomCloseSale ? 'custom' : (field.value?.toString() || '0')}
+                    onValueChange={handleCloseSaleChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue>
+                          {isCustomCloseSale 
+                            ? `Personalizado: ${formatCloseSaleTime(closeSaleHours)}`
+                            : formatCloseSaleTime(field.value || 0)
+                          }
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {CLOSE_SALE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value.toString()}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="custom">
+                        <div className="flex flex-col">
+                          <span>Personalizado</span>
+                          <span className="text-xs text-muted-foreground">Define tu propio tiempo</span>
+                        </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    </SelectContent>
+                  </Select>
+
+                  {isCustomCloseSale && (
+                    <div className="flex flex-wrap gap-2 items-center p-3 rounded-lg border bg-muted/50">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={customCloseSaleUnit === 'days' ? 7 : MAX_CLOSE_SALE_HOURS}
+                        value={customCloseSaleValue}
+                        onChange={(e) => handleCustomCloseSaleChange(parseInt(e.target.value) || 1, customCloseSaleUnit)}
+                        className="w-20"
+                      />
+                      <Select
+                        value={customCloseSaleUnit}
+                        onValueChange={(v) => handleCustomCloseSaleChange(customCloseSaleValue, v as 'hours' | 'days')}
+                      >
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CLOSE_SALE_TIME_UNITS.map((unit) => (
+                            <SelectItem key={unit.value} value={unit.value}>
+                              {unit.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-sm text-muted-foreground">
+                        = {formatCloseSaleTime(closeSaleHours)}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
