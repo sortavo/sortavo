@@ -38,6 +38,7 @@ import { OrganizerSection } from "@/components/raffle/public/OrganizerSection";
 import { PrizeShowcase } from "@/components/raffle/public/PrizeShowcase";
 import { FloatingWhatsAppButton } from "@/components/raffle/public/FloatingWhatsAppButton";
 import { PrizeVideoPlayer } from "@/components/raffle/public/PrizeVideoPlayer";
+import { PrizeLightbox } from "@/components/raffle/public/PrizeLightbox";
 import { UrgencyBadge } from "@/components/marketing/UrgencyBadge";
 import { SocialProof } from "@/components/marketing/SocialProof";
 import { PurchaseToast } from "@/components/marketing/PurchaseToast";
@@ -54,6 +55,8 @@ export default function PublicRaffle() {
   const { data: raffle, isLoading, error } = usePublicRaffle(slug);
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   
   // Detect if we're coming from organization route
   const isFromOrganization = !!orgSlug;
@@ -298,7 +301,13 @@ export default function PublicRaffle() {
                 <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl animate-pulse"></div>
                 
                 {/* Main image */}
-                <div className="relative aspect-square rounded-3xl overflow-hidden shadow-2xl bg-gray-100">
+                <div 
+                  className="relative aspect-square rounded-3xl overflow-hidden shadow-2xl bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setLightboxIndex(0);
+                    setLightboxOpen(true);
+                  }}
+                >
                   <img 
                     src={mainImage} 
                     alt={raffle.prize_name}
@@ -306,10 +315,10 @@ export default function PublicRaffle() {
                   />
                   
                   {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none"></div>
                   
                   {/* Floating badge - tickets sold */}
-                  <div className="absolute top-4 right-4 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full shadow-lg">
+                  <div className="absolute top-4 right-4 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full shadow-lg pointer-events-none">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                       <span className="text-sm font-semibold text-gray-900">
@@ -321,7 +330,7 @@ export default function PublicRaffle() {
                   {/* Prize value badge */}
                   {raffle.prize_value && (
                     <div 
-                      className="absolute bottom-4 left-4 px-6 py-3 rounded-2xl shadow-xl"
+                      className="absolute bottom-4 left-4 px-6 py-3 rounded-2xl shadow-xl pointer-events-none"
                       style={{ background: gradient }}
                     >
                       <div className="text-white">
@@ -341,6 +350,10 @@ export default function PublicRaffle() {
                       <div 
                         key={idx}
                         className="w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-md hover:scale-105 transition-transform cursor-pointer"
+                        onClick={() => {
+                          setLightboxIndex(idx);
+                          setLightboxOpen(true);
+                        }}
                       >
                         <img src={img} alt="" className="w-full h-full object-cover" />
                       </div>
@@ -354,6 +367,16 @@ export default function PublicRaffle() {
                     videoUrl={raffle.prize_video_url} 
                     title={raffle.prize_name}
                     className="mt-6"
+                  />
+                )}
+
+                {/* Lightbox */}
+                {raffle.prize_images && raffle.prize_images.length > 0 && (
+                  <PrizeLightbox
+                    images={raffle.prize_images}
+                    initialIndex={lightboxIndex}
+                    open={lightboxOpen}
+                    onOpenChange={setLightboxOpen}
                   />
                 )}
               </div>
