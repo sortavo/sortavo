@@ -600,6 +600,7 @@ export type Database = {
           prize_terms: string | null
           prize_value: number | null
           prize_video_url: string | null
+          prizes: Json | null
           reservation_time_minutes: number | null
           slug: string
           start_date: string | null
@@ -642,6 +643,7 @@ export type Database = {
           prize_terms?: string | null
           prize_value?: number | null
           prize_video_url?: string | null
+          prizes?: Json | null
           reservation_time_minutes?: number | null
           slug: string
           start_date?: string | null
@@ -684,6 +686,7 @@ export type Database = {
           prize_terms?: string | null
           prize_value?: number | null
           prize_video_url?: string | null
+          prizes?: Json | null
           reservation_time_minutes?: number | null
           slug?: string
           start_date?: string | null

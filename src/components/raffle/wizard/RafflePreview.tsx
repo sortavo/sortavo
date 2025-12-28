@@ -41,14 +41,20 @@ export function RafflePreview({ form, className }: RafflePreviewProps) {
   
   // Get values from form
   const title = values.title || 'Título del Sorteo';
-  const prizeName = values.prize_name || 'Nombre del Premio';
   const description = values.description || 'Descripción del sorteo...';
   const ticketPrice = values.ticket_price || 0;
   const totalTickets = values.total_tickets || 100;
-  const prizeValue = values.prize_value || 0;
   const prizeImages = values.prize_images || [];
   const drawDate = values.draw_date;
   const currency = values.currency_code || organization?.currency_code || 'MXN';
+  
+  // Get prizes from new field or fallback to legacy
+  const prizes = values.prizes || [];
+  const firstPrize = prizes[0];
+  const prizeName = firstPrize?.name || values.prize_name || 'Nombre del Premio';
+  const prizeValue = firstPrize?.value || values.prize_value || 0;
+  const prizeCurrency = firstPrize?.currency || currency;
+  const hasMultiplePrizes = prizes.length > 1;
   
   // Customization
   const customization = values.customization || {};
@@ -169,7 +175,7 @@ export function RafflePreview({ form, className }: RafflePreviewProps) {
                       style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}cc)` }}
                     >
                       <p className="text-[8px] opacity-80">Valor</p>
-                      <p className="text-xs font-bold">{formatCurrency(Number(prizeValue), currency)}</p>
+                      <p className="text-xs font-bold">{formatCurrency(Number(prizeValue), prizeCurrency)}</p>
                     </div>
                   )}
                 </div>
@@ -183,8 +189,10 @@ export function RafflePreview({ form, className }: RafflePreviewProps) {
                     <Zap className="w-2.5 h-2.5 mr-1" />
                     Activo
                   </Badge>
-                  
-                  <h2 className="text-sm font-bold text-gray-900 leading-tight">{prizeName}</h2>
+                  <h2 className="text-sm font-bold text-gray-900 leading-tight">
+                    {prizeName}
+                    {hasMultiplePrizes && <span className="text-xs font-normal text-muted-foreground ml-1">+{prizes.length - 1} más</span>}
+                  </h2>
                   <p className="text-[10px] text-gray-600 line-clamp-1">{title}</p>
                   
                   <div className="grid grid-cols-2 gap-1.5 flex-1">
@@ -250,7 +258,7 @@ export function RafflePreview({ form, className }: RafflePreviewProps) {
                       style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}cc)` }}
                     >
                       <p className="text-[8px] opacity-80">Valor del Premio</p>
-                      <p className="text-sm font-bold">{formatCurrency(Number(prizeValue), currency)}</p>
+                      <p className="text-sm font-bold">{formatCurrency(Number(prizeValue), prizeCurrency)}</p>
                     </div>
                   )}
                 </div>
@@ -258,10 +266,29 @@ export function RafflePreview({ form, className }: RafflePreviewProps) {
                 {/* Prize Info */}
                 <div className="space-y-1.5">
                   {headline && <p className="text-xs text-muted-foreground">{headline}</p>}
-                  <h2 className="text-lg font-bold text-gray-900 leading-tight">{prizeName}</h2>
+                  <h2 className="text-lg font-bold text-gray-900 leading-tight">
+                    {prizeName}
+                    {hasMultiplePrizes && <span className="text-sm font-normal text-muted-foreground ml-2">+{prizes.length - 1} más</span>}
+                  </h2>
                   <p className="text-sm text-gray-600">{title}</p>
                   {description && description !== 'Descripción del sorteo...' && (
                     <p className="text-xs text-gray-500 line-clamp-2">{description}</p>
+                  )}
+                  
+                  {/* Show additional prizes if any */}
+                  {hasMultiplePrizes && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {prizes.slice(1, 4).map((prize: any, idx: number) => (
+                        <span key={prize.id || idx} className="text-[10px] bg-muted px-2 py-0.5 rounded-full">
+                          {prize.name}
+                        </span>
+                      ))}
+                      {prizes.length > 4 && (
+                        <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                          +{prizes.length - 4} más
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
 

@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import type { Prize } from '@/types/prize';
 
 export interface ValidationError {
   field: string;
@@ -25,10 +26,17 @@ interface ValidationConfig {
 // Export required fields for use in step components
 export const REQUIRED_FIELDS: Record<string, { step: number; label: string; message: string }> = {
   title: { step: 1, label: 'Título del sorteo', message: 'El título debe tener al menos 3 caracteres' },
-  prize_name: { step: 2, label: 'Nombre del premio', message: 'El nombre del premio es requerido' },
+  prizes: { step: 2, label: 'Premios', message: 'Debes agregar al menos un premio con nombre' },
   ticket_price: { step: 3, label: 'Precio por boleto', message: 'El precio debe ser mayor a 0' },
   total_tickets: { step: 3, label: 'Total de boletos', message: 'Debes seleccionar la cantidad de boletos' },
   draw_date: { step: 4, label: 'Fecha del sorteo', message: 'La fecha del sorteo es requerida y debe ser en el futuro' },
+};
+
+const validatePrizes = (value: unknown): boolean => {
+  if (!Array.isArray(value) || value.length === 0) return false;
+  const prizes = value as Prize[];
+  // At least the first prize must have a name
+  return prizes[0]?.name?.trim().length > 0;
 };
 
 const STEP_VALIDATIONS: Record<number, ValidationConfig[]> = {
@@ -42,10 +50,10 @@ const STEP_VALIDATIONS: Record<number, ValidationConfig[]> = {
   ],
   2: [
     {
-      field: 'prize_name',
-      label: 'Nombre del premio',
-      validate: (value) => typeof value === 'string' && value.trim().length > 0,
-      message: 'El nombre del premio es requerido'
+      field: 'prizes',
+      label: 'Premios',
+      validate: validatePrizes,
+      message: 'Debes agregar al menos un premio con nombre'
     }
   ],
   3: [
