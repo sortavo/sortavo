@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/currency-utils";
 import { getSubscriptionLimits, SubscriptionTier } from "@/lib/subscription-limits";
+import { getTemplateById } from "@/lib/raffle-utils";
 import { usePublicRaffle } from "@/hooks/usePublicRaffle";
 import { TicketSelector } from "@/components/raffle/public/TicketSelector";
 import { CheckoutModal } from "@/components/raffle/public/CheckoutModal";
@@ -167,11 +168,29 @@ export default function PublicRaffle() {
 
   // Organization branding - ALWAYS available
   const org = raffle.organization;
-  const orgBrandColor = org?.brand_color || "#2563EB";
   const orgName = org?.name || "";
   const orgLogo = org?.logo_url;
   const orgSlugValue = org?.slug;
   const hasWhatsApp = !!org?.whatsapp_number;
+
+  // Get template styles - use raffle's template_id or default to 'modern'
+  const template = getTemplateById((raffle as any).template_id);
+  
+  // Use template colors as primary, org brand color as accent override
+  const primaryColor = template.colors.primary;
+  const accentColor = template.colors.accent;
+  const bgColor = template.colors.background;
+  const cardBg = template.colors.cardBg;
+  const textColor = template.colors.text;
+  const textMuted = template.colors.textMuted;
+  const fontTitle = template.fonts.title;
+  const fontBody = template.fonts.body;
+  const borderRadius = template.effects.borderRadius;
+  const shadow = template.effects.shadow;
+  const gradient = template.effects.gradient;
+
+  // Check if template is dark (elegant template)
+  const isDarkTemplate = template.id === 'elegant';
 
   return (
     <>
@@ -185,11 +204,20 @@ export default function PublicRaffle() {
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
 
-      <div className="min-h-screen bg-white">
+      <div 
+        className="min-h-screen transition-colors duration-300"
+        style={{ 
+          backgroundColor: bgColor,
+          fontFamily: `"${fontBody}", sans-serif`,
+        }}
+      >
         {/* Organization Header - ALWAYS visible */}
         <header 
-          className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur-sm"
-          style={{ borderBottomColor: `${orgBrandColor}20` }}
+          className="sticky top-0 z-50 border-b backdrop-blur-sm"
+          style={{ 
+            backgroundColor: isDarkTemplate ? `${cardBg}f0` : `${bgColor}f0`,
+            borderBottomColor: `${primaryColor}20` 
+          }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -200,11 +228,11 @@ export default function PublicRaffle() {
                 {isFromOrganization && (
                   <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                 )}
-                <Avatar className="h-8 w-8 border-2" style={{ borderColor: orgBrandColor }}>
+                <Avatar className="h-8 w-8 border-2" style={{ borderColor: primaryColor }}>
                   <AvatarImage src={orgLogo || undefined} alt={orgName} />
                   <AvatarFallback 
                     className="text-xs font-semibold text-white"
-                    style={{ backgroundColor: orgBrandColor }}
+                    style={{ backgroundColor: primaryColor }}
                   >
                     {orgName.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -288,7 +316,7 @@ export default function PublicRaffle() {
                   {raffle.prize_value && (
                     <div 
                       className="absolute bottom-4 left-4 px-6 py-3 rounded-2xl shadow-xl"
-                      style={{ background: `linear-gradient(135deg, ${orgBrandColor}, ${orgBrandColor}cc)` }}
+                      style={{ background: gradient }}
                     >
                       <div className="text-white">
                         <p className="text-xs font-medium opacity-90">Valor del Premio</p>
@@ -321,7 +349,7 @@ export default function PublicRaffle() {
                 <div className="flex flex-wrap items-center gap-3">
                   <div 
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium text-white"
-                    style={{ backgroundColor: orgBrandColor }}
+                    style={{ background: gradient }}
                   >
                     <Zap className="w-4 h-4" />
                     Sorteo Activo
@@ -340,7 +368,13 @@ export default function PublicRaffle() {
 
                 {/* Title */}
                 <div className="space-y-2 sm:space-y-3">
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 leading-tight">
+                  <h1 
+                    className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight"
+                    style={{ 
+                      fontFamily: `"${fontTitle}", sans-serif`,
+                      color: textColor,
+                    }}
+                  >
                     {raffle.prize_name}
                   </h1>
                   
@@ -348,50 +382,74 @@ export default function PublicRaffle() {
                   {Array.isArray((raffle as any).prizes) && (raffle as any).prizes.length > 1 && (
                     <div className="flex flex-wrap gap-2">
                       {(raffle as any).prizes.slice(1).map((prize: any, idx: number) => (
-                        <span key={prize.id || idx} className="text-sm bg-muted px-3 py-1 rounded-full text-muted-foreground">
+                        <span 
+                          key={prize.id || idx} 
+                          className="text-sm px-3 py-1 rounded-full"
+                          style={{ 
+                            backgroundColor: `${primaryColor}15`,
+                            color: primaryColor,
+                          }}
+                        >
                           + {prize.name}
                         </span>
                       ))}
                     </div>
                   )}
                   
-                  <p className="text-base sm:text-lg lg:text-xl text-gray-600">
+                  <p 
+                    className="text-base sm:text-lg lg:text-xl"
+                    style={{ color: textMuted }}
+                  >
                     {raffle.title}
                   </p>
                   {raffle.description && (
-                    <p className="text-sm sm:text-base text-gray-500">{raffle.description}</p>
+                    <p className="text-sm sm:text-base" style={{ color: textMuted }}>{raffle.description}</p>
                   )}
                 </div>
 
                 {/* Key info grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="p-3 sm:p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div 
+                    className="p-3 sm:p-4 rounded-xl border shadow-sm"
+                    style={{ 
+                      backgroundColor: cardBg,
+                      borderColor: `${primaryColor}20`,
+                      borderRadius: borderRadius
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       <div 
                         className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${orgBrandColor}20` }}
+                        style={{ backgroundColor: `${primaryColor}20` }}
                       >
-                        <Ticket className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: orgBrandColor }} />
+                        <Ticket className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: primaryColor }} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs sm:text-sm text-gray-600">Precio</p>
-                        <p className="text-base sm:text-lg font-bold text-gray-900 truncate">
+                        <p className="text-xs sm:text-sm" style={{ color: textMuted }}>Precio</p>
+                        <p className="text-base sm:text-lg font-bold truncate" style={{ color: textColor }}>
                           {formatCurrency(Number(raffle.ticket_price), currency)}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="p-3 sm:p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div 
+                    className="p-3 sm:p-4 rounded-xl border shadow-sm"
+                    style={{ 
+                      backgroundColor: cardBg,
+                      borderColor: `${primaryColor}20`,
+                      borderRadius: borderRadius
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       <div 
                         className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${orgBrandColor}20` }}
+                        style={{ backgroundColor: `${primaryColor}20` }}
                       >
-                        <Calendar className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: orgBrandColor }} />
+                        <Calendar className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: primaryColor }} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs sm:text-sm text-gray-600">Sorteo</p>
-                        <p className="text-base sm:text-lg font-bold text-gray-900 truncate">
+                        <p className="text-xs sm:text-sm" style={{ color: textMuted }}>Sorteo</p>
+                        <p className="text-base sm:text-lg font-bold truncate" style={{ color: textColor }}>
                           {raffle.draw_date 
                             ? format(new Date(raffle.draw_date), 'dd MMM', { locale: es })
                             : 'Por definir'
@@ -405,27 +463,30 @@ export default function PublicRaffle() {
                 {/* Progress bar */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium" style={{ color: textColor }}>
                       {raffle.ticketsSold} de {raffle.total_tickets} vendidos
                     </span>
-                    <span className="font-semibold" style={{ color: orgBrandColor }}>
+                    <span className="font-semibold" style={{ color: primaryColor }}>
                       {Math.round(progress)}%
                     </span>
                   </div>
                   
-                  <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="relative h-3 rounded-full overflow-hidden"
+                    style={{ backgroundColor: `${primaryColor}20` }}
+                  >
                     <div 
                       className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
                       style={{ 
                         width: `${progress}%`,
-                        background: `linear-gradient(90deg, ${orgBrandColor}, ${orgBrandColor}cc)` 
+                        background: gradient
                       }}
                     >
                       <div className="absolute inset-0 bg-white/20 animate-shimmer"></div>
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm" style={{ color: textMuted }}>
                     {raffle.ticketsAvailable} boletos disponibles
                   </p>
                 </div>
@@ -436,7 +497,8 @@ export default function PublicRaffle() {
                     size="lg"
                     className="flex-1 text-lg py-6 shadow-xl group text-white"
                     style={{ 
-                      background: `linear-gradient(135deg, ${orgBrandColor}, ${orgBrandColor}dd)`,
+                      background: gradient,
+                      borderRadius: borderRadius,
                     }}
                     onClick={scrollToTickets}
                   >
@@ -448,7 +510,12 @@ export default function PublicRaffle() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-2 border-gray-300 hover:border-gray-400 py-6"
+                    className="border-2 py-6"
+                    style={{ 
+                      borderColor: primaryColor,
+                      color: isDarkTemplate ? '#FFFFFF' : primaryColor,
+                      borderRadius: borderRadius,
+                    }}
                     onClick={shareRaffle}
                   >
                     <Share2 className="w-5 h-5 mr-2" />
@@ -480,7 +547,7 @@ export default function PublicRaffle() {
         {raffle.draw_date && (
           <div 
             className="py-8"
-            style={{ background: `linear-gradient(135deg, ${orgBrandColor}, ${orgBrandColor}dd)` }}
+            style={{ background: gradient }}
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-4">
@@ -559,7 +626,7 @@ export default function PublicRaffle() {
               created_at: org.created_at,
             }}
             raffleTitle={raffle.title}
-            brandColor={orgBrandColor}
+            brandColor={primaryColor}
           />
         )}
 
