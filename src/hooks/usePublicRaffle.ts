@@ -160,6 +160,7 @@ export function useReserveTickets() {
       ticketNumbers,
       buyerData,
       reservationMinutes,
+      orderTotal,
     }: {
       raffleId: string;
       ticketNumbers: string[];
@@ -170,6 +171,7 @@ export function useReserveTickets() {
         city?: string;
       };
       reservationMinutes: number;
+      orderTotal?: number;
     }) => {
       const reservedUntil = new Date();
       reservedUntil.setMinutes(reservedUntil.getMinutes() + reservationMinutes);
@@ -190,6 +192,7 @@ export function useReserveTickets() {
           reserved_at: new Date().toISOString(),
           reserved_until: reservedUntil.toISOString(),
           payment_reference: referenceCode,
+          order_total: orderTotal ?? null,
         })
         .eq('raffle_id', raffleId)
         .eq('status', 'available') // Only update available tickets

@@ -859,6 +859,7 @@ export type Database = {
           created_at: string | null
           id: string
           notes: string | null
+          order_total: number | null
           payment_method: string | null
           payment_proof_url: string | null
           payment_reference: string | null
@@ -881,6 +882,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           notes?: string | null
+          order_total?: number | null
           payment_method?: string | null
           payment_proof_url?: string | null
           payment_reference?: string | null
@@ -903,6 +905,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           notes?: string | null
+          order_total?: number | null
           payment_method?: string | null
           payment_proof_url?: string | null
           payment_reference?: string | null
