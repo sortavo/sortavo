@@ -442,11 +442,11 @@ export const Step3Tickets = ({ form }: Step3Props) => {
         <CardContent>
           <div className="space-y-4">
             {/* Desktop header */}
-            <div className="hidden sm:grid grid-cols-14 gap-2 text-sm font-medium text-muted-foreground px-1">
-              <div className="col-span-2">Cantidad</div>
+            <div className="hidden sm:grid grid-cols-12 gap-2 text-sm font-medium text-muted-foreground px-1">
+              <div className="col-span-1">Cant.</div>
               <div className="col-span-2">P. Normal</div>
               <div className="col-span-2">P. Final</div>
-              <div className="col-span-2">Descuento</div>
+              <div className="col-span-1">Dto. %</div>
               <div className="col-span-2">Ahorro</div>
               <div className="col-span-3">
                 <div className="flex items-center gap-1">
@@ -542,13 +542,14 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                   </div>
 
                   {/* Desktop: Grid layout */}
-                  <div className="hidden sm:grid grid-cols-14 gap-2 items-center">
-                    <div className="col-span-2">
+                  <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-1">
                       <Input
                         type="number"
                         value={pkg.quantity}
                         onChange={(e) => updatePackage(index, 'quantity', parseInt(e.target.value) || 1)}
                         min={1}
+                        className="text-center px-1"
                       />
                     </div>
                     <div className="col-span-2">
@@ -572,7 +573,7 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                         />
                       </div>
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <div className="relative">
                         <Input
                           type="number"
@@ -580,16 +581,16 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                           onChange={(e) => updatePackage(index, 'discount_percent', parseFloat(e.target.value) || 0)}
                           min={0}
                           max={99}
-                          className="pr-6"
+                          className="pr-5 text-center px-1"
                         />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
                           %
                         </span>
                       </div>
                     </div>
                     <div className="col-span-2">
                       {hasDiscount ? (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">
                           -{savingsPercent}% ({currencyData?.symbol}{savings.toLocaleString()})
                         </Badge>
                       ) : (
