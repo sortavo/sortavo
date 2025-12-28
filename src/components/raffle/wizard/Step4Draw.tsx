@@ -10,6 +10,9 @@ import { Calendar, Clock, Video, Dices, Globe, Hand } from 'lucide-react';
 import { CLOSE_SALE_OPTIONS } from '@/lib/raffle-utils';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { REQUIRED_FIELDS } from '@/hooks/useWizardValidation';
+import { useState } from 'react';
 
 interface Step4Props {
   form: UseFormReturn<any>;
@@ -18,6 +21,38 @@ interface Step4Props {
 export const Step4Draw = ({ form }: Step4Props) => {
   const { organization } = useAuth();
   const drawMethod = form.watch('draw_method') || 'manual';
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const handleBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+  };
+
+  const getFieldError = (field: string): string | null => {
+    if (!touchedFields[field]) return null;
+    const value = form.watch(field);
+    
+    if (field === 'draw_date') {
+      if (!value) {
+        return 'La fecha del sorteo es requerida';
+      }
+      const date = new Date(value);
+      if (isNaN(date.getTime()) || date <= new Date()) {
+        return 'La fecha del sorteo debe ser en el futuro';
+      }
+    }
+    
+    if (field === 'start_date') {
+      const startDate = form.watch('start_date');
+      const drawDate = form.watch('draw_date');
+      if (startDate && drawDate && new Date(startDate) >= new Date(drawDate)) {
+        return 'La fecha de inicio debe ser anterior a la fecha del sorteo';
+      }
+    }
+    return null;
+  };
+
+  const drawDateError = getFieldError('draw_date');
+  const startDateError = getFieldError('start_date');
 
   return (
     <div className="space-y-6">
@@ -43,11 +78,16 @@ export const Step4Draw = ({ form }: Step4Props) => {
                       {...field}
                       value={field.value ? format(new Date(field.value), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                      onBlur={() => handleBlur('start_date')}
+                      className={cn(startDateError && "border-destructive focus-visible:ring-destructive")}
                     />
                   </FormControl>
                   <FormDescription>
                     Zona horaria: America/Mexico_City
                   </FormDescription>
+                  {startDateError && (
+                    <p className="text-sm font-medium text-destructive">{startDateError}</p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -61,6 +101,7 @@ export const Step4Draw = ({ form }: Step4Props) => {
                   <FormLabel className="flex items-center gap-2">
                     <Dices className="w-4 h-4" />
                     Fecha del Sorteo
+                    <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input 
@@ -68,8 +109,13 @@ export const Step4Draw = ({ form }: Step4Props) => {
                       {...field}
                       value={field.value ? format(new Date(field.value), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                      onBlur={() => handleBlur('draw_date')}
+                      className={cn(drawDateError && "border-destructive focus-visible:ring-destructive")}
                     />
                   </FormControl>
+                  {drawDateError && (
+                    <p className="text-sm font-medium text-destructive">{drawDateError}</p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
