@@ -246,6 +246,7 @@ export default function PaymentInstructions() {
       ticketIds: tickets.map(t => t.id),
       file,
       buyerName: buyerName || undefined,
+      referenceCode: referenceCode || undefined,
     });
 
     if (buyerEmail && buyerName) {
