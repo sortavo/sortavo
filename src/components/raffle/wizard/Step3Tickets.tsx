@@ -22,6 +22,8 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { REQUIRED_FIELDS } from '@/hooks/useWizardValidation';
 import { LabelCombobox } from './LabelCombobox';
+import { NumberingConfigPanel } from './NumberingConfigPanel';
+import { CustomNumbersUpload } from './CustomNumbersUpload';
 
 interface Step3Props {
   form: UseFormReturn<any>;
@@ -509,6 +511,19 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                 <FormMessage />
               </FormItem>
             )}
+          />
+          
+          {/* New Advanced Numbering Config */}
+          <NumberingConfigPanel form={form} totalTickets={currentTotalTickets || 100} />
+          
+          {/* Custom Numbers Upload (only show when custom_list mode) */}
+          {form.watch('numbering_config')?.mode === 'custom_list' && (
+            <CustomNumbersUpload 
+              form={form} 
+              raffleId={form.watch('id')}
+              totalTickets={currentTotalTickets || 100} 
+            />
+          )}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

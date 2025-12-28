@@ -532,6 +532,38 @@ export type Database = {
           },
         ]
       }
+      raffle_custom_numbers: {
+        Row: {
+          created_at: string | null
+          custom_number: string
+          id: string
+          raffle_id: string
+          ticket_index: number
+        }
+        Insert: {
+          created_at?: string | null
+          custom_number: string
+          id?: string
+          raffle_id: string
+          ticket_index: number
+        }
+        Update: {
+          created_at?: string | null
+          custom_number?: string
+          id?: string
+          raffle_id?: string
+          ticket_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_custom_numbers_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       raffle_packages: {
         Row: {
           created_at: string | null
@@ -594,6 +626,7 @@ export type Database = {
           lucky_numbers_enabled: boolean | null
           max_tickets_per_person: number | null
           max_tickets_per_purchase: number | null
+          numbering_config: Json | null
           organization_id: string
           prize_display_mode: string | null
           prize_images: string[] | null
@@ -638,6 +671,7 @@ export type Database = {
           lucky_numbers_enabled?: boolean | null
           max_tickets_per_person?: number | null
           max_tickets_per_purchase?: number | null
+          numbering_config?: Json | null
           organization_id: string
           prize_display_mode?: string | null
           prize_images?: string[] | null
@@ -682,6 +716,7 @@ export type Database = {
           lucky_numbers_enabled?: boolean | null
           max_tickets_per_person?: number | null
           max_tickets_per_purchase?: number | null
+          numbering_config?: Json | null
           organization_id?: string
           prize_display_mode?: string | null
           prize_images?: string[] | null
@@ -868,6 +903,7 @@ export type Database = {
           reserved_until: string | null
           sold_at: string | null
           status: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_index: number | null
           ticket_number: string
         }
         Insert: {
@@ -891,6 +927,7 @@ export type Database = {
           reserved_until?: string | null
           sold_at?: string | null
           status?: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_index?: number | null
           ticket_number: string
         }
         Update: {
@@ -914,6 +951,7 @@ export type Database = {
           reserved_until?: string | null
           sold_at?: string | null
           status?: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_index?: number | null
           ticket_number?: string
         }
         Relationships: [
@@ -970,6 +1008,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_custom_numbers: { Args: { p_raffle_id: string }; Returns: number }
+      apply_random_permutation: {
+        Args: { p_numbering_config?: Json; p_raffle_id: string }
+        Returns: number
+      }
       generate_reference_code: { Args: never; Returns: string }
       generate_ticket_batch: {
         Args: {
@@ -978,6 +1021,15 @@ export type Database = {
           p_prefix?: string
           p_raffle_id: string
           p_start_number: number
+        }
+        Returns: number
+      }
+      generate_ticket_batch_v2: {
+        Args: {
+          p_end_index: number
+          p_numbering_config?: Json
+          p_raffle_id: string
+          p_start_index: number
         }
         Returns: number
       }
@@ -999,6 +1051,17 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
+      preview_ticket_numbers: {
+        Args: {
+          p_numbering_config: Json
+          p_preview_count?: number
+          p_total_tickets: number
+        }
+        Returns: {
+          ticket_index: number
+          ticket_number: string
+        }[]
+      }
       release_expired_tickets: { Args: never; Returns: undefined }
     }
     Enums: {

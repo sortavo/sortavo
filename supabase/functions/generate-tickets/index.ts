@@ -13,6 +13,20 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 const BATCH_SIZE = 50000; // Optimal batch size for PostgreSQL
 
+interface NumberingConfig {
+  mode: 'sequential' | 'random_permutation' | 'custom_list' | 'template';
+  start_number: number;
+  step: number;
+  pad_enabled: boolean;
+  pad_width: number | null;
+  pad_char: string;
+  prefix: string | null;
+  suffix: string | null;
+  separator: string;
+  range_end: number | null;
+  custom_numbers: string[] | null;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -66,7 +80,7 @@ serve(async (req) => {
     if (!raffle_id) throw new Error("raffle_id is required");
     logStep("Processing raffle", { raffle_id, force_rebuild });
 
-    // Get raffle details
+    // Get raffle details including new numbering_config
     const { data: raffle, error: raffleError } = await supabaseClient
       .from("raffles")
       .select("*")
@@ -77,9 +91,16 @@ serve(async (req) => {
     if (!raffle) throw new Error("Raffle not found");
 
     const totalTickets = raffle.total_tickets;
-    const format = raffle.ticket_number_format || "sequential";
+    const legacyFormat = raffle.ticket_number_format || "sequential";
+    
+    // Get numbering config (new system) or build from legacy format
+    let numberingConfig: NumberingConfig = raffle.numbering_config || buildLegacyConfig(legacyFormat, totalTickets);
 
-    logStep("Raffle found", { total_tickets: totalTickets, format });
+    logStep("Raffle found", { 
+      total_tickets: totalTickets, 
+      mode: numberingConfig.mode,
+      legacy_format: legacyFormat 
+    });
 
     // Check existing tickets
     const { count: existingCount, error: countError } = await supabaseClient
@@ -106,7 +127,7 @@ serve(async (req) => {
       .select("id, status")
       .eq("raffle_id", raffle_id)
       .in("status", ["pending", "running"])
-      .single();
+      .maybeSingle();
 
     if (existingJob) {
       logStep("Job already in progress", { job_id: existingJob.id });
@@ -159,20 +180,65 @@ serve(async (req) => {
 
     // For small raffles (<= 50K), use synchronous generation
     if (totalTickets <= BATCH_SIZE) {
-      logStep("Small raffle - using synchronous generation", { totalTickets });
+      logStep("Small raffle - using synchronous generation", { totalTickets, mode: numberingConfig.mode });
       
+      // Use new v2 function with numbering config
       const { data: count, error: genError } = await supabaseClient.rpc(
-        'generate_ticket_batch',
+        'generate_ticket_batch_v2',
         {
           p_raffle_id: raffle_id,
-          p_start_number: 1,
-          p_end_number: totalTickets,
-          p_format: format,
-          p_prefix: format === 'prefixed' ? 'TKT' : null
+          p_start_index: 1,
+          p_end_index: totalTickets,
+          p_numbering_config: numberingConfig
         }
       );
 
-      if (genError) throw genError;
+      if (genError) {
+        logStep("V2 function failed, trying legacy", { error: genError.message });
+        // Fallback to legacy function
+        const { data: legacyCount, error: legacyError } = await supabaseClient.rpc(
+          'generate_ticket_batch',
+          {
+            p_raffle_id: raffle_id,
+            p_start_number: 1,
+            p_end_number: totalTickets,
+            p_format: legacyFormat,
+            p_prefix: legacyFormat === 'prefixed' ? 'TKT' : null
+          }
+        );
+        
+        if (legacyError) throw legacyError;
+        
+        logStep("Legacy generation complete", { count: legacyCount });
+        return new Response(
+          JSON.stringify({ success: true, count: legacyCount, async: false, legacy: true }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+
+      // Apply random permutation if mode is random_permutation
+      if (numberingConfig.mode === 'random_permutation') {
+        logStep("Applying random permutation");
+        const { error: permError } = await supabaseClient.rpc(
+          'apply_random_permutation',
+          { p_raffle_id: raffle_id, p_numbering_config: numberingConfig }
+        );
+        if (permError) {
+          logStep("Random permutation error", { error: permError.message });
+        }
+      }
+
+      // Apply custom numbers if mode is custom_list
+      if (numberingConfig.mode === 'custom_list') {
+        logStep("Applying custom number list");
+        const { error: customError } = await supabaseClient.rpc(
+          'apply_custom_numbers',
+          { p_raffle_id: raffle_id }
+        );
+        if (customError) {
+          logStep("Custom numbers error", { error: customError.message });
+        }
+      }
 
       logStep("Synchronous generation complete", { count });
       return new Response(
@@ -191,8 +257,8 @@ serve(async (req) => {
         total_tickets: totalTickets,
         total_batches: totalBatches,
         batch_size: BATCH_SIZE,
-        ticket_format: format,
-        ticket_prefix: format === 'prefixed' ? 'TKT' : null,
+        ticket_format: numberingConfig.mode,
+        ticket_prefix: numberingConfig.prefix,
         status: 'running',
         started_at: new Date().toISOString()
       })
@@ -209,7 +275,7 @@ serve(async (req) => {
     
     // deno-lint-ignore no-explicit-any
     (globalThis as any).EdgeRuntime?.waitUntil?.(
-      processJobBatches(supabaseUrl, supabaseKey, job.id, raffle_id, totalTickets, format, BATCH_SIZE)
+      processJobBatches(supabaseUrl, supabaseKey, job.id, raffle_id, totalTickets, numberingConfig, BATCH_SIZE)
     );
 
     // Return immediately with job ID (202 Accepted)
@@ -235,6 +301,25 @@ serve(async (req) => {
   }
 });
 
+// Build config from legacy format for backwards compatibility
+function buildLegacyConfig(format: string, totalTickets: number): NumberingConfig {
+  const digits = Math.max(3, totalTickets.toString().length);
+  
+  return {
+    mode: format === 'random' ? 'random_permutation' : 'sequential',
+    start_number: 1,
+    step: 1,
+    pad_enabled: true,
+    pad_width: digits,
+    pad_char: '0',
+    prefix: format === 'prefixed' ? 'TKT' : null,
+    suffix: null,
+    separator: format === 'prefixed' ? '-' : '',
+    range_end: null,
+    custom_numbers: null
+  };
+}
+
 // Background job processor
 async function processJobBatches(
   supabaseUrl: string,
@@ -242,7 +327,7 @@ async function processJobBatches(
   jobId: string,
   raffleId: string,
   totalTickets: number,
-  format: string,
+  numberingConfig: NumberingConfig,
   batchSize: number
 ) {
   const logJob = (msg: string, details?: Record<string, unknown>) => {
@@ -252,19 +337,19 @@ async function processJobBatches(
   const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
   try {
-    logJob("Background processing started");
+    logJob("Background processing started", { mode: numberingConfig.mode });
 
     const totalBatches = Math.ceil(totalTickets / batchSize);
     let generatedCount = 0;
 
     for (let batch = 0; batch < totalBatches; batch++) {
-      const startNumber = batch * batchSize + 1;
-      const endNumber = Math.min((batch + 1) * batchSize, totalTickets);
+      const startIndex = batch * batchSize + 1;
+      const endIndex = Math.min((batch + 1) * batchSize, totalTickets);
 
-      logJob(`Processing batch ${batch + 1}/${totalBatches}`, { startNumber, endNumber });
+      logJob(`Processing batch ${batch + 1}/${totalBatches}`, { startIndex, endIndex });
 
-      // Use SQL function for massive insertion via direct fetch
-      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/generate_ticket_batch`, {
+      // Use new v2 SQL function for batch generation
+      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/generate_ticket_batch_v2`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -274,22 +359,44 @@ async function processJobBatches(
         },
         body: JSON.stringify({
           p_raffle_id: raffleId,
-          p_start_number: startNumber,
-          p_end_number: endNumber,
-          p_format: format,
-          p_prefix: format === 'prefixed' ? 'TKT' : null
+          p_start_index: startIndex,
+          p_end_index: endIndex,
+          p_numbering_config: numberingConfig
         })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        logJob("Batch generation error", { error: errorText });
-        throw new Error(errorText);
+        logJob("V2 Batch generation error, trying legacy", { error: errorText });
+        
+        // Fallback to legacy function
+        const legacyResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/generate_ticket_batch`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            p_raffle_id: raffleId,
+            p_start_number: startIndex,
+            p_end_number: endIndex,
+            p_format: 'sequential',
+            p_prefix: numberingConfig.prefix
+          })
+        });
+        
+        if (!legacyResponse.ok) {
+          throw new Error(await legacyResponse.text());
+        }
+        
+        const legacyCount = await legacyResponse.json();
+        generatedCount += legacyCount || (endIndex - startIndex + 1);
+      } else {
+        const count = await response.json();
+        generatedCount += count || (endIndex - startIndex + 1);
       }
-
-      const count = await response.json();
-
-      generatedCount += count || (endNumber - startNumber + 1);
 
       // Update job progress via REST API
       await fetch(`${supabaseUrl}/rest/v1/ticket_generation_jobs?id=eq.${jobId}`, {
@@ -307,6 +414,53 @@ async function processJobBatches(
       });
 
       logJob(`Batch ${batch + 1} complete`, { generatedCount, total: totalTickets });
+    }
+
+    // Apply random permutation after all batches if needed
+    if (numberingConfig.mode === 'random_permutation') {
+      logJob("Applying random permutation to all tickets");
+      const permResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/apply_random_permutation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          p_raffle_id: raffleId,
+          p_numbering_config: numberingConfig
+        })
+      });
+      
+      if (!permResponse.ok) {
+        logJob("Random permutation error", { error: await permResponse.text() });
+      } else {
+        logJob("Random permutation applied successfully");
+      }
+    }
+
+    // Apply custom numbers if needed
+    if (numberingConfig.mode === 'custom_list') {
+      logJob("Applying custom number list");
+      const customResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/apply_custom_numbers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          p_raffle_id: raffleId
+        })
+      });
+      
+      if (!customResponse.ok) {
+        logJob("Custom numbers error", { error: await customResponse.text() });
+      } else {
+        logJob("Custom numbers applied successfully");
+      }
     }
 
     // Mark job as completed via REST API
