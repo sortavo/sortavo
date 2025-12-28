@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Hash, Settings2, Eye, ChevronDown, Shuffle, ListOrdered, FileSpreadsheet, Wand2, Sparkles, Lightbulb } from 'lucide-react';
+import { 
+  Hash, 
+  Settings2, 
+  Eye, 
+  ChevronDown, 
+  Shuffle, 
+  ListOrdered, 
+  FileSpreadsheet, 
+  Sparkles, 
+  Lightbulb,
+  Ticket,
+  Binary,
+  Gem,
+  Tag,
+  Dice5,
+  Check
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -48,13 +65,14 @@ function getRecommendedPreset(totalTickets: number): { id: string; reason: strin
   return { id: 'lottery_7', reason: 'Como boletos de lotería nacional' };
 }
 
-// Presets de numeración
+// Presets de numeración con iconos más descriptivos
 const NUMBERING_PRESETS = [
   {
     id: 'simple',
     name: 'Consecutivo Simple',
     description: 'Sin ceros (1, 2, 3...)',
     icon: ListOrdered,
+    iconColor: 'text-blue-500',
     config: {
       mode: 'sequential' as const,
       start_number: 1,
@@ -72,7 +90,8 @@ const NUMBERING_PRESETS = [
     id: 'zeros_auto',
     name: 'Con Ceros (Auto)',
     description: 'Ajusta automáticamente (001, 002...)',
-    icon: Hash,
+    icon: Binary,
+    iconColor: 'text-emerald-500',
     config: {
       mode: 'sequential' as const,
       start_number: 1,
@@ -91,6 +110,7 @@ const NUMBERING_PRESETS = [
     name: 'Con Ceros (Custom)',
     description: 'Tú defines el ancho',
     icon: Settings2,
+    iconColor: 'text-violet-500',
     config: {
       mode: 'sequential' as const,
       start_number: 1,
@@ -108,7 +128,8 @@ const NUMBERING_PRESETS = [
     id: 'lottery_7',
     name: 'Tipo Lotería (7 dígitos)',
     description: 'Como lotería nacional (0000001...)',
-    icon: Wand2,
+    icon: Ticket,
+    iconColor: 'text-amber-500',
     config: {
       mode: 'sequential' as const,
       start_number: 1,
@@ -126,7 +147,8 @@ const NUMBERING_PRESETS = [
     id: 'prefixed',
     name: 'Prefijo + Ceros',
     description: 'TKT-000001, TKT-000002...',
-    icon: Hash,
+    icon: Tag,
+    iconColor: 'text-pink-500',
     config: {
       mode: 'sequential' as const,
       start_number: 1,
@@ -144,7 +166,8 @@ const NUMBERING_PRESETS = [
     id: 'random',
     name: 'Aleatorio Real',
     description: 'Números en orden aleatorio',
-    icon: Shuffle,
+    icon: Dice5,
+    iconColor: 'text-rose-500',
     config: {
       mode: 'random_permutation' as const,
       start_number: 1,
@@ -322,97 +345,195 @@ export function NumberingConfigPanel({ form, totalTickets }: NumberingConfigPane
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Presets Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {NUMBERING_PRESETS.map((preset) => {
             const Icon = preset.icon;
             const isSelected = selectedPreset === preset.id;
             const isRecommended = recommendedPreset.id === preset.id;
             
             return (
-              <Button
+              <motion.div
                 key={preset.id}
-                type="button"
-                variant={isSelected ? "default" : "outline"}
-                className={cn(
-                  "h-auto py-3 px-3 flex flex-col items-start text-left gap-1 relative",
-                  isSelected && "ring-2 ring-primary ring-offset-2",
-                  isRecommended && !isSelected && "border-amber-500/50 bg-amber-500/5"
-                )}
-                onClick={() => applyPreset(preset.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <div className="flex items-center gap-2 w-full min-w-0">
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="text-sm font-medium flex-1 truncate">{preset.name}</span>
-                  {isRecommended && (
-                    <Badge 
-                      variant={isSelected ? "secondary" : "outline"} 
+                <Button
+                  type="button"
+                  variant={isSelected ? "default" : "outline"}
+                  className={cn(
+                    "h-auto w-full py-3 px-3 flex flex-col items-start text-left gap-2 relative overflow-hidden transition-all duration-200",
+                    isSelected && "ring-2 ring-primary ring-offset-2 shadow-lg",
+                    isRecommended && !isSelected && "border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10",
+                    !isSelected && "hover:border-primary/50 hover:shadow-md"
+                  )}
+                  onClick={() => applyPreset(preset.id)}
+                >
+                  {/* Selection indicator */}
+                  <AnimatePresence>
+                    {isSelected && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        className="absolute top-2 right-2"
+                      >
+                        <div className="w-5 h-5 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                          <Check className="w-3 h-3" />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  <div className="flex items-center gap-3 w-full min-w-0">
+                    {/* Icon with background */}
+                    <motion.div
+                      animate={{ 
+                        rotate: isSelected ? [0, -10, 10, 0] : 0,
+                      }}
+                      transition={{ duration: 0.4 }}
                       className={cn(
-                        "text-[10px] px-1 py-0 h-5 shrink-0",
-                        !isSelected && "border-amber-500/50 text-amber-600 dark:text-amber-400"
+                        "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                        isSelected 
+                          ? "bg-primary-foreground/20" 
+                          : "bg-muted"
                       )}
                     >
-                      <Sparkles className="w-3 h-3" />
-                      <span className="hidden xs:inline ml-0.5">Sugerido</span>
-                    </Badge>
-                  )}
-                </div>
-                <span className={cn(
-                  "text-xs w-full",
-                  isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
-                )}>
-                  {preset.description}
-                </span>
-              </Button>
+                      <Icon className={cn(
+                        "w-5 h-5 transition-colors",
+                        isSelected ? "text-primary-foreground" : preset.iconColor
+                      )} />
+                    </motion.div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium truncate">{preset.name}</span>
+                        {isRecommended && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", delay: 0.1 }}
+                          >
+                            <Badge 
+                              variant={isSelected ? "secondary" : "outline"} 
+                              className={cn(
+                                "text-[10px] px-1.5 py-0 h-5 shrink-0",
+                                !isSelected && "border-amber-500/50 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+                              )}
+                            >
+                              <Sparkles className="w-3 h-3" />
+                              <span className="hidden xs:inline ml-0.5">Sugerido</span>
+                            </Badge>
+                          </motion.div>
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-xs block mt-0.5",
+                        isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                      )}>
+                        {preset.description}
+                      </span>
+                    </div>
+                  </div>
+                </Button>
+              </motion.div>
             );
           })}
         </div>
         
         {/* Recommendation Tip */}
-        {selectedPreset !== recommendedPreset.id && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm">
-            <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-            <div className="text-amber-700 dark:text-amber-300">
-              <span className="font-medium">Sugerencia:</span>{' '}
-              Para {totalTickets.toLocaleString()} boletos, {recommendedPreset.reason.toLowerCase()}.
-              <Button 
-                variant="link" 
-                size="sm" 
-                type="button"
-                className="text-amber-600 dark:text-amber-400 h-auto p-0 ml-1"
-                onClick={() => applyPreset(recommendedPreset.id)}
-              >
-                Usar formato sugerido →
-              </Button>
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {selectedPreset !== recommendedPreset.id && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 text-sm">
+                <motion.div
+                  animate={{ rotate: [0, -10, 10, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+                  className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0"
+                >
+                  <Lightbulb className="w-4 h-4 text-amber-500" />
+                </motion.div>
+                <div className="text-amber-700 dark:text-amber-300 flex-1">
+                  <span className="font-medium">Sugerencia:</span>{' '}
+                  Para {totalTickets.toLocaleString()} boletos, {recommendedPreset.reason.toLowerCase()}.
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    type="button"
+                    className="text-amber-600 dark:text-amber-400 h-auto p-0 ml-1 font-semibold hover:text-amber-500"
+                    onClick={() => applyPreset(recommendedPreset.id)}
+                  >
+                    Usar formato sugerido →
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         {/* Preview Section */}
-        <div className="p-3 rounded-lg bg-muted/50 border">
-          <div className="flex items-center gap-2 mb-2">
-            <Eye className="w-4 h-4 text-muted-foreground" />
+        <motion.div 
+          className="p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border"
+          layout
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Eye className="w-4 h-4 text-primary" />
+            </div>
             <span className="text-sm font-medium">Vista Previa</span>
-            {currentConfig.mode === 'random_permutation' && (
-              <Badge variant="secondary" className="text-xs">
-                Orden aleatorio
-              </Badge>
-            )}
+            <AnimatePresence mode="wait">
+              {currentConfig.mode === 'random_permutation' && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                >
+                  <Badge variant="secondary" className="text-xs">
+                    <Shuffle className="w-3 h-3 mr-1" />
+                    Orden aleatorio
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <div className="flex flex-wrap gap-2">
-            {previewNumbers.map((num, i) => (
-              <Badge 
-                key={i} 
-                variant="outline" 
-                className={cn(
-                  "font-mono text-sm",
-                  num === '...' && "bg-transparent border-dashed"
-                )}
-              >
-                {num}
-              </Badge>
-            ))}
+            <AnimatePresence mode="popLayout">
+              {previewNumbers.map((num, i) => (
+                <motion.div
+                  key={`${selectedPreset}-${num}-${i}`}
+                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                  transition={{ 
+                    duration: 0.2, 
+                    delay: i * 0.03,
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 25
+                  }}
+                >
+                  <Badge 
+                    variant="outline" 
+                    className={cn(
+                      "font-mono text-sm transition-colors",
+                      num === '...' 
+                        ? "bg-transparent border-dashed text-muted-foreground" 
+                        : "bg-background hover:bg-primary/5 hover:border-primary/50"
+                    )}
+                  >
+                    {num}
+                  </Badge>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
         
         {/* Advanced Settings Collapsible */}
         <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
