@@ -258,11 +258,13 @@ export function useUploadPaymentProof() {
       ticketIds,
       file,
       buyerName,
+      referenceCode,
     }: {
       raffleId: string;
       ticketIds: string[];
       file: File;
       buyerName?: string;
+      referenceCode?: string;
     }) => {
       // Sanitize filename - remove spaces and special characters
       const sanitizedName = file.name
@@ -271,8 +273,13 @@ export function useUploadPaymentProof() {
         .replace(/[^a-zA-Z0-9.-]/g, '_') // Replace special chars with underscore
         .replace(/_+/g, '_'); // Collapse multiple underscores
       
+      // Build storage path - include referenceCode for better organization
+      const basePath = referenceCode 
+        ? `${raffleId}/${referenceCode}` 
+        : raffleId;
+      const fileName = `${basePath}/${Date.now()}-${sanitizedName}`;
+      
       // Upload file to storage
-      const fileName = `${raffleId}/${Date.now()}-${sanitizedName}`;
       const { data: upload, error: uploadError } = await supabase.storage
         .from('payment-proofs')
         .upload(fileName, file);
@@ -284,7 +291,25 @@ export function useUploadPaymentProof() {
         .from('payment-proofs')
         .getPublicUrl(upload.path);
 
-      // Update tickets with proof URL
+      // If we have a referenceCode, use the edge function for reliable association
+      if (referenceCode) {
+        const { data, error } = await supabase.functions.invoke('submit-payment-proof', {
+          body: { raffleId, referenceCode, publicUrl },
+        });
+
+        if (error) {
+          console.error('Edge function error:', error);
+          throw new Error('No se pudo asociar el comprobante a tu reservación. Contacta al organizador con tu clave: ' + referenceCode);
+        }
+
+        if (!data?.updatedCount || data.updatedCount === 0) {
+          throw new Error('No se encontraron boletos para esta reservación. Verifica tu clave: ' + referenceCode);
+        }
+
+        return publicUrl;
+      }
+
+      // Fallback: direct update by ticket IDs (legacy support)
       const { data: updatedTickets, error } = await supabase
         .from('tickets')
         .update({ payment_proof_url: publicUrl })
