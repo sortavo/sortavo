@@ -6,10 +6,12 @@ const corsHeaders = {
 };
 
 interface GenerateDescriptionRequest {
-  type?: 'title' | 'description';
+  type?: 'title' | 'description' | 'prize_terms';
   title?: string;
   category?: string;
   prizeName?: string;
+  prizeValue?: number;
+  currencyCode?: string;
   userContext?: string;
 }
 
@@ -20,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { type = 'description', title, category, prizeName, userContext }: GenerateDescriptionRequest = await req.json();
+    const { type = 'description', title, category, prizeName, prizeValue, currencyCode, userContext }: GenerateDescriptionRequest = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -56,6 +58,40 @@ El título debe:
 Escribe SOLO el título, sin explicaciones adicionales.`;
 
       logMessage = `Generating title for category: ${category || 'none'}, prize: ${prizeName || 'none'}`;
+    } else if (type === 'prize_terms') {
+      // Generate prize terms
+      const contextParts = [];
+      if (prizeName) contextParts.push(`Premio: ${prizeName}`);
+      if (prizeValue && currencyCode) contextParts.push(`Valor: ${currencyCode} $${prizeValue.toLocaleString()}`);
+      if (category) contextParts.push(`Categoría: ${category}`);
+      if (title) contextParts.push(`Nombre del sorteo: ${title}`);
+      if (userContext && userContext.trim()) {
+        contextParts.push(`Instrucciones adicionales: ${userContext}`);
+      }
+
+      prompt = `Genera términos y condiciones claros y profesionales para un premio de sorteo con estas características:
+
+${contextParts.length > 0 ? contextParts.join('\n') : 'Premio genérico de sorteo'}
+
+Los términos deben incluir secciones sobre:
+1. **Entrega del premio**: Cómo y cuándo se entregará (ej: envío a domicilio, recogida en punto)
+2. **Requisitos del ganador**: Documentación necesaria (identificación, ser mayor de edad, etc.)
+3. **Condiciones del premio**: Si es nuevo/usado, garantías, si incluye accesorios
+4. **Restricciones geográficas**: Si aplica (ej: solo envíos nacionales)
+5. **Vigencia**: Tiempo para reclamar el premio
+6. **Responsabilidades**: Impuestos, seguros, gastos adicionales
+
+Formato:
+- Usar bullets (•) para cada punto
+- Máximo 500 caracteres
+- Lenguaje claro y directo
+- Español latinoamericano neutro
+- Profesional pero accesible
+- NO usar títulos de secciones, solo bullets directos
+
+Escribe SOLO los términos, sin explicaciones adicionales.`;
+
+      logMessage = `Generating prize terms for: ${prizeName || 'unknown prize'}`;
     } else {
       // Generate description
       if (!title) {
@@ -142,8 +178,11 @@ Escribe SOLO la descripción, sin explicaciones adicionales.`;
 
     if (!generatedContent) {
       console.error("No content in AI response:", data);
+      const errorMsg = type === 'title' ? "No se pudo generar el título" : 
+                       type === 'prize_terms' ? "No se pudo generar los términos" :
+                       "No se pudo generar la descripción";
       return new Response(
-        JSON.stringify({ error: type === 'title' ? "No se pudo generar el título" : "No se pudo generar la descripción" }),
+        JSON.stringify({ error: errorMsg }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -151,7 +190,7 @@ Escribe SOLO la descripción, sin explicaciones adicionales.`;
     console.log(`Successfully generated ${type}:`, generatedContent.substring(0, 50) + "...");
 
     // Return with appropriate key based on type
-    const responseKey = type === 'title' ? 'title' : 'description';
+    const responseKey = type === 'title' ? 'title' : type === 'prize_terms' ? 'prize_terms' : 'description';
     return new Response(
       JSON.stringify({ [responseKey]: generatedContent }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

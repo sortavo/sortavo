@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES } from '@/lib/currency-utils';
-import { ImagePlus, Video, X, Loader2, GripVertical, Plus, Trash2, Gift } from 'lucide-react';
+import { ImagePlus, Video, X, Loader2, GripVertical, Plus, Trash2, Gift, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -253,6 +253,7 @@ export const Step2Prize = ({ form }: Step2Props) => {
   const defaultCurrency = form.watch('currency_code') || 'MXN';
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isGeneratingTerms, setIsGeneratingTerms] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const prizeImages = form.watch('prize_images') || [];
@@ -458,6 +459,42 @@ export const Step2Prize = ({ form }: Step2Props) => {
 
   const firstPrizeHasName = prizes[0]?.name?.trim().length > 0;
 
+  const handleGenerateTerms = async () => {
+    setIsGeneratingTerms(true);
+    try {
+      const title = form.getValues('title');
+      const category = form.getValues('category');
+      const firstPrize = prizes[0];
+      
+      const { data, error } = await supabase.functions.invoke('generate-description', {
+        body: {
+          type: 'prize_terms',
+          title,
+          category,
+          prizeName: firstPrize?.name,
+          prizeValue: firstPrize?.value,
+          currencyCode: firstPrize?.currency || defaultCurrency,
+        },
+      });
+
+      if (error) {
+        console.error('Error generating terms:', error);
+        toast.error('Error al generar términos');
+        return;
+      }
+
+      if (data?.prize_terms) {
+        form.setValue('prize_terms', data.prize_terms);
+        toast.success('Términos generados con IA');
+      }
+    } catch (err) {
+      console.error('Error generating terms:', err);
+      toast.error('Error al generar términos');
+    } finally {
+      setIsGeneratingTerms(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -629,14 +666,34 @@ export const Step2Prize = ({ form }: Step2Props) => {
           name="prize_terms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Términos del Premio</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel>Términos del Premio</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateTerms}
+                  disabled={isGeneratingTerms}
+                  className="h-7 text-xs gap-1.5"
+                >
+                  {isGeneratingTerms ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3 w-3" />
+                  )}
+                  Generar con IA
+                </Button>
+              </div>
               <FormControl>
                 <Textarea 
                   placeholder="Condiciones de entrega, garantías, restricciones..."
-                  className="min-h-[100px]"
+                  className="min-h-[120px]"
                   {...field}
                 />
               </FormControl>
+              <FormDescription>
+                La IA generará términos basándose en el premio y categoría del sorteo
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
