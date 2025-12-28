@@ -322,7 +322,7 @@ export function NumberingConfigPanel({ form, totalTickets }: NumberingConfigPane
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Presets Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {NUMBERING_PRESETS.map((preset) => {
             const Icon = preset.icon;
             const isSelected = selectedPreset === preset.id;
@@ -340,24 +340,24 @@ export function NumberingConfigPanel({ form, totalTickets }: NumberingConfigPane
                 )}
                 onClick={() => applyPreset(preset.id)}
               >
-                <div className="flex items-center gap-2 w-full">
+                <div className="flex items-center gap-2 w-full min-w-0">
                   <Icon className="w-4 h-4 shrink-0" />
-                  <span className="text-sm font-medium truncate">{preset.name}</span>
+                  <span className="text-sm font-medium flex-1 truncate">{preset.name}</span>
                   {isRecommended && (
                     <Badge 
                       variant={isSelected ? "secondary" : "outline"} 
                       className={cn(
-                        "text-[10px] px-1.5 py-0 h-5 ml-auto shrink-0",
+                        "text-[10px] px-1 py-0 h-5 shrink-0",
                         !isSelected && "border-amber-500/50 text-amber-600 dark:text-amber-400"
                       )}
                     >
-                      <Sparkles className="w-3 h-3 mr-0.5" />
-                      Sugerido
+                      <Sparkles className="w-3 h-3" />
+                      <span className="hidden xs:inline ml-0.5">Sugerido</span>
                     </Badge>
                   )}
                 </div>
                 <span className={cn(
-                  "text-xs truncate w-full",
+                  "text-xs w-full",
                   isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
                 )}>
                   {preset.description}
