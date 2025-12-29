@@ -38,6 +38,7 @@ import Contact from "./pages/Contact";
 import SystemStatus from "./pages/SystemStatus";
 import LogoPreview from "./pages/LogoPreview";
 import ColorPalette from "./components/design-system/ColorPalette";
+import SentryTest from "./pages/SentryTest";
 
 // Admin pages
 import AdminOverview from "./pages/admin/AdminOverview";
@@ -47,6 +48,7 @@ import AdminUsersDashboard from "./pages/admin/AdminUsersDashboard";
 import AdminOrganizations from "./pages/admin/AdminOrganizations";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminUsers from "./pages/admin/AdminUsers";
+
 
 const queryClient = new QueryClient();
 
@@ -102,6 +104,7 @@ const App = () => (
                   <Route path="/status" element={<SystemStatus />} />
                   <Route path="/design-system" element={<ColorPalette />} />
                   <Route path="/logo-preview" element={<LogoPreview />} />
+                  <Route path="/sentry-test" element={<SentryTest />} />
                   {/* Redirects for common reserved slugs */}
                   <Route path="/login" element={<Navigate to="/auth" replace />} />
                   <Route path="/signup" element={<Navigate to="/auth" replace />} />
