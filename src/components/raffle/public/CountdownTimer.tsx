@@ -73,18 +73,18 @@ export function CountdownTimer({
 
   const pad = (num: number) => num.toString().padStart(2, '0');
 
-  // Lottery variant - large animated numbers
+  // Lottery variant - large animated numbers (clean style)
   if (variant === 'lottery') {
     const isUrgent = timeLeft.days === 0 && timeLeft.hours < 6;
     
     return (
       <div className={cn("flex justify-center gap-2 sm:gap-4", className)}>
         <LotteryTimeUnit value={timeLeft.days} label="DÍAS" urgent={isUrgent} />
-        <div className="text-white/60 text-3xl sm:text-5xl font-bold self-center pb-6">:</div>
+        <div className="text-muted-foreground/60 text-3xl sm:text-5xl font-bold self-center pb-6">:</div>
         <LotteryTimeUnit value={timeLeft.hours} label="HRS" urgent={isUrgent} />
-        <div className="text-white/60 text-3xl sm:text-5xl font-bold self-center pb-6">:</div>
+        <div className="text-muted-foreground/60 text-3xl sm:text-5xl font-bold self-center pb-6">:</div>
         <LotteryTimeUnit value={timeLeft.minutes} label="MIN" urgent={isUrgent} />
-        <div className="text-white/60 text-3xl sm:text-5xl font-bold self-center pb-6">:</div>
+        <div className="text-muted-foreground/60 text-3xl sm:text-5xl font-bold self-center pb-6">:</div>
         <LotteryTimeUnit 
           value={timeLeft.seconds} 
           label="SEG" 
@@ -181,12 +181,9 @@ function LotteryTimeUnit({
   return (
     <div className="flex flex-col items-center">
       <div className={cn(
-        "relative bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-4 sm:py-3 min-w-[52px] sm:min-w-[72px] overflow-hidden",
-        urgent && "bg-red-500/30"
+        "relative bg-primary/10 rounded-xl px-3 py-2 sm:px-4 sm:py-3 min-w-[52px] sm:min-w-[72px] overflow-hidden border border-primary/20",
+        urgent && "bg-destructive/10 border-destructive/20"
       )}>
-        {/* Shimmer effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer" />
-        
         <AnimatePresence mode="popLayout">
           <motion.span
             key={displayValue}
@@ -195,8 +192,8 @@ function LotteryTimeUnit({
             exit={{ y: 40, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={cn(
-              "block text-3xl sm:text-5xl font-black text-white text-center font-mono tabular-nums",
-              urgent && "text-red-100"
+              "block text-3xl sm:text-5xl font-black text-foreground text-center font-mono tabular-nums",
+              urgent && "text-destructive"
             )}
           >
             {displayValue}
@@ -205,7 +202,7 @@ function LotteryTimeUnit({
       </div>
       <span className={cn(
         "text-[10px] sm:text-xs font-medium mt-1.5 uppercase tracking-wider",
-        urgent ? "text-red-200" : "text-white/70"
+        urgent ? "text-destructive" : "text-muted-foreground"
       )}>
         {label}
       </span>
