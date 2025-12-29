@@ -10,7 +10,9 @@ import {
   Shuffle,
   Package,
   User,
-  MessageCircle
+  MessageCircle,
+  Truck,
+  ShieldCheck
 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +41,7 @@ interface FAQSectionProps {
     sections?: { faq?: boolean };
     faq_config?: { 
       show_default_faqs?: boolean; 
-      custom_faqs?: Array<{ question: string; answer: string }>;
+      custom_faqs?: Array<{ question: string; answer: string; category?: string }>;
     };
   };
   className?: string;
@@ -50,8 +52,18 @@ interface SmartFAQ {
   question: string;
   answer: string;
   icon: React.ReactNode;
-  category: 'auto' | 'custom';
+  category: string;
 }
+
+// FAQ Categories matching the editor
+const FAQ_CATEGORIES = [
+  { id: 'shipping', label: 'Envío', icon: Truck, color: 'bg-blue-500' },
+  { id: 'payment', label: 'Pagos', icon: CreditCard, color: 'bg-green-500' },
+  { id: 'prize', label: 'Premio', icon: Trophy, color: 'bg-amber-500' },
+  { id: 'participation', label: 'Participación', icon: HelpCircle, color: 'bg-purple-500' },
+  { id: 'trust', label: 'Garantías', icon: ShieldCheck, color: 'bg-teal-500' },
+  { id: 'other', label: 'Otros', icon: Package, color: 'bg-gray-500' },
+] as const;
 
 const DRAW_METHOD_LABELS: Record<string, string> = {
   lottery_nacional: 'Lotería Nacional',
@@ -64,7 +76,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
   const faqConfig = customization?.faq_config || { show_default_faqs: true, custom_faqs: [] };
   const showFaqSection = sections.faq !== false;
   const showDefaultFaqs = faqConfig.show_default_faqs !== false;
-  const customFaqs: Array<{ question: string; answer: string }> = faqConfig.custom_faqs || [];
+  const customFaqs: Array<{ question: string; answer: string; category?: string }> = faqConfig.custom_faqs || [];
   
   if (!showFaqSection) return null;
 
@@ -88,7 +100,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
       question: '¿Cuánto cuesta cada boleto?',
       answer: priceAnswer,
       icon: <DollarSign className="w-4 h-4" />,
-      category: 'auto'
+      category: 'payment'
     });
 
     // Draw date FAQ
@@ -99,7 +111,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
         ? `El sorteo se realizará el ${format(new Date(raffle.draw_date), "EEEE dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}.`
         : 'La fecha del sorteo será confirmada próximamente.',
       icon: <Calendar className="w-4 h-4" />,
-      category: 'auto'
+      category: 'participation'
     });
 
     // Total tickets FAQ
@@ -108,7 +120,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
       question: '¿Cuántos boletos hay disponibles?',
       answer: `Este sorteo cuenta con un total de ${raffle.total_tickets.toLocaleString()} boletos.`,
       icon: <Ticket className="w-4 h-4" />,
-      category: 'auto'
+      category: 'participation'
     });
 
     // Prize FAQ
@@ -121,7 +133,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
       question: '¿Cuál es el premio?',
       answer: prizeAnswer,
       icon: <Trophy className="w-4 h-4" />,
-      category: 'auto'
+      category: 'prize'
     });
 
     // Draw method FAQ
@@ -132,7 +144,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
         question: '¿Cómo se realizará el sorteo?',
         answer: `El sorteo se realizará mediante: ${methodLabel}. Esto garantiza transparencia y equidad para todos los participantes.`,
         icon: <Shuffle className="w-4 h-4" />,
-        category: 'auto'
+        category: 'trust'
       });
     }
 
@@ -143,7 +155,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
         question: '¿Cuántos boletos puedo comprar?',
         answer: `Cada participante puede comprar hasta ${raffle.max_tickets_per_person} boleto${raffle.max_tickets_per_person > 1 ? 's' : ''}.`,
         icon: <User className="w-4 h-4" />,
-        category: 'auto'
+        category: 'participation'
       });
     }
 
@@ -154,7 +166,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
         question: '¿Puedo elegir mis números de la suerte?',
         answer: '¡Sí! Este sorteo te permite seleccionar tus números favoritos. Al momento de comprar, podrás elegir los boletos específicos que deseas.',
         icon: <Ticket className="w-4 h-4" />,
-        category: 'auto'
+        category: 'participation'
       });
     }
 
@@ -165,7 +177,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
         question: '¿Hay descuentos por comprar varios boletos?',
         answer: `¡Sí! Ofrecemos paquetes con descuento: ${packages.map(p => `${p.quantity} boletos por ${formatCurrency(p.price, currency)}`).join(', ')}.`,
         icon: <Package className="w-4 h-4" />,
-        category: 'auto'
+        category: 'payment'
       });
     }
 
@@ -175,7 +187,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
       question: '¿Cómo participo?',
       answer: 'Selecciona tus boletos, completa tus datos, realiza el pago y sube tu comprobante. Una vez verificado tu pago, recibirás la confirmación de tu participación.',
       icon: <HelpCircle className="w-4 h-4" />,
-      category: 'auto'
+      category: 'participation'
     });
 
     // Winner notification FAQ
@@ -184,7 +196,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
       question: '¿Cómo sé si gané?',
       answer: `Te contactaremos por email y teléfono si resultas ganador.${organization?.name ? ` También publicaremos los resultados en las redes de ${organization.name}.` : ''}`,
       icon: <Trophy className="w-4 h-4" />,
-      category: 'auto'
+      category: 'prize'
     });
 
     // Payment methods FAQ
@@ -193,7 +205,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
       question: '¿Qué métodos de pago aceptan?',
       answer: 'Aceptamos transferencia bancaria, depósito en efectivo y otros métodos de pago. Verás las opciones disponibles al momento de completar tu compra.',
       icon: <CreditCard className="w-4 h-4" />,
-      category: 'auto'
+      category: 'payment'
     });
 
     // Contact FAQ
@@ -214,7 +226,7 @@ export function FAQSection({ raffle, organization, customization, className }: F
         question: '¿Cómo puedo contactar al organizador?',
         answer: contactAnswer,
         icon: <MessageCircle className="w-4 h-4" />,
-        category: 'auto'
+        category: 'other'
       });
     }
 
@@ -229,16 +241,23 @@ export function FAQSection({ raffle, organization, customization, className }: F
     question: faq.question,
     answer: faq.answer,
     icon: <HelpCircle className="w-4 h-4" />,
-    category: 'custom' as const
+    category: faq.category || 'other'
   }));
 
   const allFaqs = [...smartFaqs, ...customFaqsFormatted];
   
   if (allFaqs.length === 0) return null;
 
-  // Separate into auto-generated and custom for visual differentiation
-  const autoFaqs = allFaqs.filter(f => f.category === 'auto');
-  const orgFaqs = allFaqs.filter(f => f.category === 'custom');
+  // Group FAQs by category
+  const groupedFaqs = allFaqs.reduce((acc, faq) => {
+    const cat = faq.category || 'other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(faq);
+    return acc;
+  }, {} as Record<string, SmartFAQ[]>);
+
+  // Get categories that have FAQs, in order
+  const categoriesWithFaqs = FAQ_CATEGORIES.filter(cat => groupedFaqs[cat.id]?.length > 0);
 
   return (
     <div className={cn("max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16", className)}>
@@ -255,63 +274,64 @@ export function FAQSection({ raffle, organization, customization, className }: F
         </p>
       </div>
 
-      <div className="space-y-6">
-        {/* Auto-generated FAQs */}
-        {autoFaqs.length > 0 && (
-          <Accordion type="single" collapsible className="w-full space-y-2">
-            {autoFaqs.map((faq) => (
-              <AccordionItem 
-                key={faq.id} 
-                value={faq.id} 
-                className="bg-card rounded-xl border border-border px-4 sm:px-5 overflow-hidden"
-              >
-                <AccordionTrigger className="text-left font-semibold hover:no-underline text-sm sm:text-base py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                      {faq.icon}
-                    </div>
-                    <span>{faq.question}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-sm pb-4 pl-11">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        )}
+      {/* Category badges */}
+      <div className="flex flex-wrap justify-center gap-2 mb-6">
+        {categoriesWithFaqs.map((cat) => {
+          const Icon = cat.icon;
+          const count = groupedFaqs[cat.id]?.length || 0;
+          return (
+            <Badge 
+              key={cat.id} 
+              variant="outline" 
+              className="gap-1.5 text-xs cursor-default"
+            >
+              <span className={cn("w-2 h-2 rounded-full", cat.color)} />
+              <Icon className="w-3 h-3" />
+              {cat.label}
+              <span className="text-muted-foreground">({count})</span>
+            </Badge>
+          );
+        })}
+      </div>
 
-        {/* Custom FAQs from organizer */}
-        {orgFaqs.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                Del organizador
-              </Badge>
-            </div>
-            <Accordion type="single" collapsible className="w-full space-y-2">
-              {orgFaqs.map((faq) => (
-                <AccordionItem 
-                  key={faq.id} 
-                  value={faq.id} 
-                  className="bg-accent/50 rounded-xl border border-border px-4 sm:px-5 overflow-hidden"
-                >
-                  <AccordionTrigger className="text-left font-semibold hover:no-underline text-sm sm:text-base py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-secondary text-secondary-foreground flex items-center justify-center">
-                        {faq.icon}
+      <div className="space-y-8">
+        {categoriesWithFaqs.map((cat) => {
+          const Icon = cat.icon;
+          const faqs = groupedFaqs[cat.id] || [];
+          
+          return (
+            <div key={cat.id} className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <span className={cn("w-3 h-3 rounded-full", cat.color)} />
+                <Icon className="w-5 h-5 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground">{cat.label}</h3>
+                <span className="text-sm text-muted-foreground">({faqs.length})</span>
+              </div>
+              
+              <Accordion type="single" collapsible className="w-full space-y-2">
+                {faqs.map((faq) => (
+                  <AccordionItem 
+                    key={faq.id} 
+                    value={faq.id} 
+                    className="bg-card rounded-xl border border-border px-4 sm:px-5 overflow-hidden"
+                  >
+                    <AccordionTrigger className="text-left font-medium hover:no-underline text-sm sm:text-base py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center">
+                          {faq.icon}
+                        </div>
+                        <span>{faq.question}</span>
                       </div>
-                      <span>{faq.question}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground text-sm pb-4 pl-11">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        )}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-sm pb-4 pl-11">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

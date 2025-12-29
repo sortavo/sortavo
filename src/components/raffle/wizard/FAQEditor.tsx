@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   HelpCircle, 
   Plus, 
@@ -23,76 +24,106 @@ import {
   MapPin,
   Gift,
   Phone,
-  RefreshCw
+  RefreshCw,
+  Trophy,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FAQItem {
   question: string;
   answer: string;
+  category?: string;
 }
 
 interface FAQEditorProps {
   form: UseFormReturn<any>;
 }
 
+// FAQ Categories
+const FAQ_CATEGORIES = [
+  { id: 'shipping', label: 'Envío', icon: Truck, color: 'bg-blue-500' },
+  { id: 'payment', label: 'Pagos', icon: CreditCard, color: 'bg-green-500' },
+  { id: 'prize', label: 'Premio', icon: Trophy, color: 'bg-amber-500' },
+  { id: 'participation', label: 'Participación', icon: HelpCircle, color: 'bg-purple-500' },
+  { id: 'trust', label: 'Garantías', icon: ShieldCheck, color: 'bg-teal-500' },
+  { id: 'other', label: 'Otros', icon: Package, color: 'bg-gray-500' },
+] as const;
+
+type CategoryId = typeof FAQ_CATEGORIES[number]['id'];
+
 // Quick FAQ suggestions that organizers commonly need
-const FAQ_SUGGESTIONS = [
+const FAQ_SUGGESTIONS: Array<{
+  id: string;
+  label: string;
+  icon: typeof Truck;
+  question: string;
+  answer: string;
+  category: CategoryId;
+}> = [
   {
     id: 'shipping',
     label: 'Envío',
     icon: Truck,
     question: '¿Hacen envíos?',
-    answer: 'Sí, hacemos envíos a todo el país. El costo y tiempo de envío dependerá de tu ubicación.'
+    answer: 'Sí, hacemos envíos a todo el país. El costo y tiempo de envío dependerá de tu ubicación.',
+    category: 'shipping'
   },
   {
     id: 'delivery-time',
     label: 'Tiempo',
     icon: Clock,
     question: '¿Cuánto tarda el envío?',
-    answer: 'El envío tarda de 3 a 7 días hábiles dependiendo de tu ubicación.'
+    answer: 'El envío tarda de 3 a 7 días hábiles dependiendo de tu ubicación.',
+    category: 'shipping'
   },
   {
     id: 'pickup',
     label: 'Recoger',
     icon: MapPin,
     question: '¿Puedo recoger el premio en persona?',
-    answer: 'Sí, puedes recoger el premio en nuestra ubicación previa coordinación.'
+    answer: 'Sí, puedes recoger el premio en nuestra ubicación previa coordinación.',
+    category: 'shipping'
   },
   {
     id: 'refund',
     label: 'Reembolso',
     icon: RefreshCw,
     question: '¿Hay reembolsos?',
-    answer: 'Los boletos no son reembolsables una vez comprados, según nuestros términos y condiciones.'
+    answer: 'Los boletos no son reembolsables una vez comprados, según nuestros términos y condiciones.',
+    category: 'payment'
   },
   {
     id: 'payment-deadline',
     label: 'Plazo pago',
     icon: CreditCard,
     question: '¿Cuánto tiempo tengo para pagar?',
-    answer: 'Tienes el tiempo indicado en tu reserva para completar el pago. Si no pagas a tiempo, los boletos quedarán disponibles nuevamente.'
+    answer: 'Tienes el tiempo indicado en tu reserva para completar el pago. Si no pagas a tiempo, los boletos quedarán disponibles nuevamente.',
+    category: 'payment'
   },
   {
     id: 'prize-exchange',
     label: 'Cambio',
     icon: Gift,
     question: '¿Puedo cambiar el premio por dinero?',
-    answer: 'No, el premio no es canjeable por dinero en efectivo.'
+    answer: 'No, el premio no es canjeable por dinero en efectivo.',
+    category: 'prize'
   },
   {
     id: 'contact',
     label: 'Contacto',
     icon: Phone,
     question: '¿Cómo los contacto para dudas?',
-    answer: 'Puedes contactarnos por WhatsApp o por las redes sociales indicadas en esta página.'
+    answer: 'Puedes contactarnos por WhatsApp o por las redes sociales indicadas en esta página.',
+    category: 'other'
   },
   {
     id: 'packages',
     label: 'Paquetes',
     icon: Package,
     question: '¿Hay promociones por varios boletos?',
-    answer: 'Sí, ofrecemos paquetes con descuento. Consulta las opciones disponibles al momento de comprar.'
+    answer: 'Sí, ofrecemos paquetes con descuento. Consulta las opciones disponibles al momento de comprar.',
+    category: 'participation'
   }
 ];
 
@@ -104,9 +135,11 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuestion, setEditQuestion] = useState('');
   const [editAnswer, setEditAnswer] = useState('');
+  const [editCategory, setEditCategory] = useState<CategoryId>('other');
   const [isAdding, setIsAdding] = useState(false);
   const [newQuestion, setNewQuestion] = useState('');
   const [newAnswer, setNewAnswer] = useState('');
+  const [newCategory, setNewCategory] = useState<CategoryId>('other');
 
   const showFaqSection = sections.faq !== false;
   const showDefaultFaqs = faqConfig.show_default_faqs !== false;
@@ -129,21 +162,29 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
   const handleAddFaq = () => {
     if (!newQuestion.trim() || !newAnswer.trim()) return;
     
-    const newFaq: FAQItem = { question: newQuestion.trim(), answer: newAnswer.trim() };
+    const newFaq: FAQItem = { 
+      question: newQuestion.trim(), 
+      answer: newAnswer.trim(),
+      category: newCategory 
+    };
     updateFaqConfig({ custom_faqs: [...customFaqs, newFaq] });
     setNewQuestion('');
     setNewAnswer('');
+    setNewCategory('other');
     setIsAdding(false);
   };
 
   const handleAddSuggestion = (suggestion: typeof FAQ_SUGGESTIONS[0]) => {
-    // Check if already exists
     const exists = customFaqs.some(
       faq => faq.question.toLowerCase() === suggestion.question.toLowerCase()
     );
     if (exists) return;
     
-    const newFaq: FAQItem = { question: suggestion.question, answer: suggestion.answer };
+    const newFaq: FAQItem = { 
+      question: suggestion.question, 
+      answer: suggestion.answer,
+      category: suggestion.category 
+    };
     updateFaqConfig({ custom_faqs: [...customFaqs, newFaq] });
   };
 
@@ -151,17 +192,23 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
     setEditingIndex(index);
     setEditQuestion(customFaqs[index].question);
     setEditAnswer(customFaqs[index].answer);
+    setEditCategory((customFaqs[index].category as CategoryId) || 'other');
   };
 
   const handleSaveEdit = () => {
     if (editingIndex === null || !editQuestion.trim() || !editAnswer.trim()) return;
     
     const updatedFaqs = [...customFaqs];
-    updatedFaqs[editingIndex] = { question: editQuestion.trim(), answer: editAnswer.trim() };
+    updatedFaqs[editingIndex] = { 
+      question: editQuestion.trim(), 
+      answer: editAnswer.trim(),
+      category: editCategory 
+    };
     updateFaqConfig({ custom_faqs: updatedFaqs });
     setEditingIndex(null);
     setEditQuestion('');
     setEditAnswer('');
+    setEditCategory('other');
   };
 
   const handleDeleteFaq = (index: number) => {
@@ -173,15 +220,16 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
     setEditingIndex(null);
     setEditQuestion('');
     setEditAnswer('');
+    setEditCategory('other');
   };
 
   const handleCancelAdd = () => {
     setIsAdding(false);
     setNewQuestion('');
     setNewAnswer('');
+    setNewCategory('other');
   };
 
-  // Check which suggestions are already added
   const getAddedSuggestionIds = () => {
     return FAQ_SUGGESTIONS.filter(suggestion =>
       customFaqs.some(faq => 
@@ -191,6 +239,18 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
   };
 
   const addedSuggestionIds = getAddedSuggestionIds();
+
+  const getCategoryInfo = (categoryId: string) => {
+    return FAQ_CATEGORIES.find(c => c.id === categoryId) || FAQ_CATEGORIES[5]; // default to 'other'
+  };
+
+  // Group FAQs by category for display
+  const groupedFaqs = customFaqs.reduce((acc, faq, index) => {
+    const cat = faq.category || 'other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push({ ...faq, originalIndex: index });
+    return acc;
+  }, {} as Record<string, Array<FAQItem & { originalIndex: number }>>);
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
@@ -229,7 +289,6 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
           />
         </div>
 
-        {/* Content when FAQ section is enabled */}
         {showFaqSection && (
           <>
             <Separator />
@@ -246,8 +305,29 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
                   Incluir preguntas automáticas
                 </label>
                 <p className="text-xs text-muted-foreground">
-                  Se generan automáticamente basadas en la información de tu sorteo (precio, fecha, métodos de pago, etc.)
+                  Se generan automáticamente basadas en la información de tu sorteo
                 </p>
+              </div>
+            </div>
+
+            {/* Category legend */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Categorías disponibles</Label>
+              <div className="flex flex-wrap gap-2">
+                {FAQ_CATEGORIES.map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <Badge 
+                      key={cat.id} 
+                      variant="outline" 
+                      className="gap-1.5 text-xs"
+                    >
+                      <span className={cn("w-2 h-2 rounded-full", cat.color)} />
+                      <Icon className="w-3 h-3" />
+                      {cat.label}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
 
@@ -258,6 +338,7 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
                 {FAQ_SUGGESTIONS.map((suggestion) => {
                   const isAdded = addedSuggestionIds.includes(suggestion.id);
                   const Icon = suggestion.icon;
+                  const catInfo = getCategoryInfo(suggestion.category);
                   return (
                     <Button
                       key={suggestion.id}
@@ -271,6 +352,7 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
                       onClick={() => !isAdded && handleAddSuggestion(suggestion)}
                       disabled={isAdded}
                     >
+                      <span className={cn("w-1.5 h-1.5 rounded-full", catInfo.color)} />
                       <Icon className="w-3.5 h-3.5" />
                       {suggestion.label}
                       {isAdded && <Check className="w-3 h-3 ml-1" />}
@@ -278,14 +360,11 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Click para agregar, luego edita la respuesta según tu caso
-              </p>
             </div>
 
             <Separator />
 
-            {/* Custom FAQs section */}
+            {/* Custom FAQs section - grouped by category */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Tus preguntas personalizadas</Label>
@@ -294,87 +373,92 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
                 </Badge>
               </div>
 
-              {/* Existing custom FAQs */}
               {customFaqs.length > 0 && (
-                <div className="space-y-3">
-                  {customFaqs.map((faq, index) => (
-                    <div 
-                      key={index} 
-                      className="bg-card rounded-lg border border-border overflow-hidden"
-                    >
-                      {editingIndex === index ? (
-                        // Edit mode
-                        <div className="p-4 space-y-3">
-                          <Input
-                            placeholder="Pregunta"
-                            value={editQuestion}
-                            onChange={(e) => setEditQuestion(e.target.value)}
-                            className="font-medium"
-                          />
-                          <Textarea
-                            placeholder="Respuesta"
-                            value={editAnswer}
-                            onChange={(e) => setEditAnswer(e.target.value)}
-                            rows={3}
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={handleCancelEdit}
-                            >
-                              <X className="w-4 h-4 mr-1" />
-                              Cancelar
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={handleSaveEdit}
-                              disabled={!editQuestion.trim() || !editAnswer.trim()}
-                            >
-                              <Check className="w-4 h-4 mr-1" />
-                              Guardar
-                            </Button>
-                          </div>
+                <div className="space-y-4">
+                  {FAQ_CATEGORIES.filter(cat => groupedFaqs[cat.id]?.length > 0).map((cat) => {
+                    const Icon = cat.icon;
+                    const faqs = groupedFaqs[cat.id] || [];
+                    
+                    return (
+                      <div key={cat.id} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className={cn("w-2 h-2 rounded-full", cat.color)} />
+                          <Icon className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium text-muted-foreground">{cat.label}</span>
+                          <span className="text-xs text-muted-foreground">({faqs.length})</span>
                         </div>
-                      ) : (
-                        // View mode
-                        <div className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-foreground truncate">
-                                P: {faq.question}
-                              </p>
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                R: {faq.answer}
-                              </p>
+                        <div className="space-y-2 pl-4 border-l-2 border-muted">
+                          {faqs.map((faq) => (
+                            <div 
+                              key={faq.originalIndex} 
+                              className="bg-card rounded-lg border border-border overflow-hidden"
+                            >
+                              {editingIndex === faq.originalIndex ? (
+                                <div className="p-4 space-y-3">
+                                  <Input
+                                    placeholder="Pregunta"
+                                    value={editQuestion}
+                                    onChange={(e) => setEditQuestion(e.target.value)}
+                                    className="font-medium"
+                                  />
+                                  <Textarea
+                                    placeholder="Respuesta"
+                                    value={editAnswer}
+                                    onChange={(e) => setEditAnswer(e.target.value)}
+                                    rows={3}
+                                  />
+                                  <Select value={editCategory} onValueChange={(v) => setEditCategory(v as CategoryId)}>
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Categoría" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {FAQ_CATEGORIES.map((c) => {
+                                        const CatIcon = c.icon;
+                                        return (
+                                          <SelectItem key={c.id} value={c.id}>
+                                            <div className="flex items-center gap-2">
+                                              <span className={cn("w-2 h-2 rounded-full", c.color)} />
+                                              <CatIcon className="w-4 h-4" />
+                                              {c.label}
+                                            </div>
+                                          </SelectItem>
+                                        );
+                                      })}
+                                    </SelectContent>
+                                  </Select>
+                                  <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="ghost" size="sm" onClick={handleCancelEdit}>
+                                      <X className="w-4 h-4 mr-1" />Cancelar
+                                    </Button>
+                                    <Button type="button" size="sm" onClick={handleSaveEdit} disabled={!editQuestion.trim() || !editAnswer.trim()}>
+                                      <Check className="w-4 h-4 mr-1" />Guardar
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="p-4">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-foreground truncate">P: {faq.question}</p>
+                                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">R: {faq.answer}</p>
+                                    </div>
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditFaq(faq.originalIndex)}>
+                                        <Pencil className="w-4 h-4 text-muted-foreground" />
+                                      </Button>
+                                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteFaq(faq.originalIndex)}>
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleEditFaq(index)}
-                              >
-                                <Pencil className="w-4 h-4 text-muted-foreground" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => handleDeleteFaq(index)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -393,36 +477,37 @@ export const FAQEditor = ({ form }: FAQEditorProps) => {
                     onChange={(e) => setNewAnswer(e.target.value)}
                     rows={3}
                   />
+                  <Select value={newCategory} onValueChange={(v) => setNewCategory(v as CategoryId)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecciona categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FAQ_CATEGORIES.map((c) => {
+                        const CatIcon = c.icon;
+                        return (
+                          <SelectItem key={c.id} value={c.id}>
+                            <div className="flex items-center gap-2">
+                              <span className={cn("w-2 h-2 rounded-full", c.color)} />
+                              <CatIcon className="w-4 h-4" />
+                              {c.label}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                   <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancelAdd}
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Cancelar
+                    <Button type="button" variant="ghost" size="sm" onClick={handleCancelAdd}>
+                      <X className="w-4 h-4 mr-1" />Cancelar
                     </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleAddFaq}
-                      disabled={!newQuestion.trim() || !newAnswer.trim()}
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Agregar
+                    <Button type="button" size="sm" onClick={handleAddFaq} disabled={!newQuestion.trim() || !newAnswer.trim()}>
+                      <Plus className="w-4 h-4 mr-1" />Agregar
                     </Button>
                   </div>
                 </div>
               ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-dashed"
-                  onClick={() => setIsAdding(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Escribir pregunta personalizada
+                <Button type="button" variant="outline" className="w-full border-dashed" onClick={() => setIsAdding(true)}>
+                  <Plus className="w-4 h-4 mr-2" />Escribir pregunta personalizada
                 </Button>
               )}
             </div>
