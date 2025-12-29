@@ -67,8 +67,8 @@ export function usePublicRaffle(slug: string | undefined) {
       if (error) throw error;
       if (!raffle) return null;
 
-      // Get ticket counts using count queries (no limit issues)
-      const [soldResult, reservedResult, availableResult] = await Promise.all([
+      // Get ticket counts and revenue data using count queries (no limit issues)
+      const [soldResult, reservedResult, availableResult, revenueResult] = await Promise.all([
         supabase
           .from('tickets')
           .select('*', { count: 'exact', head: true })
@@ -84,11 +84,37 @@ export function usePublicRaffle(slug: string | undefined) {
           .select('*', { count: 'exact', head: true })
           .eq('raffle_id', raffle.id)
           .eq('status', 'available'),
+        // Get revenue by summing unique order_total per payment_reference group
+        supabase
+          .from('tickets')
+          .select('payment_reference, order_total')
+          .eq('raffle_id', raffle.id)
+          .eq('status', 'sold')
+          .not('payment_reference', 'is', null),
       ]);
 
       const ticketsSold = soldResult.count || 0;
       const ticketsReserved = reservedResult.count || 0;
       const ticketsAvailable = availableResult.count || 0;
+
+      // Calculate total revenue from unique payment groups
+      let totalRevenue = 0;
+      if (revenueResult.data && revenueResult.data.length > 0) {
+        const uniqueGroups = new Map<string, number>();
+        for (const ticket of revenueResult.data) {
+          if (ticket.payment_reference && ticket.order_total !== null) {
+            uniqueGroups.set(ticket.payment_reference, Number(ticket.order_total));
+          }
+        }
+        totalRevenue = Array.from(uniqueGroups.values()).reduce((sum, val) => sum + val, 0);
+      }
+      
+      // Fallback: for sold tickets without order_total, use ticket_price
+      const soldWithOrderTotal = revenueResult.data?.filter(t => t.order_total !== null).length || 0;
+      const soldWithoutOrderTotal = ticketsSold - soldWithOrderTotal;
+      if (soldWithoutOrderTotal > 0) {
+        totalRevenue += soldWithoutOrderTotal * Number(raffle.ticket_price);
+      }
 
       // Get packages
       const { data: packages } = await supabase
@@ -102,7 +128,7 @@ export function usePublicRaffle(slug: string | undefined) {
         ticketsSold,
         ticketsAvailable,
         ticketsReserved,
-        totalRevenue: ticketsSold * Number(raffle.ticket_price),
+        totalRevenue,
         organization: raffle.organizations as RaffleWithStats['organization'],
         packages: packages || [],
       };

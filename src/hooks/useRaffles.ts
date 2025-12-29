@@ -94,7 +94,7 @@ export const useRaffles = () => {
 
         // Get ticket stats using aggregation to avoid Supabase 1000 row limit
         // Count tickets by status using separate count queries for accuracy
-        const [availableResult, soldResult, reservedResult] = await Promise.all([
+        const [availableResult, soldResult, reservedResult, revenueResult] = await Promise.all([
           supabase
             .from('tickets')
             .select('id', { count: 'exact', head: true })
@@ -110,13 +110,40 @@ export const useRaffles = () => {
             .select('id', { count: 'exact', head: true })
             .eq('raffle_id', raffleId)
             .eq('status', 'reserved'),
+          // Get revenue by summing unique order_total per payment_reference group
+          supabase
+            .from('tickets')
+            .select('payment_reference, order_total')
+            .eq('raffle_id', raffleId)
+            .eq('status', 'sold')
+            .not('payment_reference', 'is', null),
         ]);
+
+        // Calculate total revenue from unique payment groups
+        // Each payment_reference group has the same order_total, so we take one per group
+        let totalRevenue = 0;
+        if (revenueResult.data && revenueResult.data.length > 0) {
+          const uniqueGroups = new Map<string, number>();
+          for (const ticket of revenueResult.data) {
+            if (ticket.payment_reference && ticket.order_total !== null) {
+              uniqueGroups.set(ticket.payment_reference, Number(ticket.order_total));
+            }
+          }
+          totalRevenue = Array.from(uniqueGroups.values()).reduce((sum, val) => sum + val, 0);
+        }
+        
+        // Fallback: for sold tickets without order_total, use ticket_price
+        const soldWithOrderTotal = revenueResult.data?.filter(t => t.order_total !== null).length || 0;
+        const soldWithoutOrderTotal = (soldResult.count || 0) - soldWithOrderTotal;
+        if (soldWithoutOrderTotal > 0) {
+          totalRevenue += soldWithoutOrderTotal * raffle.ticket_price;
+        }
 
         const stats = {
           tickets_sold: soldResult.count || 0,
           tickets_available: availableResult.count || 0,
           tickets_reserved: reservedResult.count || 0,
-          total_revenue: (soldResult.count || 0) * raffle.ticket_price,
+          total_revenue: totalRevenue,
         };
 
         // Remove the organizations field from raffle and add organization
