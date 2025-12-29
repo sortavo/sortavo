@@ -860,35 +860,52 @@ export function TicketSelector({
               )}
             </AnimatePresence>
 
-            {/* Premium ticket grid */}
+            {/* Premium ticket grid with swipe gestures */}
             {isLoading ? (
               <div className="flex justify-center py-16">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
               </div>
             ) : (
-              <motion.div 
-                className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2"
-                {...swipeHandlers}
+              <div
+                onTouchStart={swipeHandlers.onTouchStart}
+                onTouchMove={swipeHandlers.onTouchMove}
+                onTouchEnd={swipeHandlers.onTouchEnd}
+                className="relative touch-pan-y"
               >
-                <AnimatePresence>
-                  {filteredTickets.map((ticket) => (
-                    <TicketButton
-                      key={ticket.id}
-                      ticketNumber={ticket.ticket_number}
-                      status={ticket.status}
-                      isSelected={selectedTickets.includes(ticket.ticket_number)}
-                      onClick={() => handleTicketClick(ticket.ticket_number, ticket.status)}
-                      disabled={ticket.status !== 'available'}
-                      isLastFew={ticket.status === 'available' && filteredTickets.filter(t => t.status === 'available').length <= 10}
-                      isHighlighted={highlightedTicket === ticket.ticket_number}
-                      ref={(el) => {
-                        if (el) ticketRefs.current.set(ticket.ticket_number, el);
-                        else ticketRefs.current.delete(ticket.ticket_number);
-                      }}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
+                <motion.div 
+                  key={page}
+                  initial={{ opacity: 0.8, x: 0 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2"
+                >
+                  <AnimatePresence>
+                    {filteredTickets.map((ticket) => (
+                      <TicketButton
+                        key={ticket.id}
+                        ticketNumber={ticket.ticket_number}
+                        status={ticket.status}
+                        isSelected={selectedTickets.includes(ticket.ticket_number)}
+                        onClick={() => handleTicketClick(ticket.ticket_number, ticket.status)}
+                        disabled={ticket.status !== 'available'}
+                        isLastFew={ticket.status === 'available' && filteredTickets.filter(t => t.status === 'available').length <= 10}
+                        isHighlighted={highlightedTicket === ticket.ticket_number}
+                        ref={(el) => {
+                          if (el) ticketRefs.current.set(ticket.ticket_number, el);
+                          else ticketRefs.current.delete(ticket.ticket_number);
+                        }}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+                
+                {/* Mobile swipe hint */}
+                {isMobile && effectiveTotalPages > 1 && (
+                  <p className="text-xs text-center text-muted-foreground mt-3">
+                    ← Desliza para cambiar de página →
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Pagination */}
