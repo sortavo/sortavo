@@ -257,6 +257,7 @@ export default function PublicRaffle() {
                 title: raffle.title,
                 prize_name: raffle.prize_name,
                 prize_images: raffle.prize_images,
+                prize_video_url: raffle.prize_video_url,
                 prize_value: raffle.prize_value ? Number(raffle.prize_value) : null,
                 ticket_price: Number(raffle.ticket_price),
                 draw_date: raffle.draw_date,
@@ -269,12 +270,14 @@ export default function PublicRaffle() {
                 logo_url: orgLogo,
                 slug: orgSlugValue,
                 verified: org?.verified,
+                city: org?.city,
+                whatsapp_number: org?.whatsapp_number || (org as any)?.whatsapp_numbers?.[0],
               }}
               currency={currency}
               onScrollToTickets={scrollToTickets}
               onShare={shareRaffle}
-              onImageClick={() => {
-                setLightboxIndex(0);
+              onImageClick={(index) => {
+                setLightboxIndex(index);
                 setLightboxOpen(true);
               }}
             />
