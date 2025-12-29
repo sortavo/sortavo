@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { SimulationProvider } from "@/contexts/SimulationContext";
 import { SimulationBanner } from "@/components/admin/SimulationBanner";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { SentryErrorBoundary } from "@/components/errors/SentryErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -50,6 +51,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <SentryErrorBoundary>
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -125,6 +127,7 @@ const App = () => (
       </TooltipProvider>
     </QueryClientProvider>
   </HelmetProvider>
+  </SentryErrorBoundary>
 );
 
 export default App;

@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "@/lib/rbac";
+import * as Sentry from "@sentry/react";
 
 interface Profile {
   id: string;
@@ -101,6 +102,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       setProfile(profileData);
 
+      // Set Sentry user context
+      if (profileData) {
+        Sentry.setUser({
+          id: userId,
+          email: profileData.email,
+          username: profileData.full_name || undefined,
+        });
+      }
+
       if (profileData?.organization_id) {
         // Fetch organization
         const { data: orgData, error: orgError } = await supabase
@@ -167,6 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setOrganization(null);
     setRole(null);
+    // Clear Sentry user context
+    Sentry.setUser(null);
   };
 
   const resetPassword = async (email: string) => {
