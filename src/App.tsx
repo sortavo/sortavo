@@ -51,7 +51,6 @@ import AdminUsers from "./pages/admin/AdminUsers";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <SentryErrorBoundary>
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -62,72 +61,72 @@ const App = () => (
             <SimulationProvider>
               <ScrollToTop />
               <SimulationBanner />
-              
-              <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboard/raffles" element={<RafflesList />} />
-              <Route path="/dashboard/raffles/new" element={<RaffleWizard />} />
-              <Route path="/dashboard/raffles/:id" element={<RaffleDetail />} />
-              <Route path="/dashboard/raffles/:id/edit" element={<RaffleWizard />} />
-              <Route path="/dashboard/raffles/:id/draw" element={<DrawWinner />} />
-              <Route path="/dashboard/settings" element={<Settings />} />
-              <Route path="/dashboard/buyers" element={<Buyers />} />
-              <Route path="/dashboard/analytics" element={<Analytics />} />
-              <Route path="/dashboard/subscription" element={<Subscription />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/dashboard/coupons" element={<Coupons />} />
-              <Route path="/dashboard/marketing" element={<Marketing />} />
-              {/* Admin Routes - Before public routes */}
-              <Route path="/admin" element={<AdminOverview />} />
-              <Route path="/admin/financial" element={<AdminFinancial />} />
-              <Route path="/admin/activity" element={<AdminActivity />} />
-              <Route path="/admin/users-dashboard" element={<AdminUsersDashboard />} />
-              <Route path="/admin/organizations" element={<AdminOrganizations />} />
-              <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-              <Route path="/admin/users" element={<AdminUsers />} />
-              {/* Public Routes */}
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/help" element={<HelpCenter />} />
-              {/* Legacy raffle routes */}
-              <Route path="/r/:slug" element={<PublicRaffle />} />
-              <Route path="/r/:slug/payment" element={<PaymentInstructions />} />
-              <Route path="/my-tickets" element={<MyTickets />} />
-              <Route path="/ticket/:ticketId" element={<TicketVerification />} />
-              <Route path="/invite/:token" element={<AcceptInvite />} />
-              {/* Legal Routes */}
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/status" element={<SystemStatus />} />
-              <Route path="/design-system" element={<ColorPalette />} />
-              <Route path="/logo-preview" element={<LogoPreview />} />
-              {/* Redirects for common reserved slugs */}
-              <Route path="/login" element={<Navigate to="/auth" replace />} />
-              <Route path="/signup" element={<Navigate to="/auth" replace />} />
-              <Route path="/register" element={<Navigate to="/auth" replace />} />
-              <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
-              <Route path="/account" element={<Navigate to="/dashboard/settings" replace />} />
-              <Route path="/billing" element={<Navigate to="/dashboard/subscription" replace />} />
-              <Route path="/profile" element={<Navigate to="/dashboard/settings" replace />} />
-              <Route path="/support" element={<Navigate to="/help" replace />} />
-              <Route path="/faq" element={<Navigate to="/help" replace />} />
-              <Route path="/contacto" element={<Navigate to="/contact" replace />} />
-              <Route path="/estado" element={<Navigate to="/status" replace />} />
-              {/* Organization-based public routes - MUST be last before catch-all */}
-              <Route path="/:orgSlug" element={<OrganizationHome />} />
-              <Route path="/:orgSlug/:slug" element={<PublicRaffle />} />
-              <Route path="/:orgSlug/:slug/payment" element={<PaymentInstructions />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+              <SentryErrorBoundary>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard/raffles" element={<RafflesList />} />
+                  <Route path="/dashboard/raffles/new" element={<RaffleWizard />} />
+                  <Route path="/dashboard/raffles/:id" element={<RaffleDetail />} />
+                  <Route path="/dashboard/raffles/:id/edit" element={<RaffleWizard />} />
+                  <Route path="/dashboard/raffles/:id/draw" element={<DrawWinner />} />
+                  <Route path="/dashboard/settings" element={<Settings />} />
+                  <Route path="/dashboard/buyers" element={<Buyers />} />
+                  <Route path="/dashboard/analytics" element={<Analytics />} />
+                  <Route path="/dashboard/subscription" element={<Subscription />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/dashboard/coupons" element={<Coupons />} />
+                  <Route path="/dashboard/marketing" element={<Marketing />} />
+                  {/* Admin Routes - Before public routes */}
+                  <Route path="/admin" element={<AdminOverview />} />
+                  <Route path="/admin/financial" element={<AdminFinancial />} />
+                  <Route path="/admin/activity" element={<AdminActivity />} />
+                  <Route path="/admin/users-dashboard" element={<AdminUsersDashboard />} />
+                  <Route path="/admin/organizations" element={<AdminOrganizations />} />
+                  <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  {/* Public Routes */}
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/help" element={<HelpCenter />} />
+                  {/* Legacy raffle routes */}
+                  <Route path="/r/:slug" element={<PublicRaffle />} />
+                  <Route path="/r/:slug/payment" element={<PaymentInstructions />} />
+                  <Route path="/my-tickets" element={<MyTickets />} />
+                  <Route path="/ticket/:ticketId" element={<TicketVerification />} />
+                  <Route path="/invite/:token" element={<AcceptInvite />} />
+                  {/* Legal Routes */}
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/status" element={<SystemStatus />} />
+                  <Route path="/design-system" element={<ColorPalette />} />
+                  <Route path="/logo-preview" element={<LogoPreview />} />
+                  {/* Redirects for common reserved slugs */}
+                  <Route path="/login" element={<Navigate to="/auth" replace />} />
+                  <Route path="/signup" element={<Navigate to="/auth" replace />} />
+                  <Route path="/register" element={<Navigate to="/auth" replace />} />
+                  <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
+                  <Route path="/account" element={<Navigate to="/dashboard/settings" replace />} />
+                  <Route path="/billing" element={<Navigate to="/dashboard/subscription" replace />} />
+                  <Route path="/profile" element={<Navigate to="/dashboard/settings" replace />} />
+                  <Route path="/support" element={<Navigate to="/help" replace />} />
+                  <Route path="/faq" element={<Navigate to="/help" replace />} />
+                  <Route path="/contacto" element={<Navigate to="/contact" replace />} />
+                  <Route path="/estado" element={<Navigate to="/status" replace />} />
+                  {/* Organization-based public routes - MUST be last before catch-all */}
+                  <Route path="/:orgSlug" element={<OrganizationHome />} />
+                  <Route path="/:orgSlug/:slug" element={<PublicRaffle />} />
+                  <Route path="/:orgSlug/:slug/payment" element={<PaymentInstructions />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </SentryErrorBoundary>
             </SimulationProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </HelmetProvider>
-  </SentryErrorBoundary>
 );
 
 export default App;
