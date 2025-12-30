@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -14,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trophy, Loader2, ArrowRight, Check, Building2, Sparkles, Globe, MapPin } from "lucide-react";
+import { Trophy, Loader2, ArrowRight, Check, Building2, Sparkles, Globe, MapPin, Gift, CreditCard, Zap, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STRIPE_PLANS, getPriceId, type PlanKey, type BillingPeriod } from "@/lib/stripe-config";
 import { z } from "zod";
@@ -576,54 +577,83 @@ export default function Onboarding() {
             </div>
 
             {/* Plan Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
-              {(Object.entries(STRIPE_PLANS) as [PlanKey, typeof STRIPE_PLANS.basic & { popular?: boolean }][]).map(
-                ([key, plan]) => (
-                  <Card
-                    key={key}
-                    className={cn(
-                      "relative cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl backdrop-blur-sm",
-                      selectedPlan === key 
-                        ? "ring-2 ring-primary shadow-lg shadow-primary/20 bg-card" 
-                        : "bg-card/80 hover:bg-card",
-                      "popular" in plan && plan.popular && "border-primary"
-                    )}
-                    onClick={() => setSelectedPlan(key)}
-                  >
-                    {"popular" in plan && plan.popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-accent px-4 py-1 text-xs font-medium text-primary-foreground shadow-lg">
-                        Más popular
-                      </div>
-                    )}
-                    <CardHeader>
-                      <CardTitle className="text-lg">{plan.name}</CardTitle>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                          ${billingPeriod === "annual" ? plan.annualPrice : plan.monthlyPrice}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          /{billingPeriod === "annual" ? "año" : "mes"}
-                        </span>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        {plan.limits && (
-                          <>
-                            <li className="flex items-center gap-2">
-                              <Check className="h-4 w-4 text-success" />
-                              <span>{plan.limits.maxActiveRaffles} sorteos activos</span>
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <Check className="h-4 w-4 text-success" />
-                              <span>{plan.limits.maxTicketsPerRaffle.toLocaleString()} boletos/sorteo</span>
-                            </li>
-                          </>
-                        )}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )
+            <div className="grid gap-4 md:grid-cols-4">
+              {(Object.entries(STRIPE_PLANS) as [PlanKey, typeof STRIPE_PLANS.basic & { popular?: boolean; hasTrial?: boolean }][]).map(
+                ([key, plan]) => {
+                  const isBasic = key === 'basic';
+                  const hasTrial = plan.hasTrial || false;
+                  const PlanIcon = key === 'basic' ? Sparkles : key === 'pro' ? Zap : key === 'premium' ? Crown : Building2;
+                  
+                  return (
+                    <Card
+                      key={key}
+                      className={cn(
+                        "relative cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl backdrop-blur-sm",
+                        selectedPlan === key 
+                          ? "ring-2 ring-primary shadow-lg shadow-primary/20 bg-card" 
+                          : "bg-card/80 hover:bg-card",
+                        "popular" in plan && plan.popular && "border-primary"
+                      )}
+                      onClick={() => setSelectedPlan(key)}
+                    >
+                      {"popular" in plan && plan.popular && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-accent px-4 py-1 text-xs font-medium text-primary-foreground shadow-lg">
+                          Más popular
+                        </div>
+                      )}
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <PlanIcon className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-lg">{plan.name}</CardTitle>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                            ${billingPeriod === "annual" ? plan.annualPrice : plan.monthlyPrice}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            /{billingPeriod === "annual" ? "año" : "mes"}
+                          </span>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        {/* Trial or Payment Notice */}
+                        <div className="mb-4 min-h-[40px]">
+                          {hasTrial ? (
+                            <div className="space-y-1">
+                              <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30 text-xs">
+                                <Gift className="w-3 h-3 mr-1" />
+                                7 DÍAS GRATIS
+                              </Badge>
+                              <p className="text-[10px] text-emerald-600">
+                                Sin cargo hasta terminar la prueba
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <CreditCard className="w-3 h-3" />
+                              <span>Pago inmediato al suscribirte</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <ul className="space-y-2 text-sm">
+                          {plan.limits && (
+                            <>
+                              <li className="flex items-center gap-2">
+                                <Check className="h-4 w-4 text-success" />
+                                <span>{plan.limits.maxActiveRaffles >= 999 ? 'Ilimitados' : plan.limits.maxActiveRaffles} sorteos activos</span>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <Check className="h-4 w-4 text-success" />
+                                <span>{plan.limits.maxTicketsPerRaffle.toLocaleString()} boletos/sorteo</span>
+                              </li>
+                            </>
+                          )}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  );
+                }
               )}
             </div>
 
@@ -642,19 +672,14 @@ export default function Onboarding() {
                   </>
                 ) : (
                   <>
-                    Continuar con {STRIPE_PLANS[selectedPlan].name}
+                    {STRIPE_PLANS[selectedPlan].hasTrial 
+                      ? `Empezar prueba gratis de ${STRIPE_PLANS[selectedPlan].name}`
+                      : `Suscribirse a ${STRIPE_PLANS[selectedPlan].name}`
+                    }
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </>
                 )}
               </Button>
-              
-              <button
-                onClick={handleSkipTrial}
-                disabled={isSubmitting}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Continuar con prueba gratuita de 7 días
-              </button>
             </div>
           </div>
         )}
