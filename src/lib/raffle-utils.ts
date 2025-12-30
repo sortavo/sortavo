@@ -59,10 +59,12 @@ export const generateRandomTicketNumbers = (count: number): number[] => {
 
 export const getTicketLimitByTier = (tier: string | null): number => {
   switch (tier) {
-    case 'premium':
+    case 'enterprise':
       return 10000000; // 10 million
+    case 'premium':
+      return 100000;
     case 'pro':
-      return 50000;
+      return 30000;
     case 'basic':
     default:
       return 2000;
@@ -71,10 +73,12 @@ export const getTicketLimitByTier = (tier: string | null): number => {
 
 export const getRaffleLimitByTier = (tier: string | null): number => {
   switch (tier) {
+    case 'enterprise':
+      return 999;
     case 'premium':
-      return 100;
+      return 15;
     case 'pro':
-      return 20;
+      return 7;
     case 'basic':
     default:
       return 2;
