@@ -16,12 +16,10 @@ import {
   Crown, 
   Loader2, 
   ExternalLink,
-  Calendar,
   Gift,
   Users,
   FileText,
-  Building2,
-  Phone
+  Building2
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -252,6 +250,17 @@ export default function Subscription() {
                       <p className="text-sm text-muted-foreground">
                         o ${plan.annualPrice} USD/año (ahorra 16%)
                       </p>
+                      {/* Trial indicator */}
+                      {'hasTrial' in plan && plan.hasTrial ? (
+                        <Badge className="mt-2 bg-emerald-100 text-emerald-700 border-emerald-200">
+                          <Gift className="w-3 h-3 mr-1" />
+                          7 días gratis
+                        </Badge>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Pago inmediato
+                        </p>
+                      )}
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">

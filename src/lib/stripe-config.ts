@@ -61,6 +61,8 @@ const PLAN_METADATA = {
     name: "Basic",
     monthlyPrice: 49,
     annualPrice: 490,
+    hasTrial: true,
+    trialDays: 7,
     features: [
       "2 sorteos activos",
       "2,000 boletos por sorteo",
@@ -78,6 +80,7 @@ const PLAN_METADATA = {
     monthlyPrice: 149,
     annualPrice: 1490,
     popular: true,
+    hasTrial: false,
     features: [
       "7 sorteos activos",
       "30,000 boletos por sorteo",
@@ -96,6 +99,7 @@ const PLAN_METADATA = {
     name: "Premium",
     monthlyPrice: 299,
     annualPrice: 2990,
+    hasTrial: false,
     features: [
       "15 sorteos activos",
       "100,000 boletos por sorteo",
@@ -114,6 +118,7 @@ const PLAN_METADATA = {
     name: "Enterprise",
     monthlyPrice: 499,
     annualPrice: 4990,
+    hasTrial: false,
     features: [
       "Sorteos ilimitados",
       "10,000,000 boletos por sorteo",

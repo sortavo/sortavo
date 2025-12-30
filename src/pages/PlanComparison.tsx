@@ -26,6 +26,19 @@ import { PremiumBackground, PremiumHero } from '@/components/layout/PremiumBackg
 // Feature categories with tooltips
 const featureCategories = [
   {
+    name: 'Inicio y Prueba',
+    features: [
+      {
+        name: 'Período de prueba gratis',
+        tooltip: 'Días de uso gratuito antes del primer cobro. Tu tarjeta se valida pero no se cobra.',
+        basic: '7 días',
+        pro: false,
+        premium: false,
+        enterprise: false,
+      },
+    ],
+  },
+  {
     name: 'Sorteos y Capacidad',
     features: [
       {

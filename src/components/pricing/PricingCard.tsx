@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, ArrowRight, Sparkles, LucideIcon } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, LucideIcon, Gift, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Feature {
@@ -24,6 +24,8 @@ interface PricingCardProps {
   cta: string;
   ctaLink: string;
   index: number;
+  hasTrial?: boolean;
+  trialDays?: number;
 }
 
 const tierStyles = {
@@ -70,9 +72,10 @@ export function PricingCard({
   cta,
   ctaLink,
   index,
+  hasTrial = false,
+  trialDays = 7,
 }: PricingCardProps) {
   const styles = tierStyles[tier];
-  const isEnterprise = tier === 'enterprise';
   const monthlyEquivalent = isAnnual ? Math.round(price / 12) : price;
 
   return (
@@ -123,7 +126,7 @@ export function PricingCard({
       </div>
 
       {/* Price */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-4">
         <div className="flex items-baseline justify-center gap-1">
           <span className="text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             ${monthlyEquivalent.toLocaleString()}
@@ -134,6 +137,36 @@ export function PricingCard({
           <p className="text-sm text-muted-foreground mt-1">
             Facturado anualmente (${price.toLocaleString()} USD)
           </p>
+        )}
+      </div>
+
+      {/* Trial Badge or Payment Notice */}
+      <div className="text-center mb-6 min-h-[52px]">
+        {hasTrial ? (
+          <div className="space-y-1">
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ 
+                repeat: Infinity, 
+                repeatType: "reverse", 
+                duration: 2 
+              }}
+            >
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 px-3 py-1.5 text-sm font-bold">
+                <Gift className="w-3.5 h-3.5 mr-1.5" />
+                {trialDays} DÍAS GRATIS
+              </Badge>
+            </motion.div>
+            <p className="text-xs text-emerald-400/80">
+              Sin cargo hasta terminar la prueba
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <CreditCard className="w-3.5 h-3.5" />
+            <span>Pago inmediato al suscribirte</span>
+          </div>
         )}
       </div>
 

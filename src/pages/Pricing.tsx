@@ -13,6 +13,7 @@ import { Footer } from '@/components/layout/Footer';
 import { PricingCard, PricingToggle, SocialProofSection, TrustBadges } from '@/components/pricing';
 import { PremiumNavbar } from '@/components/layout/PremiumNavbar';
 import { PremiumHero } from '@/components/layout/PremiumBackground';
+import { cn } from '@/lib/utils';
 
 export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(true);
@@ -23,6 +24,8 @@ export default function Pricing() {
       icon: Rocket,
       badge: 'Para Empezar',
       idealFor: 'Ideal para organizadores casuales',
+      hasTrial: true,
+      trialDays: 7,
       features: [
         { text: '2 sorteos activos simultáneos', included: true },
         { text: 'Hasta 2,000 boletos por sorteo', included: true },
@@ -32,7 +35,7 @@ export default function Pricing() {
         { text: 'Grid de boletos interactivo', included: true },
         { text: 'Sistema de reservación automática', included: true },
       ],
-      cta: 'Prueba 7 días gratis',
+      cta: 'Empezar gratis',
       ctaLink: '/auth?tab=signup&plan=basic',
     },
     {
@@ -41,6 +44,7 @@ export default function Pricing() {
       badge: 'Más Popular',
       idealFor: 'Para organizadores profesionales',
       popular: true,
+      hasTrial: false,
       features: [
         { text: '7 sorteos activos simultáneos', included: true, highlight: true },
         { text: 'Hasta 30,000 boletos por sorteo', included: true, highlight: true },
@@ -50,7 +54,7 @@ export default function Pricing() {
         { text: 'Integración WhatsApp', included: true },
         { text: 'API Lotería Nacional', included: true },
       ],
-      cta: 'Empezar ahora',
+      cta: 'Suscribirse',
       ctaLink: '/auth?tab=signup&plan=pro',
     },
     {
@@ -58,6 +62,7 @@ export default function Pricing() {
       icon: Crown,
       badge: 'Empresas',
       idealFor: 'Para equipos y empresas',
+      hasTrial: false,
       features: [
         { text: '15 sorteos activos simultáneos', included: true, highlight: true },
         { text: 'Hasta 100,000 boletos', included: true, highlight: true },
@@ -67,7 +72,7 @@ export default function Pricing() {
         { text: 'Setup asistido incluido', included: true },
         { text: 'White-label completo', included: true },
       ],
-      cta: 'Empezar ahora',
+      cta: 'Suscribirse',
       ctaLink: '/auth?tab=signup&plan=premium',
     },
     {
@@ -75,6 +80,7 @@ export default function Pricing() {
       icon: Building2,
       badge: 'Corporativo',
       idealFor: 'Loterías y grandes organizaciones',
+      hasTrial: false,
       features: [
         { text: 'Sorteos ilimitados', included: true, highlight: true },
         { text: 'Hasta 10,000,000 boletos', included: true, highlight: true },
@@ -84,7 +90,7 @@ export default function Pricing() {
         { text: 'Integraciones personalizadas', included: true },
         { text: 'Facturación empresarial', included: true },
       ],
-      cta: 'Empezar ahora',
+      cta: 'Suscribirse',
       ctaLink: '/auth?tab=signup&plan=enterprise',
     },
   ];
@@ -191,6 +197,8 @@ export default function Pricing() {
                   cta={plan.cta}
                   ctaLink={plan.ctaLink}
                   index={index}
+                  hasTrial={plan.hasTrial}
+                  trialDays={plan.trialDays}
                 />
               );
             })}
@@ -262,6 +270,7 @@ export default function Pricing() {
               </thead>
               <tbody className="divide-y divide-white/10">
                 {[
+                  ['Período de prueba', '7 días gratis', false, false, false],
                   ['Sorteos activos', '2', '7', '15', 'Ilimitados'],
                   ['Boletos por sorteo', '2,000', '30,000', '100,000', '10,000,000'],
                   ['Plantillas', '1', '6', '6 + CSS', '6 + CSS'],
@@ -275,12 +284,12 @@ export default function Pricing() {
                   ['SLA 99.9%', false, false, false, true],
                   ['Soporte 24/7', false, false, false, true],
                 ].map(([feature, basic, pro, premium, enterprise], idx) => (
-                  <tr key={idx} className="hover:bg-white/5 transition-colors">
-                    <td className="py-4 px-6 text-gray-200 font-medium">{feature}</td>
+                  <tr key={idx} className={cn("hover:bg-white/5 transition-colors", idx === 0 && "bg-emerald-500/5")}>
+                    <td className={cn("py-4 px-6 text-gray-200 font-medium", idx === 0 && "text-emerald-400")}>{feature}</td>
                     <td className="py-4 px-4 text-center">
                       {typeof basic === 'boolean' ? (
                         basic ? <Check className="h-5 w-5 mx-auto text-emerald-400" /> : <X className="h-5 w-5 mx-auto text-gray-600" />
-                      ) : <span className="text-gray-400">{basic}</span>}
+                      ) : <span className={cn("text-gray-400", idx === 0 && "text-emerald-400 font-medium")}>{basic}</span>}
                     </td>
                     <td className="py-4 px-4 text-center bg-emerald-500/5">
                       {typeof pro === 'boolean' ? (
