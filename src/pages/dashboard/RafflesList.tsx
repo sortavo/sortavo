@@ -190,10 +190,10 @@ export default function RafflesList() {
                 className="hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => navigate(`/dashboard/raffles/${raffle.id}`)}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    {/* Thumbnail */}
-                    <div className="hidden sm:block w-20 h-20 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    {/* Thumbnail - visible on mobile too */}
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg bg-muted overflow-hidden shrink-0">
                       {raffle.prize_images && raffle.prize_images[0] ? (
                         <img 
                           src={raffle.prize_images[0]} 
@@ -202,58 +202,61 @@ export default function RafflesList() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Gift className="h-8 w-8 text-muted-foreground" />
+                          <Gift className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
                         </div>
                       )}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-semibold hover:text-primary transition-colors line-clamp-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold hover:text-primary transition-colors line-clamp-1 text-sm sm:text-base">
                             {raffle.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
                             {raffle.prize_name}
                           </p>
                         </div>
                         <RaffleStatusBadge status={raffle.status || 'draft'} />
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm text-muted-foreground">
+                      {/* Stats - grid on mobile for better layout */}
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-x-3 gap-y-1.5 sm:gap-x-4 sm:gap-y-2 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {raffle.draw_date 
-                            ? format(new Date(raffle.draw_date), 'dd MMM yyyy', { locale: es })
-                            : 'Sin fecha'
-                          }
+                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                          <span className="truncate">
+                            {raffle.draw_date 
+                              ? format(new Date(raffle.draw_date), 'dd MMM yy', { locale: es })
+                              : 'Sin fecha'
+                            }
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Ticket className="h-4 w-4" />
-                          {raffle.total_tickets.toLocaleString()} boletos
+                          <Ticket className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                          <span className="truncate">{raffle.total_tickets.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          {formatCurrency(raffle.ticket_price, raffle.currency_code || 'MXN')}
+                          <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                          <span className="truncate">{formatCurrency(raffle.ticket_price, raffle.currency_code || 'MXN')}</span>
                         </div>
                         {raffle.status === 'active' && (
                           <div 
-                            className="flex items-center gap-1.5 text-primary hover:text-primary/80 cursor-pointer group"
+                            className="flex items-center gap-1 text-primary hover:text-primary/80 cursor-pointer group col-span-2 sm:col-span-1"
                             onClick={(e) => copyUrl(
                               getRafflePublicUrl(raffle.slug, organization?.slug),
                               e
                             )}
                             title="Clic para copiar URL"
                           >
-                            <Link2 className="h-4 w-4" />
-                            <span className="max-w-[120px] sm:max-w-[180px] truncate text-xs">
+                            <Link2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                            <span className="truncate max-w-[140px] sm:max-w-[180px]">
                               {organization?.slug 
                                 ? `/${organization.slug}/${raffle.slug}` 
                                 : `/r/${raffle.slug}`
                               }
                             </span>
-                            <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                           </div>
                         )}
                       </div>
