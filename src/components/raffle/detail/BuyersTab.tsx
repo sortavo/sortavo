@@ -155,32 +155,41 @@ export function BuyersTab({
       return;
     }
 
-    // Fetch tickets for this order
-    const { data: ticketsData, error } = await supabase
-      .from('tickets')
-      .select('*')
-      .eq('payment_reference', buyer.paymentReference);
+    try {
+      // Fetch tickets for this order - include raffle_id to avoid cross-raffle matches
+      const { data: ticketsData, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('raffle_id', raffleId)
+        .eq('payment_reference', buyer.paymentReference)
+        .order('ticket_index', { ascending: true });
 
-    if (error || !ticketsData || ticketsData.length === 0) {
-      toast({ title: 'Error al obtener boletos', variant: 'destructive' });
-      return;
-    }
+      if (error) {
+        console.error('Error fetching tickets:', error);
+        toast({ title: 'Error al obtener boletos', variant: 'destructive' });
+        return;
+      }
 
-    await generateOrderReceipt({
-      tickets: ticketsData.map(t => ({
-        id: t.id,
-        ticket_number: t.ticket_number,
-        status: t.status || 'reserved',
-        reserved_at: t.reserved_at,
-        sold_at: t.sold_at,
-        payment_reference: t.payment_reference,
-        order_total: t.order_total ? Number(t.order_total) : null,
-        buyer_name: t.buyer_name,
-        buyer_email: t.buyer_email,
-        buyer_phone: t.buyer_phone,
-        buyer_city: t.buyer_city,
-        payment_method: t.payment_method,
-      })),
+      if (!ticketsData || ticketsData.length === 0) {
+        toast({ title: 'No se encontraron boletos para esta orden', variant: 'destructive' });
+        return;
+      }
+
+      await generateOrderReceipt({
+        tickets: ticketsData.map(t => ({
+          id: t.id,
+          ticket_number: t.ticket_number,
+          status: t.status || 'reserved',
+          reserved_at: t.reserved_at,
+          sold_at: t.sold_at,
+          payment_reference: t.payment_reference,
+          order_total: t.order_total ? Number(t.order_total) : null,
+          buyer_name: t.buyer_name,
+          buyer_email: t.buyer_email,
+          buyer_phone: t.buyer_phone,
+          buyer_city: t.buyer_city,
+          payment_method: t.payment_method,
+        })),
       raffle: {
         title: raffleTitle,
         slug: raffleSlug,
@@ -194,6 +203,12 @@ export function BuyersTab({
         logo_url: organizationLogo,
       },
     });
+
+      toast({ title: 'Comprobante generado correctamente' });
+    } catch (err) {
+      console.error('Error generating receipt:', err);
+      toast({ title: 'Error al generar comprobante', variant: 'destructive' });
+    }
   };
 
   const handleCopyReference = (reference: string) => {
