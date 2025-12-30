@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, ArrowRight, Save, Rocket, AlertCircle, CreditCard, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Rocket, AlertCircle, CreditCard, Eye, EyeOff, X } from 'lucide-react';
 import { useRaffles } from '@/hooks/useRaffles';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -513,34 +513,35 @@ export default function RaffleWizard() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">
-              {isEditing ? 'Editar Sorteo' : 'Crear Nuevo Sorteo'}
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+        {/* Header - Compact on mobile */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">
+              {isEditing ? 'Editar Sorteo' : 'Crear Sorteo'}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {STEPS[currentStep - 1].description}
-            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowPreview(!showPreview)}
+                className="hidden lg:flex"
+              >
+                {showPreview ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {showPreview ? 'Ocultar Vista Previa' : 'Mostrar Vista Previa'}
+              </Button>
+              <Button variant="ghost" size="sm" className="px-2 sm:px-3" onClick={() => navigate('/dashboard/raffles')}>
+                <span className="hidden sm:inline">Cancelar</span>
+                <X className="h-4 w-4 sm:hidden" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowPreview(!showPreview)}
-              className="hidden lg:flex"
-            >
-              {showPreview ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-              {showPreview ? 'Ocultar Vista Previa' : 'Mostrar Vista Previa'}
-            </Button>
-            <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => navigate('/dashboard/raffles')}>
-              Cancelar
-            </Button>
-          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground -mt-1">
+            {STEPS[currentStep - 1].description}
+          </p>
         </div>
 
-        {/* Progress */}
+        {/* Progress - Compact */}
         <WizardProgress 
           steps={STEPS} 
           currentStep={currentStep} 
@@ -550,14 +551,14 @@ export default function RaffleWizard() {
 
         {/* Payment Methods Warning */}
         {showPaymentMethodsWarning && !hasEnabledPaymentMethods && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="py-3">
             <CreditCard className="h-4 w-4" />
-            <AlertTitle>Métodos de pago requeridos</AlertTitle>
-            <AlertDescription className="flex items-center justify-between">
-              <span>Configura al menos un método de pago para que los compradores puedan pagarte.</span>
-              <Button variant="outline" size="sm" asChild>
+            <AlertTitle className="text-sm">Métodos de pago requeridos</AlertTitle>
+            <AlertDescription className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
+              <span>Configura un método de pago para que te paguen.</span>
+              <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
                 <Link to="/dashboard/settings?tab=payment-methods">
-                  Configurar Métodos de Pago
+                  Configurar
                 </Link>
               </Button>
             </AlertDescription>
@@ -565,61 +566,60 @@ export default function RaffleWizard() {
         )}
 
         {/* Main Content with Preview */}
-        <div className={`grid gap-6 ${showPreview ? 'lg:grid-cols-[1fr,400px]' : ''}`}>
+        <div className={`grid gap-4 md:gap-6 ${showPreview ? 'lg:grid-cols-[1fr,400px]' : ''}`}>
           {/* Left: Form */}
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-3 md:space-y-4">
             <Form {...form}>
               <form onSubmit={(e) => e.preventDefault()}>
-                <Card className="overflow-hidden">
-                  <CardContent className="p-4 md:p-6">
+                <Card className="overflow-hidden border-0 shadow-sm md:border md:shadow">
+                  <CardContent className="p-3 sm:p-4 md:p-6">
                     {renderStep()}
                   </CardContent>
                 </Card>
               </form>
             </Form>
 
-            {/* Navigation */}
-            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Navigation - Fixed bottom on mobile */}
+            <div className="flex items-center justify-between gap-2 p-3 -mx-3 sm:mx-0 sm:p-0 bg-background/95 backdrop-blur-sm border-t sm:border-0 sticky bottom-0 sm:static z-10">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleBack}
                 disabled={currentStep === 1}
-                className="w-full sm:w-auto"
+                className="px-3"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 sm:mr-1" />
                 <span className="hidden sm:inline">Anterior</span>
-                <span className="sm:hidden">Atrás</span>
               </Button>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={handleSaveDraft}
                   disabled={createRaffle.isPending || updateRaffle.isPending}
-                  className="w-full sm:w-auto"
+                  className="px-3"
                 >
-                  <Save className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Guardar Borrador</span>
-                  <span className="sm:hidden">Guardar</span>
+                  <Save className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Guardar</span>
                 </Button>
 
                 {currentStep < 5 ? (
-                  <Button onClick={handleNext} size="sm" className="w-full sm:w-auto">
-                    Siguiente
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                  <Button onClick={handleNext} size="sm" className="px-4">
+                    <span className="hidden sm:inline">Siguiente</span>
+                    <span className="sm:hidden">Sig.</span>
+                    <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                 ) : (
                   <Button 
                     onClick={handlePublish}
                     size="sm"
                     disabled={publishRaffle.isPending || !canPublish || !hasEnabledPaymentMethods}
-                    className="w-full sm:w-auto"
+                    className="px-4"
                   >
-                    <Rocket className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Publicar Sorteo</span>
-                    <span className="sm:hidden">Publicar</span>
+                    <Rocket className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Publicar</span>
+                    <span className="sm:hidden">Pub.</span>
                   </Button>
                 )}
               </div>

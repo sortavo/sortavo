@@ -613,20 +613,20 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                   </Select>
 
                   {isCustomTime && (
-                    <div className="flex gap-2 items-center p-3 rounded-lg border bg-muted/50">
+                    <div className="flex flex-wrap gap-2 items-center p-3 rounded-lg border bg-muted/50">
                       <Input
                         type="number"
                         min={1}
                         max={customUnit === 'days' ? 7 : customUnit === 'hours' ? 168 : MAX_RESERVATION_MINUTES}
                         value={customValue}
                         onChange={(e) => handleCustomValueChange(parseInt(e.target.value) || 1, customUnit)}
-                        className="w-24"
+                        className="w-20"
                       />
                       <Select
                         value={customUnit}
                         onValueChange={(v) => handleCustomValueChange(customValue, v as 'minutes' | 'hours' | 'days')}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-28">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -637,7 +637,7 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                           ))}
                         </SelectContent>
                       </Select>
-                      <span className="text-sm text-muted-foreground ml-2">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         = {formatReservationTime(reservationTime)}
                       </span>
                     </div>
@@ -661,17 +661,17 @@ export const Step3Tickets = ({ form }: Step3Props) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="px-0 md:px-6">
-          <div className="space-y-4">
-            {/* Desktop header */}
-            <div className="hidden sm:grid grid-cols-12 gap-2 text-sm font-medium text-muted-foreground px-1">
+          <div className="space-y-3">
+            {/* Desktop header - hide on mobile */}
+            <div className="hidden md:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
               <div className="col-span-1">Cant.</div>
               <div className="col-span-2">P. Normal</div>
               <div className="col-span-2">P. Final</div>
-              <div className="col-span-1">Dto. %</div>
+              <div className="col-span-1">%</div>
               <div className="col-span-2">Ahorro</div>
               <div className="col-span-3">
                 <div className="flex items-center gap-1">
-                  <Tag className="w-3.5 h-3.5" />
+                  <Tag className="w-3 h-3" />
                   Etiqueta
                 </div>
               </div>
@@ -682,10 +682,10 @@ export const Step3Tickets = ({ form }: Step3Props) => {
               const { normalPrice, savings, savingsPercent, hasDiscount } = getSavingsInfo(pkg);
               
               return (
-                <div key={index} className="space-y-3 sm:space-y-0 p-3 sm:p-0 border sm:border-0 rounded-lg sm:rounded-none">
-                  {/* Mobile: Stacked layout */}
-                  <div className="sm:hidden space-y-3">
-                    <div className="flex items-center justify-between">
+                <div key={index} className="space-y-3 md:space-y-0 p-3 md:p-0 border md:border-0 rounded-lg md:rounded-none bg-muted/30 md:bg-transparent">
+                  {/* Mobile: Stacked compact layout */}
+                  <div className="md:hidden space-y-3">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-medium">Paquete {index + 1}</span>
                       <Button
                         type="button"
@@ -700,31 +700,32 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                     </div>
                     
                     <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label className="text-xs text-muted-foreground">Cantidad</label>
+                      <div className="min-w-0">
+                        <label className="text-[10px] text-muted-foreground truncate block">Cantidad</label>
                         <Input
                           type="number"
                           value={pkg.quantity}
                           onChange={(e) => updatePackage(index, 'quantity', parseInt(e.target.value) || 1)}
                           min={1}
+                          className="h-9 text-sm px-2"
                         />
                       </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground">Precio Final</label>
+                      <div className="min-w-0">
+                        <label className="text-[10px] text-muted-foreground truncate block">Precio</label>
                         <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                            {currencyData?.symbol}
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
+                            $
                           </span>
                           <Input
                             type="number"
                             value={pkg.price || normalPrice}
                             onChange={(e) => updatePackage(index, 'price', parseFloat(e.target.value) || 0)}
-                            className="pl-6"
+                            className="h-9 pl-5 text-sm"
                           />
                         </div>
                       </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground">Descuento</label>
+                      <div className="min-w-0">
+                        <label className="text-[10px] text-muted-foreground truncate block">Dto %</label>
                         <div className="relative">
                           <Input
                             type="number"
@@ -732,28 +733,28 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                             onChange={(e) => updatePackage(index, 'discount_percent', parseFloat(e.target.value) || 0)}
                             min={0}
                             max={99}
-                            className="pr-6"
+                            className="h-9 pr-5 text-sm"
                           />
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
                             %
                           </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">
-                        Precio normal: <span className={cn(hasDiscount && "line-through")}>{currencyData?.symbol}{normalPrice.toLocaleString()}</span>
+                        Normal: <span className={cn(hasDiscount && "line-through")}>${normalPrice.toLocaleString()}</span>
                       </span>
                       {hasDiscount && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                          -{savingsPercent}% ({currencyData?.symbol}{savings.toLocaleString()})
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-1.5">
+                          -{savingsPercent}%
                         </Badge>
                       )}
                     </div>
                     
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Etiqueta (opcional)</label>
+                    <div className="min-w-0">
+                      <label className="text-[10px] text-muted-foreground mb-1 block">Etiqueta</label>
                       <LabelCombobox
                         value={pkg.label}
                         onValueChange={(v) => updatePackage(index, 'label', v)}
@@ -763,19 +764,19 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                   </div>
 
                   {/* Desktop: Grid layout */}
-                  <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
+                  <div className="hidden md:grid grid-cols-12 gap-2 items-center">
                     <div className="col-span-1">
                       <Input
                         type="number"
                         value={pkg.quantity}
                         onChange={(e) => updatePackage(index, 'quantity', parseInt(e.target.value) || 1)}
                         min={1}
-                        className="text-center px-1"
+                        className="text-center px-1 h-9 text-sm"
                       />
                     </div>
                     <div className="col-span-2">
                       <div className={cn(
-                        "h-10 px-3 py-2 rounded-md border bg-muted/50 flex items-center text-sm",
+                        "h-9 px-2 py-1 rounded-md border bg-muted/50 flex items-center text-sm",
                         hasDiscount && "line-through text-muted-foreground"
                       )}>
                         {currencyData?.symbol}{normalPrice.toLocaleString()}
@@ -783,14 +784,14 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                     </div>
                     <div className="col-span-2">
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
                           {currencyData?.symbol}
                         </span>
                         <Input
                           type="number"
                           value={pkg.price || normalPrice}
                           onChange={(e) => updatePackage(index, 'price', parseFloat(e.target.value) || 0)}
-                          className="pl-6"
+                          className="pl-5 h-9 text-sm"
                         />
                       </div>
                     </div>
@@ -802,9 +803,9 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                           onChange={(e) => updatePackage(index, 'discount_percent', parseFloat(e.target.value) || 0)}
                           min={0}
                           max={99}
-                          className="pr-5 text-center px-1"
+                          className="pr-4 text-center px-1 h-9 text-sm"
                         />
-                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
+                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px]">
                           %
                         </span>
                       </div>
@@ -812,7 +813,7 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                     <div className="col-span-2">
                       {hasDiscount ? (
                         <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">
-                          -{savingsPercent}% ({currencyData?.symbol}{savings.toLocaleString()})
+                          -{savingsPercent}%
                         </Badge>
                       ) : (
                         <span className="text-sm text-muted-foreground">—</span>
@@ -832,6 +833,7 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                         size="icon"
                         onClick={() => removePackage(index)}
                         disabled={packages.length <= 1}
+                        className="h-8 w-8"
                       >
                         <Trash2 className="w-4 h-4 text-muted-foreground" />
                       </Button>

@@ -402,7 +402,7 @@ export const Step5Design = ({
             Configura qué herramientas de selección verán tus compradores
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-0 md:px-6 space-y-4">
+        <CardContent className="px-0 md:px-6 space-y-3">
           {TICKET_SELECTOR_FEATURES.map((feature) => {
             const Icon = feature.icon;
             const isEnabled = getFeatureValue(feature.id, feature.defaultValue);
@@ -410,23 +410,23 @@ export const Step5Design = ({
             return (
               <div 
                 key={feature.id} 
-                className="flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:border-primary/50 transition-colors"
+                className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-primary/50 transition-colors gap-3"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                   <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                    "w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0",
                     isEnabled ? "bg-primary/10" : "bg-muted"
                   )}>
                     <Icon className={cn(
-                      "w-5 h-5",
+                      "w-4 h-4 sm:w-5 sm:h-5",
                       isEnabled ? "text-primary" : "text-muted-foreground"
                     )} />
                   </div>
-                  <div>
-                    <Label htmlFor={feature.id} className="font-medium cursor-pointer">
+                  <div className="min-w-0">
+                    <Label htmlFor={feature.id} className="font-medium cursor-pointer text-sm">
                       {feature.label}
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate">
                       {feature.description}
                     </p>
                   </div>
@@ -435,6 +435,7 @@ export const Step5Design = ({
                   id={feature.id}
                   checked={isEnabled}
                   onCheckedChange={(checked) => updateCustomization(feature.id, checked)}
+                  className="shrink-0"
                 />
               </div>
             );
@@ -454,7 +455,7 @@ export const Step5Design = ({
             Configura los elementos que incentivan la compra
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-0 md:px-6 space-y-4">
+        <CardContent className="px-0 md:px-6 space-y-3">
           {MARKETING_FEATURES.map((feature) => {
             const Icon = feature.icon;
             const isEnabled = getFeatureValue(feature.id, feature.defaultValue);
@@ -462,23 +463,23 @@ export const Step5Design = ({
             return (
               <div 
                 key={feature.id} 
-                className="flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:border-warning/50 transition-colors"
+                className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-warning/50 transition-colors gap-3"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                   <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                    "w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0",
                     isEnabled ? "bg-warning/10" : "bg-muted"
                   )}>
                     <Icon className={cn(
-                      "w-5 h-5",
+                      "w-4 h-4 sm:w-5 sm:h-5",
                       isEnabled ? "text-warning" : "text-muted-foreground"
                     )} />
                   </div>
-                  <div>
-                    <Label htmlFor={feature.id} className="font-medium cursor-pointer">
+                  <div className="min-w-0">
+                    <Label htmlFor={feature.id} className="font-medium cursor-pointer text-sm">
                       {feature.label}
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate">
                       {feature.description}
                     </p>
                   </div>
@@ -487,6 +488,7 @@ export const Step5Design = ({
                   id={feature.id}
                   checked={isEnabled}
                   onCheckedChange={(checked) => updateCustomization(feature.id, checked)}
+                  className="shrink-0"
                 />
               </div>
             );
@@ -499,31 +501,34 @@ export const Step5Design = ({
           <CardTitle className="text-lg md:text-xl">Textos Personalizados</CardTitle>
           <CardDescription>Personaliza los textos principales</CardDescription>
         </CardHeader>
-        <CardContent className="px-0 md:px-6 space-y-4">
+        <CardContent className="px-0 md:px-6 space-y-3 sm:space-y-4">
           <FormItem>
-            <FormLabel>Titular Principal</FormLabel>
+            <FormLabel className="text-sm">Titular Principal</FormLabel>
             <Input
               placeholder="¡Gana un increíble premio!"
               value={customization.headline || ''}
               onChange={(e) => updateCustomization('headline', e.target.value)}
+              className="h-9 text-sm"
             />
           </FormItem>
 
           <FormItem>
-            <FormLabel>Subtitular</FormLabel>
+            <FormLabel className="text-sm">Subtitular</FormLabel>
             <Input
               placeholder="Participa ahora y sé parte de este gran sorteo"
               value={customization.subheadline || ''}
               onChange={(e) => updateCustomization('subheadline', e.target.value)}
+              className="h-9 text-sm"
             />
           </FormItem>
 
           <FormItem>
-            <FormLabel>Texto del Botón</FormLabel>
+            <FormLabel className="text-sm">Texto del Botón</FormLabel>
             <Input
               placeholder="¡Comprar Boletos!"
               value={customization.cta_text || ''}
               onChange={(e) => updateCustomization('cta_text', e.target.value)}
+              className="h-9 text-sm"
             />
           </FormItem>
         </CardContent>
