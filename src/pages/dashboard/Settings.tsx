@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, CreditCard, Users, Receipt, Loader2, Bell, ShieldAlert } from "lucide-react";
+import { Building2, CreditCard, Users, Receipt, Loader2, Bell, ShieldAlert, Send } from "lucide-react";
 import { OrganizationSettings } from "@/components/settings/OrganizationSettings";
 import { PaymentMethodsSettings } from "@/components/settings/PaymentMethodsSettings";
 import { TeamSettings } from "@/components/settings/TeamSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
+import { TelegramSettings } from "@/components/settings/TelegramSettings";
 import { ProtectedAction } from "@/components/auth/ProtectedAction";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -72,6 +73,10 @@ export default function Settings() {
               <Users className="h-4 w-4 shrink-0" />
               <span className="hidden sm:inline truncate">Equipo</span>
             </TabsTrigger>
+            <TabsTrigger value="telegram" className="flex-1 min-w-fit gap-2 px-3 py-2 text-xs sm:text-sm">
+              <Send className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline truncate">Telegram</span>
+            </TabsTrigger>
             <TabsTrigger value="subscription" className="flex-1 min-w-fit gap-2 px-3 py-2 text-xs sm:text-sm">
               <Receipt className="h-4 w-4 shrink-0" />
               <span className="hidden sm:inline truncate">Suscripción</span>
@@ -105,6 +110,10 @@ export default function Settings() {
             >
               <TeamSettings />
             </ProtectedAction>
+          </TabsContent>
+
+          <TabsContent value="telegram" className="animate-fade-in">
+            <TelegramSettings />
           </TabsContent>
 
           <TabsContent value="subscription" className="animate-fade-in">

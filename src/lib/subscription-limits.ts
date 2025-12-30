@@ -1,7 +1,7 @@
 // Subscription Limits for Sortavo
 import { supabase } from '@/integrations/supabase/client';
 
-export type SubscriptionTier = 'basic' | 'pro' | 'premium' | null;
+export type SubscriptionTier = 'basic' | 'pro' | 'premium' | 'enterprise' | null;
 
 export interface SubscriptionLimits {
   maxActiveRaffles: number;
@@ -14,14 +14,16 @@ export interface SubscriptionLimits {
   hasCustomCSS: boolean;
   hasAccountManager: boolean;
   hasLotteryIntegration: boolean;
+  hasTelegramBot: boolean;
+  hasApiAccess: boolean;
 }
 
 export function getSubscriptionLimits(tier: SubscriptionTier): SubscriptionLimits {
   switch (tier) {
-    case 'premium':
+    case 'enterprise':
       return {
-        maxActiveRaffles: 999, // effectively unlimited
-        maxTicketsPerRaffle: 10000000, // 10 million
+        maxActiveRaffles: 999,
+        maxTicketsPerRaffle: 10000000,
         templatesAvailable: 6,
         canRemoveBranding: true,
         hasAdvancedAnalytics: true,
@@ -30,6 +32,24 @@ export function getSubscriptionLimits(tier: SubscriptionTier): SubscriptionLimit
         hasCustomCSS: true,
         hasAccountManager: true,
         hasLotteryIntegration: true,
+        hasTelegramBot: true,
+        hasApiAccess: true,
+      };
+
+    case 'premium':
+      return {
+        maxActiveRaffles: 999,
+        maxTicketsPerRaffle: 10000000,
+        templatesAvailable: 6,
+        canRemoveBranding: true,
+        hasAdvancedAnalytics: true,
+        hasPrioritySupport: true,
+        hasWhatsAppSupport: true,
+        hasCustomCSS: true,
+        hasAccountManager: true,
+        hasLotteryIntegration: true,
+        hasTelegramBot: true,
+        hasApiAccess: false,
       };
     
     case 'pro':
@@ -44,6 +64,8 @@ export function getSubscriptionLimits(tier: SubscriptionTier): SubscriptionLimit
         hasCustomCSS: false,
         hasAccountManager: false,
         hasLotteryIntegration: true,
+        hasTelegramBot: false,
+        hasApiAccess: false,
       };
     
     case 'basic':
@@ -59,6 +81,8 @@ export function getSubscriptionLimits(tier: SubscriptionTier): SubscriptionLimit
         hasCustomCSS: false,
         hasAccountManager: false,
         hasLotteryIntegration: false,
+        hasTelegramBot: false,
+        hasApiAccess: false,
       };
   }
 }

@@ -54,12 +54,35 @@ export const STRIPE_PLANS = {
       "Sorteos ilimitados",
       "100,000 boletos por sorteo",
       "6 plantillas + CSS personalizado",
+      "Bot de Telegram incluido",
       "Account Manager dedicado",
       "Setup asistido incluido",
     ],
     limits: {
       maxActiveRaffles: 999,
       maxTicketsPerRaffle: 100000,
+      templatesAvailable: 6,
+    },
+  },
+  enterprise: {
+    name: "Enterprise",
+    monthlyPrice: 499,
+    annualPrice: 4990,
+    monthlyPriceId: "", // User must create in Stripe
+    annualPriceId: "", // User must create in Stripe
+    productId: "", // User must create in Stripe
+    features: [
+      "Sorteos ilimitados",
+      "10,000,000 boletos por sorteo",
+      "Bot de Telegram incluido",
+      "API Access",
+      "Account Manager dedicado",
+      "SLA 99.9% uptime",
+      "Soporte 24/7 telefónico",
+    ],
+    limits: {
+      maxActiveRaffles: 999,
+      maxTicketsPerRaffle: 10000000,
       templatesAvailable: 6,
     },
   },

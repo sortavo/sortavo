@@ -66,5 +66,8 @@ verify_jwt = false
 [functions.export-buyers-csv]
 verify_jwt = false
 
-[functions.export-tickets-csv]
+[functions.telegram-webhook]
+verify_jwt = false
+
+[functions.telegram-notify]
 verify_jwt = false
