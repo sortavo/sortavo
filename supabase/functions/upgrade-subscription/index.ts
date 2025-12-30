@@ -97,32 +97,59 @@ serve(async (req) => {
     }
     logStep("Found subscription item", { subscriptionItemId });
 
+    // Get current and new prices to determine if it's an upgrade or downgrade
+    const currentPriceId = subscription.items.data[0]?.price.id;
+    const currentPrice = await stripe.prices.retrieve(currentPriceId);
+    const newPrice = await stripe.prices.retrieve(priceId);
+    
+    const currentAmount = currentPrice.unit_amount || 0;
+    const newAmount = newPrice.unit_amount || 0;
+    const isDowngrade = newAmount < currentAmount;
+    
+    logStep("Price comparison", { 
+      currentPriceId,
+      currentAmount,
+      newPriceId: priceId,
+      newAmount,
+      isDowngrade
+    });
+
     // Update the subscription with the new price
+    // For upgrades: charge the difference immediately (always_invoice)
+    // For downgrades: no proration, change applies at next billing cycle (none)
     const updatedSubscription = await stripe.subscriptions.update(org.stripe_subscription_id, {
       items: [{
         id: subscriptionItemId,
         price: priceId,
       }],
-      proration_behavior: "always_invoice", // Charge/credit the difference immediately
+      proration_behavior: isDowngrade ? "none" : "always_invoice",
     });
     logStep("Subscription updated successfully", { 
       newStatus: updatedSubscription.status,
-      newPriceId: priceId
+      newPriceId: priceId,
+      prorationBehavior: isDowngrade ? "none" : "always_invoice"
     });
 
-    // Get the latest invoice to show what was charged
-    const latestInvoice = await stripe.invoices.list({
-      subscription: org.stripe_subscription_id,
-      limit: 1,
-    });
+    // Get the latest invoice to show what was charged (only relevant for upgrades)
+    let amountCharged = 0;
+    let currency = "usd";
     
-    const amountCharged = latestInvoice.data[0]?.amount_paid || 0;
-    const currency = latestInvoice.data[0]?.currency || "usd";
+    if (!isDowngrade) {
+      const latestInvoice = await stripe.invoices.list({
+        subscription: org.stripe_subscription_id,
+        limit: 1,
+      });
+      
+      amountCharged = latestInvoice.data[0]?.amount_paid || 0;
+      currency = latestInvoice.data[0]?.currency || "usd";
+      logStep("Fetched invoice details", { amountCharged, currency });
+    }
+
     const nextBillingDate = updatedSubscription.current_period_end 
       ? new Date(updatedSubscription.current_period_end * 1000).toISOString()
       : null;
 
-    logStep("Fetched invoice details", { amountCharged, currency, nextBillingDate });
+    logStep("Upgrade completed", { isDowngrade, amountCharged, nextBillingDate });
 
     return new Response(
       JSON.stringify({ 
@@ -131,6 +158,7 @@ serve(async (req) => {
           id: updatedSubscription.id,
           status: updatedSubscription.status,
         },
+        is_downgrade: isDowngrade,
         amount_charged: amountCharged,
         currency: currency,
         next_billing_date: nextBillingDate,

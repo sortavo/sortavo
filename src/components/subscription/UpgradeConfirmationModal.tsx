@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, Loader2, CreditCard, Calendar, AlertTriangle } from "lucide-react";
+import { ArrowRight, Loader2, CreditCard, Calendar, AlertTriangle, Clock, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -30,6 +30,8 @@ interface UpgradePreview {
   next_billing_date: string | null;
   new_plan_name: string;
   old_plan_name: string;
+  is_downgrade?: boolean;
+  message?: string;
 }
 
 interface UpgradeConfirmationModalProps {
@@ -61,7 +63,7 @@ export function UpgradeConfirmationModal({
     }).format(amount);
   };
 
-  const isUpgrade = targetPlanPrice > currentPlanPrice;
+  const isDowngrade = preview.is_downgrade ?? targetPlanPrice < currentPlanPrice;
   const amountDue = preview.amount_due;
 
   return (
@@ -69,11 +71,18 @@ export function UpgradeConfirmationModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-primary" />
-            Confirmar Cambio de Plan
+            {isDowngrade ? (
+              <ArrowDown className="h-5 w-5 text-amber-500" />
+            ) : (
+              <CreditCard className="h-5 w-5 text-primary" />
+            )}
+            {isDowngrade ? "Confirmar Cambio de Plan" : "Confirmar Mejora de Plan"}
           </DialogTitle>
           <DialogDescription>
-            Revisa los detalles antes de confirmar el cambio
+            {isDowngrade 
+              ? "Tu plan cambiará al final del período actual"
+              : "Revisa los detalles antes de confirmar el cambio"
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -91,8 +100,8 @@ export function UpgradeConfirmationModal({
             </div>
             <ArrowRight className="h-6 w-6 text-muted-foreground" />
             <div className="text-center">
-              <Badge className={isUpgrade ? "bg-primary" : "bg-amber-500"}>
-                {isUpgrade ? "Upgrade" : "Downgrade"}
+              <Badge className={isDowngrade ? "bg-amber-500" : "bg-primary"}>
+                {isDowngrade ? "Downgrade" : "Upgrade"}
               </Badge>
               <p className="font-semibold text-lg capitalize mt-2">{preview.new_plan_name}</p>
               <p className="text-sm text-muted-foreground">
@@ -103,58 +112,86 @@ export function UpgradeConfirmationModal({
 
           <Separator />
 
-          {/* Proration Details */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm text-muted-foreground">Desglose del Prorrateo</h4>
-            
-            {preview.proration_details.items.length > 0 ? (
-              <div className="space-y-2 text-sm">
-                {preview.proration_details.items.map((item, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span className="text-muted-foreground line-clamp-1 pr-2">
-                      {item.description}
-                    </span>
-                    <span className={item.amount < 0 ? "text-green-600" : ""}>
-                      {item.amount < 0 ? "-" : ""}
-                      {formatCurrency(Math.abs(item.amount))}
+          {/* Downgrade Info */}
+          {isDowngrade ? (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+                <div className="space-y-1">
+                  <p className="font-medium text-foreground">
+                    Sin cargos ni devoluciones
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {preview.message || "El cambio se aplicará al final de tu período actual."}
+                  </p>
+                </div>
+              </div>
+              
+              {preview.next_billing_date && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground pl-8">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    Cambio efectivo: {format(new Date(preview.next_billing_date), "d 'de' MMMM, yyyy", { locale: es })}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Proration Details - Only for upgrades */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm text-muted-foreground">Desglose del Prorrateo</h4>
+                
+                {preview.proration_details.items.length > 0 ? (
+                  <div className="space-y-2 text-sm">
+                    {preview.proration_details.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span className="text-muted-foreground line-clamp-1 pr-2">
+                          {item.description}
+                        </span>
+                        <span className={item.amount < 0 ? "text-green-600" : ""}>
+                          {item.amount < 0 ? "-" : ""}
+                          {formatCurrency(Math.abs(item.amount))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    El cambio se aplicará en tu próxima factura.
+                  </p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Total to Pay - Only for upgrades */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Total a cobrar hoy</span>
+                  <span className={`text-xl font-bold ${amountDue > 0 ? "text-primary" : "text-green-600"}`}>
+                    {amountDue > 0 ? formatCurrency(amountDue) : formatCurrency(0)}
+                  </span>
+                </div>
+                
+                {amountDue <= 0 && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Crédito aplicado. No se cobrará hoy.
+                  </p>
+                )}
+                
+                {preview.next_billing_date && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    <span>
+                      Próxima facturación: {format(new Date(preview.next_billing_date), "d 'de' MMMM, yyyy", { locale: es })}
                     </span>
                   </div>
-                ))}
+                )}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                El cambio se aplicará en tu próxima factura.
-              </p>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Total to Pay */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Total a cobrar hoy</span>
-              <span className={`text-xl font-bold ${amountDue > 0 ? "text-primary" : "text-green-600"}`}>
-                {amountDue > 0 ? formatCurrency(amountDue) : formatCurrency(0)}
-              </span>
-            </div>
-            
-            {amountDue <= 0 && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                Crédito aplicado. No se cobrará hoy.
-              </p>
-            )}
-            
-            {preview.next_billing_date && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="h-3 w-3" />
-                <span>
-                  Próxima facturación: {format(new Date(preview.next_billing_date), "d 'de' MMMM, yyyy", { locale: es })}
-                </span>
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -169,6 +206,7 @@ export function UpgradeConfirmationModal({
           <Button
             onClick={onConfirm}
             disabled={isLoading}
+            variant={isDowngrade ? "default" : "default"}
             className="w-full sm:w-auto"
           >
             {isLoading ? (
@@ -178,7 +216,7 @@ export function UpgradeConfirmationModal({
               </>
             ) : (
               <>
-                Confirmar Cambio
+                {isDowngrade ? "Confirmar Cambio" : "Confirmar y Pagar"}
               </>
             )}
           </Button>
