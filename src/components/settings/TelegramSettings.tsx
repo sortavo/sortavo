@@ -195,14 +195,14 @@ export function TelegramSettings() {
         </CardHeader>
         <CardContent className="space-y-4">
           {isLinked ? (
-            <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
-              <div>
-                <p className="font-medium">@{connection.telegram_username || "Usuario"}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-muted">
+              <div className="min-w-0">
+                <p className="font-medium truncate">@{connection.telegram_username || "Usuario"}</p>
                 <p className="text-sm text-muted-foreground">
                   Conectado desde {new Date(connection.verified_at!).toLocaleDateString()}
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={unlinkTelegram}>
+              <Button variant="outline" size="sm" onClick={unlinkTelegram} className="w-full sm:w-auto shrink-0">
                 <Unlink className="h-4 w-4 mr-2" />
                 Desvincular
               </Button>
@@ -217,14 +217,16 @@ export function TelegramSettings() {
               </Alert>
 
               {connection?.link_code && new Date(connection.link_code_expires_at!) > new Date() ? (
-                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted">
-                  <code className="text-2xl font-mono font-bold tracking-wider">
-                    {connection.link_code}
-                  </code>
-                  <Button variant="ghost" size="sm" onClick={copyCode}>
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                  <span className="text-sm text-muted-foreground ml-auto">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg bg-muted">
+                  <div className="flex items-center gap-2">
+                    <code className="text-xl sm:text-2xl font-mono font-bold tracking-wider">
+                      {connection.link_code}
+                    </code>
+                    <Button variant="ghost" size="sm" onClick={copyCode} className="shrink-0">
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <span className="text-sm text-muted-foreground sm:ml-auto">
                     Expira en {Math.ceil((new Date(connection.link_code_expires_at!).getTime() - Date.now()) / 60000)} min
                   </span>
                 </div>

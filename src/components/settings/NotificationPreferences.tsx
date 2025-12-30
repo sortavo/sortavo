@@ -225,19 +225,20 @@ export function NotificationPreferences() {
         <CardContent className="space-y-6">
           {/* Master toggles */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-card shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+            <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-border/50 bg-card shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shrink-0">
                   <Mail className="h-5 w-5 text-primary" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">Notificaciones por email</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground break-words">
                     Recibir notificaciones en tu correo electrónico
                   </p>
                 </div>
               </div>
               <Switch
+                className="shrink-0"
                 checked={preferences?.email_enabled ?? true}
                 onCheckedChange={(checked) =>
                   updatePreference.mutate({ email_enabled: checked })
@@ -245,14 +246,14 @@ export function NotificationPreferences() {
               />
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-card shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+            <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-border/50 bg-card shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shrink-0">
                   <Smartphone className="h-5 w-5 text-primary" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">Notificaciones push</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground break-words">
                     Recibir notificaciones en tiempo real en la app
                   </p>
                   {browserPermission === 'denied' && (
@@ -264,17 +265,18 @@ export function NotificationPreferences() {
               </div>
               {browserPermission === 'granted' ? (
                 <Switch
+                  className="shrink-0"
                   checked={preferences?.push_enabled ?? true}
                   onCheckedChange={(checked) =>
                     updatePreference.mutate({ push_enabled: checked })
                   }
                 />
               ) : browserPermission !== 'denied' ? (
-                <Button size="sm" variant="outline" onClick={handleEnablePush}>
+                <Button size="sm" variant="outline" onClick={handleEnablePush} className="shrink-0">
                   Activar
                 </Button>
               ) : (
-                <Button size="sm" variant="outline" disabled>
+                <Button size="sm" variant="outline" disabled className="shrink-0">
                   Bloqueado
                 </Button>
               )}
@@ -296,20 +298,21 @@ export function NotificationPreferences() {
               return (
                 <div
                   key={type.key}
-                  className="flex items-center justify-between py-3"
+                  className="flex items-center justify-between gap-4 py-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
                       <Icon className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium">{type.label}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground break-words">
                         {type.description}
                       </p>
                     </div>
                   </div>
                   <Switch
+                    className="shrink-0"
                     checked={isEnabled}
                     onCheckedChange={(checked) =>
                       updatePreference.mutate({ [type.key]: checked })
@@ -332,10 +335,10 @@ export function NotificationPreferences() {
       {/* Clear notifications */}
       <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="min-w-0">
               <p className="font-medium">Limpiar notificaciones</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground break-words">
                 Eliminar todas las notificaciones leídas
               </p>
             </div>
@@ -344,6 +347,7 @@ export function NotificationPreferences() {
               size="sm"
               onClick={() => clearNotifications.mutate()}
               disabled={clearNotifications.isPending}
+              className="w-full sm:w-auto shrink-0"
             >
               {clearNotifications.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -225,14 +225,14 @@ export function TeamSettings() {
   return (
     <div className="space-y-6">
       <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-300">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
           <div>
             <CardTitle className="text-lg">Equipo</CardTitle>
             <CardDescription>
               Administra los miembros de tu organización
             </CardDescription>
           </div>
-          <Button onClick={() => setShowInviteDialog(true)} className="shadow-sm">
+          <Button onClick={() => setShowInviteDialog(true)} className="shadow-sm w-full sm:w-auto">
             <UserPlus className="mr-2 h-4 w-4" />
             Invitar Miembro
           </Button>
@@ -257,31 +257,31 @@ export function TeamSettings() {
                   return (
                     <div
                       key={member.id}
-                      className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-card/50 shadow-sm hover:shadow-md transition-all duration-300"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/50 bg-card/50 shadow-sm hover:shadow-md transition-all duration-300"
                     >
-                    <div className="flex items-center gap-4">
-                      <Avatar>
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <Avatar className="shrink-0">
                         <AvatarImage src={member.profile?.avatar_url || undefined} />
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {getInitials(member.profile?.full_name)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium truncate">
                             {member.profile?.full_name || "Usuario"}
                           </span>
                           {isCurrentUser && (
-                            <Badge variant="secondary" className="text-xs">Tú</Badge>
+                            <Badge variant="secondary" className="text-xs shrink-0">Tú</Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground truncate">
                           {member.profile?.email}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                       <Badge className={roleInfo.color}>
                         <roleInfo.icon className="mr-1 h-3 w-3" />
                         {roleInfo.label}
@@ -360,20 +360,20 @@ export function TeamSettings() {
               return (
                 <div
                   key={invite.id}
-                  className="flex items-center justify-between p-4 rounded-xl border border-dashed border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors duration-300"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-dashed border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors duration-300"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-full bg-muted">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="p-2 rounded-full bg-muted shrink-0">
                       <Mail className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <div>
-                      <p className="font-medium">{invite.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{invite.email}</p>
                       <p className="text-sm text-muted-foreground">
                         Expira en {daysLeft} día{daysLeft !== 1 ? "s" : ""}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                     <Badge className={roleInfo?.color || "bg-gray-500/10 text-gray-600"}>
                       {roleInfo?.label || invite.role}
                     </Badge>

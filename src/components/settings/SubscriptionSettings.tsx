@@ -82,13 +82,13 @@ export function SubscriptionSettings() {
       {/* Current Plan */}
       <Card className="border-border/50 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
         <CardHeader className="pb-4 bg-gradient-to-r from-primary/5 to-transparent">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-primary/10 shadow-sm">
+              <div className="p-2.5 rounded-xl bg-primary/10 shadow-sm shrink-0">
                 <PlanIcon className="h-6 w-6 text-primary" />
               </div>
-              <div>
-                <CardTitle className="flex items-center gap-2 text-lg">
+              <div className="min-w-0">
+                <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
                   Plan {currentPlan?.name}
                   <Badge className={status.color}>{status.label}</Badge>
                 </CardTitle>
@@ -99,8 +99,8 @@ export function SubscriptionSettings() {
                 </CardDescription>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold">
+            <div className="text-left sm:text-right shrink-0">
+              <div className="text-xl sm:text-2xl font-bold">
                 ${organization?.subscription_period === "annual" 
                   ? currentPlan?.annualPrice 
                   : currentPlan?.monthlyPrice}{" "}
@@ -132,15 +132,15 @@ export function SubscriptionSettings() {
             </div>
           )}
 
-          <div className="flex gap-3">
-            <Button onClick={handleManageSubscription} disabled={isLoadingPortal}>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={handleManageSubscription} disabled={isLoadingPortal} className="w-full sm:w-auto">
               {isLoadingPortal && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <CreditCard className="mr-2 h-4 w-4" />
-              Gestionar Suscripción
-              <ExternalLink className="ml-2 h-4 w-4" />
+              <span className="truncate">Gestionar Suscripción</span>
+              <ExternalLink className="ml-2 h-4 w-4 shrink-0" />
             </Button>
             {currentTier !== "premium" && (
-              <Button variant="outline" onClick={() => navigate("/pricing")}>
+              <Button variant="outline" onClick={() => navigate("/pricing")} className="w-full sm:w-auto">
                 <Zap className="mr-2 h-4 w-4" />
                 Cambiar Plan
               </Button>
