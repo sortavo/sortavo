@@ -445,28 +445,6 @@ export default function Onboarding() {
           <h2 className="text-xl font-semibold text-white">Procesando tu suscripción</h2>
           <p className="text-gray-400">Esto solo tomará unos segundos...</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 mt-4">
-          <Button
-            variant="outline"
-            onClick={handleManualRetry}
-            disabled={manualRetryCount > 5}
-            className="border-white/20 text-white hover:bg-white/10"
-          >
-            Reintentar verificación
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/dashboard")}
-            className="text-gray-400 hover:text-white hover:bg-white/10"
-          >
-            Ir al dashboard
-          </Button>
-        </div>
-        {manualRetryCount > 0 && (
-          <p className="text-sm text-gray-500">
-            Reintentos: {manualRetryCount}/5
-          </p>
-        )}
       </div>
     );
   }
