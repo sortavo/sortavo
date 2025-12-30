@@ -79,7 +79,7 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Retrieve current subscription to get subscription item ID
+    // Retrieve current subscription to get subscription item ID and current price
     const subscription = await stripe.subscriptions.retrieve(org.stripe_subscription_id);
     logStep("Retrieved subscription", { 
       subscriptionId: subscription.id,
@@ -92,7 +92,58 @@ serve(async (req) => {
       throw new Error("No subscription item found");
     }
 
-    // Get upcoming invoice preview with the new price
+    // Get current and new prices to determine if it's an upgrade or downgrade
+    const currentPriceId = subscription.items.data[0]?.price.id;
+    const currentPrice = await stripe.prices.retrieve(currentPriceId);
+    const newPrice = await stripe.prices.retrieve(priceId);
+    
+    const currentAmount = currentPrice.unit_amount || 0;
+    const newAmount = newPrice.unit_amount || 0;
+    const isDowngrade = newAmount < currentAmount;
+    
+    logStep("Price comparison", { 
+      currentPriceId,
+      currentAmount,
+      newPriceId: priceId,
+      newAmount,
+      isDowngrade
+    });
+
+    // Calculate next billing date
+    const nextBillingDate = subscription.current_period_end 
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null;
+
+    // For downgrades: no proration, change applies at next billing cycle
+    if (isDowngrade) {
+      logStep("Downgrade detected - returning simplified preview");
+      
+      const response = {
+        amount_due: 0,
+        currency: currentPrice.currency || "usd",
+        proration_details: {
+          credit: 0,
+          debit: 0,
+          items: [],
+        },
+        effective_date: nextBillingDate, // Change applies at period end
+        next_billing_date: nextBillingDate,
+        new_plan_name: planName || "Nuevo Plan",
+        old_plan_name: currentPlanName || org.subscription_tier || "Plan Actual",
+        is_downgrade: true,
+        message: "El cambio se aplicará al final de tu período actual. No hay cargos ni devoluciones.",
+      };
+
+      return new Response(
+        JSON.stringify(response),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    // For upgrades: get proration details
     const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
       customer: org.stripe_customer_id,
       subscription: org.stripe_subscription_id,
@@ -127,11 +178,6 @@ serve(async (req) => {
       }
     }
 
-    // Calculate next billing date
-    const nextBillingDate = subscription.current_period_end 
-      ? new Date(subscription.current_period_end * 1000).toISOString()
-      : null;
-
     const response = {
       amount_due: upcomingInvoice.amount_due, // in cents
       currency: upcomingInvoice.currency,
@@ -144,12 +190,14 @@ serve(async (req) => {
       next_billing_date: nextBillingDate,
       new_plan_name: planName || "Nuevo Plan",
       old_plan_name: currentPlanName || org.subscription_tier || "Plan Actual",
+      is_downgrade: false,
     };
 
     logStep("Preview calculated successfully", {
       amountDue: response.amount_due,
       credit: creditAmount,
-      debit: debitAmount
+      debit: debitAmount,
+      isDowngrade: false
     });
 
     return new Response(
