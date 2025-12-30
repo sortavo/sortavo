@@ -338,8 +338,8 @@ export function TicketsTab({ raffleId, raffleTitle, raffleSlug }: TicketsTabProp
 
       {/* Ticket Detail Modal */}
       <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               Boleto #{selectedTicket?.ticket_number}
               <Badge variant={
@@ -354,7 +354,7 @@ export function TicketsTab({ raffleId, raffleTitle, raffleSlug }: TicketsTabProp
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto space-y-4">
             {/* Buyer Info */}
             {(selectedTicket?.status === 'sold' || selectedTicket?.status === 'reserved') && (
               <div className="space-y-3">
@@ -413,7 +413,7 @@ export function TicketsTab({ raffleId, raffleTitle, raffleSlug }: TicketsTabProp
                       <img 
                         src={selectedTicket.payment_proof_url} 
                         alt="Comprobante de pago"
-                        className="w-full h-auto object-cover"
+                        className="w-full h-auto object-cover max-h-[200px]"
                       />
                     </button>
                   </div>
