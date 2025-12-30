@@ -191,8 +191,11 @@ export default function Onboarding() {
   }, [user, isLoading, navigate]);
 
   useEffect(() => {
-    if (organization) {
-      setBusinessName(organization.name || "");
+    if (organization && user) {
+      // Si el nombre de la org es el email del usuario, dejar vacío para que lo llene
+      const isEmailAsName = organization.name === user.email;
+      setBusinessName(isEmailAsName ? "" : (organization.name || ""));
+      
       if (organization.country_code) {
         setSelectedCountry(organization.country_code);
       }
@@ -206,7 +209,7 @@ export default function Onboarding() {
         setCity(organization.city);
       }
     }
-  }, [organization]);
+  }, [organization, user]);
 
   // Auto-update currency and timezone when country changes
   const handleCountryChange = (countryCode: string) => {
