@@ -136,7 +136,7 @@ const SortablePrizeRow = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "grid gap-3 p-4 rounded-lg border bg-muted/30",
+        "grid gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border bg-muted/30",
         isFirst && !firstPrizeHasName && "border-destructive/50",
         isDragging && "z-50 opacity-90 shadow-lg ring-2 ring-primary"
       )}
@@ -151,7 +151,7 @@ const SortablePrizeRow = ({
           >
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-xs sm:text-sm font-medium text-muted-foreground">
             Premio {index + 1} {isFirst && <span className="text-destructive">*</span>}
           </span>
         </div>
@@ -161,30 +161,18 @@ const SortablePrizeRow = ({
             variant="ghost"
             size="sm"
             onClick={() => onRemove(index)}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+            className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-muted-foreground hover:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         )}
       </div>
       
-      {/* Labels row - solo visible en desktop */}
-      <div className="hidden md:grid md:grid-cols-[1fr,120px,100px] gap-3 mb-1">
-        <span className="text-xs text-muted-foreground">
-          Nombre del premio {isFirst && <span className="text-destructive">*</span>}
-        </span>
-        <span className="text-xs text-muted-foreground">
-          Valor <span className="text-muted-foreground/70">(opcional)</span>
-        </span>
-        <span className="text-xs text-muted-foreground">
-          Moneda
-        </span>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-[1fr,120px,100px] gap-3">
+      {/* Responsive layout - stacked on mobile, row on desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr,100px,90px] gap-2 sm:gap-3">
         {/* Prize Name */}
-        <div>
-          <span className="md:hidden text-xs text-muted-foreground mb-1 block">
+        <div className="min-w-0">
+          <span className="text-[10px] sm:text-xs text-muted-foreground mb-1 block">
             Nombre del premio {isFirst && <span className="text-destructive">*</span>}
           </span>
           <Input
@@ -192,24 +180,25 @@ const SortablePrizeRow = ({
             value={prize.name || ''}
             onChange={(e) => onUpdate(index, 'name', e.target.value)}
             className={cn(
+              "h-9 text-sm",
               isFirst && !firstPrizeHasName && "border-destructive focus-visible:ring-destructive"
             )}
           />
         </div>
         
         {/* Prize Value */}
-        <div>
-          <span className="md:hidden text-xs text-muted-foreground mb-1 block">
-            Valor <span className="text-muted-foreground/70">(opcional)</span>
+        <div className="min-w-0">
+          <span className="text-[10px] sm:text-xs text-muted-foreground mb-1 block">
+            Valor <span className="text-muted-foreground/70">(opc.)</span>
           </span>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
               $
             </span>
             <Input
               type="number"
               placeholder="0"
-              className="pl-7"
+              className="pl-5 h-9 text-sm"
               value={prize.value ?? ''}
               onChange={(e) => onUpdate(index, 'value', e.target.value ? parseFloat(e.target.value) : null)}
             />
@@ -217,15 +206,15 @@ const SortablePrizeRow = ({
         </div>
         
         {/* Currency */}
-        <div>
-          <span className="md:hidden text-xs text-muted-foreground mb-1 block">
+        <div className="min-w-0">
+          <span className="text-[10px] sm:text-xs text-muted-foreground mb-1 block">
             Moneda
           </span>
           <Select 
             value={prize.currency || defaultCurrency} 
             onValueChange={(value) => onUpdate(index, 'currency', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -630,7 +619,7 @@ export const Step2Prize = ({ form }: Step2Props) => {
                       onDrop={handleDrop}
                       onDragOver={handleDragOver}
                       className={cn(
-                        "border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer",
+                        "border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 sm:p-8 text-center hover:border-primary/50 transition-colors cursor-pointer",
                         isUploading && "pointer-events-none opacity-50"
                       )}
                     >
@@ -645,19 +634,19 @@ export const Step2Prize = ({ form }: Step2Props) => {
                       
                       {isUploading ? (
                         <>
-                          <Loader2 className="w-12 h-12 mx-auto text-primary mb-3 animate-spin" />
-                          <p className="text-sm text-muted-foreground">
-                            Subiendo imágenes... {Math.round(uploadProgress)}%
+                          <Loader2 className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-primary mb-2 sm:mb-3 animate-spin" />
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            Subiendo... {Math.round(uploadProgress)}%
                           </p>
                         </>
                       ) : (
                         <>
-                          <ImagePlus className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                          <p className="text-sm text-muted-foreground">
-                            Arrastra imágenes aquí o haz clic para seleccionar
+                          <ImagePlus className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-2 sm:mb-3" />
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            Toca para subir imágenes
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Máximo {MAX_IMAGES} imágenes, 5MB cada una
+                          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                            Máx. {MAX_IMAGES} imágenes, 5MB c/u
                           </p>
                         </>
                       )}
@@ -702,7 +691,7 @@ export const Step2Prize = ({ form }: Step2Props) => {
           name="prize_terms"
           render={({ field }) => (
             <FormItem>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
                 <FormLabel>Términos del Premio</FormLabel>
                 <Button
                   type="button"
@@ -710,7 +699,7 @@ export const Step2Prize = ({ form }: Step2Props) => {
                   size="sm"
                   onClick={handleGenerateTerms}
                   disabled={isGeneratingTerms}
-                  className="h-7 text-xs gap-1.5"
+                  className="h-8 text-xs gap-1.5 w-full sm:w-auto"
                 >
                   {isGeneratingTerms ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -723,12 +712,12 @@ export const Step2Prize = ({ form }: Step2Props) => {
               <FormControl>
                 <Textarea 
                   placeholder="Condiciones de entrega, garantías, restricciones..."
-                  className="min-h-[120px]"
+                  className="min-h-[100px] sm:min-h-[120px] text-sm"
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                La IA generará términos basándose en el premio y categoría del sorteo
+              <FormDescription className="text-xs">
+                La IA generará términos basándose en el premio y categoría
               </FormDescription>
               <FormMessage />
             </FormItem>
