@@ -984,6 +984,131 @@ export type Database = {
           },
         ]
       }
+      telegram_buyer_links: {
+        Row: {
+          buyer_email: string
+          buyer_phone: string | null
+          created_at: string | null
+          id: string
+          notify_announcements: boolean | null
+          notify_draw_reminder: boolean | null
+          notify_payment_approved: boolean | null
+          notify_payment_rejected: boolean | null
+          notify_payment_reminder: boolean | null
+          notify_reservation: boolean | null
+          notify_winner: boolean | null
+          telegram_chat_id: string
+          telegram_username: string | null
+          updated_at: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          buyer_email: string
+          buyer_phone?: string | null
+          created_at?: string | null
+          id?: string
+          notify_announcements?: boolean | null
+          notify_draw_reminder?: boolean | null
+          notify_payment_approved?: boolean | null
+          notify_payment_rejected?: boolean | null
+          notify_payment_reminder?: boolean | null
+          notify_reservation?: boolean | null
+          notify_winner?: boolean | null
+          telegram_chat_id: string
+          telegram_username?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          buyer_email?: string
+          buyer_phone?: string | null
+          created_at?: string | null
+          id?: string
+          notify_announcements?: boolean | null
+          notify_draw_reminder?: boolean | null
+          notify_payment_approved?: boolean | null
+          notify_payment_rejected?: boolean | null
+          notify_payment_reminder?: boolean | null
+          notify_reservation?: boolean | null
+          notify_winner?: boolean | null
+          telegram_chat_id?: string
+          telegram_username?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      telegram_connections: {
+        Row: {
+          created_at: string | null
+          daily_summary_hour: number | null
+          id: string
+          link_code: string | null
+          link_code_expires_at: string | null
+          notify_daily_summary: boolean | null
+          notify_payment_approved: boolean | null
+          notify_payment_proof: boolean | null
+          notify_payment_rejected: boolean | null
+          notify_raffle_ending: boolean | null
+          notify_reservation_expired: boolean | null
+          notify_ticket_reserved: boolean | null
+          notify_winner_selected: boolean | null
+          organization_id: string
+          telegram_chat_id: string
+          telegram_username: string | null
+          updated_at: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_summary_hour?: number | null
+          id?: string
+          link_code?: string | null
+          link_code_expires_at?: string | null
+          notify_daily_summary?: boolean | null
+          notify_payment_approved?: boolean | null
+          notify_payment_proof?: boolean | null
+          notify_payment_rejected?: boolean | null
+          notify_raffle_ending?: boolean | null
+          notify_reservation_expired?: boolean | null
+          notify_ticket_reserved?: boolean | null
+          notify_winner_selected?: boolean | null
+          organization_id: string
+          telegram_chat_id: string
+          telegram_username?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_summary_hour?: number | null
+          id?: string
+          link_code?: string | null
+          link_code_expires_at?: string | null
+          notify_daily_summary?: boolean | null
+          notify_payment_approved?: boolean | null
+          notify_payment_proof?: boolean | null
+          notify_payment_rejected?: boolean | null
+          notify_raffle_ending?: boolean | null
+          notify_reservation_expired?: boolean | null
+          notify_ticket_reserved?: boolean | null
+          notify_winner_selected?: boolean | null
+          organization_id?: string
+          telegram_chat_id?: string
+          telegram_username?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_generation_jobs: {
         Row: {
           batch_size: number
