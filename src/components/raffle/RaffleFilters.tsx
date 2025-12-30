@@ -166,8 +166,8 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
 
   return (
     <div className="space-y-3">
-      {/* Quick status filters - scrollable on mobile */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap scrollbar-hide">
+      {/* Quick status filters - grid on mobile, flex on desktop */}
+      <div className="grid grid-cols-5 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
         {statusOptions.map((option) => {
           const Icon = option.icon;
           const isActive = filters.status.includes(option.value);
@@ -178,26 +178,26 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
               variant={isActive ? 'default' : 'outline'}
               size="sm"
               onClick={() => handleStatusToggle(option.value)}
-              className="h-8 flex-shrink-0 text-xs sm:text-sm"
+              className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm"
             >
-              <Icon className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">{option.label}</span>
+              <Icon className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
+              <span className="truncate w-full text-center sm:w-auto">{option.label}</span>
             </Button>
           );
         })}
       </div>
 
-      {/* Action buttons - scrollable on mobile */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-3 px-3 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide">
+      {/* Action buttons - grid on mobile */}
+      <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
         {/* Saved presets dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 flex-shrink-0">
-              <Bookmark className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">Filtros guardados</span>
+            <Button variant="outline" size="sm" className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm w-full">
+              <Bookmark className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
+              <span className="truncate">Guardados</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="start" className="w-56">
             {presets.length === 0 ? (
               <div className="px-2 py-4 text-sm text-center text-muted-foreground">
                 No hay filtros guardados
@@ -231,12 +231,12 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
         {/* Save current filters */}
         <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 flex-shrink-0">
-              <Save className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">Guardar</span>
+            <Button variant="outline" size="sm" className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm w-full">
+              <Save className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
+              <span className="truncate">Guardar</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Guardar filtros actuales</DialogTitle>
               <DialogDescription>
@@ -250,11 +250,11 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
                 onChange={(e) => setPresetName(e.target.value)}
               />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setShowSaveDialog(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button onClick={savePreset} disabled={!presetName.trim()}>
+              <Button onClick={savePreset} disabled={!presetName.trim()} className="w-full sm:w-auto">
                 Guardar
               </Button>
             </DialogFooter>
@@ -264,17 +264,17 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
         {/* Advanced filters dialog */}
         <Dialog open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 flex-shrink-0">
-              <SlidersHorizontal className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">Filtros avanzados</span>
+            <Button variant="outline" size="sm" className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm w-full relative">
+              <SlidersHorizontal className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
+              <span className="truncate">Avanzados</span>
               {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 text-[10px] flex items-center justify-center sm:static sm:ml-1.5 sm:h-5 sm:w-auto sm:px-1.5">
                   {activeFiltersCount}
                 </Badge>
               )}
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Filtros avanzados</DialogTitle>
               <DialogDescription>
@@ -291,26 +291,27 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full justify-start text-left font-normal text-sm",
                         !filters.dateRange[0] && "text-muted-foreground"
                       )}
                     >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {filters.dateRange[0] ? (
-                        filters.dateRange[1] ? (
-                          <>
-                            {format(filters.dateRange[0], 'dd/MM/yyyy', { locale: es })} -{' '}
-                            {format(filters.dateRange[1], 'dd/MM/yyyy', { locale: es })}
-                          </>
+                      <Calendar className="mr-2 h-4 w-4 shrink-0" />
+                      <span className="truncate">
+                        {filters.dateRange[0] ? (
+                          filters.dateRange[1] ? (
+                            <>
+                              {format(filters.dateRange[0], 'dd/MM/yy', { locale: es })} - {format(filters.dateRange[1], 'dd/MM/yy', { locale: es })}
+                            </>
+                          ) : (
+                            format(filters.dateRange[0], 'dd/MM/yyyy', { locale: es })
+                          )
                         ) : (
-                          format(filters.dateRange[0], 'dd/MM/yyyy', { locale: es })
-                        )
-                      ) : (
-                        'Seleccionar fechas'
-                      )}
+                          'Seleccionar fechas'
+                        )}
+                      </span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0" align="center" side="bottom">
                     <CalendarComponent
                       mode="range"
                       selected={{
@@ -318,7 +319,7 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
                         to: filters.dateRange[1] || undefined
                       }}
                       onSelect={handleDateRangeChange}
-                      numberOfMonths={2}
+                      numberOfMonths={1}
                       className="pointer-events-auto"
                     />
                   </PopoverContent>
@@ -389,9 +390,9 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
         {/* Sort dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 flex-shrink-0">
-              <ArrowUpDown className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">Ordenar</span>
+            <Button variant="outline" size="sm" className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm w-full">
+              <ArrowUpDown className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
+              <span className="truncate">Ordenar</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
