@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -45,6 +46,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TicketScannerDialog } from "@/components/scanner";
+import { SubscriptionBadge } from "./SubscriptionBadge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import sortavoLogo from "@/assets/sortavo-logo.png";
 
 const menuItems = [
@@ -108,7 +111,9 @@ export function DashboardSidebar() {
   const { profile, organization, signOut } = useAuth();
   const { isPlatformAdmin } = useIsPlatformAdmin();
   const { isSimulating, simulatedUser, simulatedOrg, mode: simulationMode } = useSimulation();
+  const { state } = useSidebar();
   const [scannerOpen, setScannerOpen] = useState(false);
+  const isCollapsed = state === "collapsed";
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
@@ -133,6 +138,26 @@ export function DashboardSidebar() {
         <Link to="/dashboard" className="flex items-center gap-3 group">
           <img src={sortavoLogo} alt="Sortavo" className="h-8 w-auto" />
         </Link>
+        
+        {/* Subscription Badge */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link to="/dashboard/subscription" className="mt-3">
+              <SubscriptionBadge 
+                tier={organization?.subscription_tier || "basic"}
+                status={organization?.subscription_status}
+                trialEndsAt={organization?.trial_ends_at}
+                collapsed={isCollapsed}
+              />
+            </Link>
+          </TooltipTrigger>
+          {isCollapsed && (
+            <TooltipContent side="right">
+              <p className="capitalize">{organization?.subscription_tier || "Basic"}</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+        
         {isSimulating && (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-gradient-to-r from-warning/10 to-warning/5 px-3 py-2 border border-warning/20">
             <Eye className="h-3.5 w-3.5 text-warning" />
