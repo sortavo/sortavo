@@ -672,17 +672,61 @@ async function handlePaymentSucceeded(
     return;
   }
 
-  const { data: org, error: orgError } = await supabase
+  const email = customer.email;
+
+  // Find organization using cascaded search
+  let org = null;
+
+  // 1. First try by stripe_customer_id (most reliable for payments)
+  const { data: orgByCustomer } = await supabase
     .from("organizations")
     .select("id, subscription_tier")
-    .eq("email", customer.email)
+    .eq("stripe_customer_id", customerId)
     .single();
+  if (orgByCustomer) {
+    org = orgByCustomer;
+    logStep("PaymentSuccess: Organization found by stripe_customer_id", { orgId: org.id, eventId }, "DEBUG");
+  }
+
+  // 2. If not found, try by organization email
+  if (!org) {
+    const { data: orgByEmail } = await supabase
+      .from("organizations")
+      .select("id, subscription_tier")
+      .eq("email", email)
+      .single();
+    if (orgByEmail) {
+      org = orgByEmail;
+      logStep("PaymentSuccess: Organization found by org email", { orgId: org.id, eventId }, "DEBUG");
+    }
+  }
+
+  // 3. If still not found, try by profile email
+  if (!org) {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("email", email)
+      .single();
+    
+    if (profileData?.organization_id) {
+      const { data: orgByProfile } = await supabase
+        .from("organizations")
+        .select("id, subscription_tier")
+        .eq("id", profileData.organization_id)
+        .single();
+      if (orgByProfile) {
+        org = orgByProfile;
+        logStep("PaymentSuccess: Organization found via profile email", { orgId: org.id, eventId }, "DEBUG");
+      }
+    }
+  }
 
   if (!org) {
-    logStep("Organization not found for cancellation", { 
-      email: customer.email, 
+    logStep("PaymentSuccess: Organization not found by any method", { 
+      email, 
+      customerId,
       eventId,
-      error: orgError?.message,
     }, "WARN");
     return;
   }
@@ -733,14 +777,58 @@ async function handlePaymentFailed(
     return;
   }
 
-  const { data: org } = await supabase
+  const email = customer.email;
+
+  // Find organization using cascaded search
+  let org = null;
+
+  // 1. First try by stripe_customer_id
+  const { data: orgByCustomer } = await supabase
     .from("organizations")
     .select("id")
-    .eq("email", customer.email)
+    .eq("stripe_customer_id", customerId)
     .single();
+  if (orgByCustomer) {
+    org = orgByCustomer;
+    logStep("PaymentFailed: Organization found by stripe_customer_id", { orgId: org.id, eventId }, "DEBUG");
+  }
+
+  // 2. If not found, try by organization email
+  if (!org) {
+    const { data: orgByEmail } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("email", email)
+      .single();
+    if (orgByEmail) {
+      org = orgByEmail;
+      logStep("PaymentFailed: Organization found by org email", { orgId: org.id, eventId }, "DEBUG");
+    }
+  }
+
+  // 3. If still not found, try by profile email
+  if (!org) {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("email", email)
+      .single();
+    
+    if (profileData?.organization_id) {
+      const { data: orgByProfile } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("id", profileData.organization_id)
+        .single();
+      if (orgByProfile) {
+        org = orgByProfile;
+        logStep("PaymentFailed: Organization found via profile email", { orgId: org.id, eventId }, "DEBUG");
+      }
+    }
+  }
 
   if (!org) {
-    logStep("Organization not found for failed payment", { email: customer.email, eventId }, "WARN");
+    logStep("PaymentFailed: Organization not found by any method", { email, customerId, eventId }, "WARN");
     return;
   }
 
