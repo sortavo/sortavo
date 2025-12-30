@@ -1427,7 +1427,7 @@ export type Database = {
       raffle_status: "draft" | "active" | "paused" | "completed" | "canceled"
       subscription_period: "monthly" | "annual"
       subscription_status: "active" | "canceled" | "past_due" | "trial"
-      subscription_tier: "basic" | "pro" | "premium"
+      subscription_tier: "basic" | "pro" | "premium" | "enterprise"
       ticket_number_format: "sequential" | "prefixed" | "random"
       ticket_status: "available" | "reserved" | "sold" | "canceled"
     }
@@ -1562,7 +1562,7 @@ export const Constants = {
       raffle_status: ["draft", "active", "paused", "completed", "canceled"],
       subscription_period: ["monthly", "annual"],
       subscription_status: ["active", "canceled", "past_due", "trial"],
-      subscription_tier: ["basic", "pro", "premium"],
+      subscription_tier: ["basic", "pro", "premium", "enterprise"],
       ticket_number_format: ["sequential", "prefixed", "random"],
       ticket_status: ["available", "reserved", "sold", "canceled"],
     },
