@@ -253,8 +253,8 @@ function AccountCard({ group, onEdit, onDelete, onToggle, isToggling }: AccountC
   return (
     <Card className={`border-border/50 shadow-sm hover:shadow-md transition-all duration-300 ${!someEnabled ? "opacity-60" : ""}`}>
       <CardContent className="p-4">
-        <div className="flex items-start gap-4">
-          <div className={`p-2 rounded-lg ${someEnabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+          <div className={`p-2 rounded-lg shrink-0 ${someEnabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
             {firstMethod.bank_name ? (
               <Landmark className="h-5 w-5" />
             ) : (
@@ -268,7 +268,7 @@ function AccountCard({ group, onEdit, onDelete, onToggle, isToggling }: AccountC
                 <BankBadge bankName={group.bankName} size="sm" />
               )}
               {!group.bankName && (
-                <h4 className="font-medium">{firstMethod.name}</h4>
+                <h4 className="font-medium truncate">{firstMethod.name}</h4>
               )}
             </div>
             
@@ -284,25 +284,25 @@ function AccountCard({ group, onEdit, onDelete, onToggle, isToggling }: AccountC
                   }`}
                 >
                   {getIcon(method.subtype)}
-                  {getSubtypeLabel(method.subtype)}
+                  <span className="truncate max-w-[100px]">{getSubtypeLabel(method.subtype)}</span>
                 </span>
               ))}
             </div>
 
             {/* Account info */}
             {firstMethod.clabe && (
-              <p className="text-sm text-muted-foreground font-mono">
+              <p className="text-sm text-muted-foreground font-mono break-all">
                 CLABE: {firstMethod.clabe}
               </p>
             )}
             {firstMethod.account_holder && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground truncate">
                 {firstMethod.account_holder}
               </p>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2 shrink-0">
             <Button
               variant="ghost"
               size="icon"

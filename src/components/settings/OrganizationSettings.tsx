@@ -393,20 +393,20 @@ export function OrganizationSettings() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Logo */}
-          <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24 ring-2 ring-border/50 ring-offset-2 ring-offset-background">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            <Avatar className="h-24 w-24 ring-2 ring-border/50 ring-offset-2 ring-offset-background shrink-0">
               <AvatarImage src={organization?.logo_url || undefined} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl">
                 <Building2 className="h-10 w-10" />
               </AvatarFallback>
             </Avatar>
-            <div className="space-y-2">
+            <div className="space-y-2 text-center sm:text-left">
               <Label className="text-sm font-medium">Logo</Label>
               <Button
                 variant="outline"
                 disabled={isUploadingLogo}
                 onClick={() => document.getElementById("logo-upload")?.click()}
-                className="shadow-sm"
+                className="shadow-sm w-full sm:w-auto"
               >
                 {isUploadingLogo ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -791,34 +791,40 @@ export function OrganizationSettings() {
                 Puedes agregar hasta 5 de cada tipo de contacto
               </p>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <MultiContactInput
-                  label="Email"
-                  icon={<Mail className="h-4 w-4" />}
-                  values={emails}
-                  onChange={setEmails}
-                  placeholder="contacto@ejemplo.com"
-                  type="email"
-                  required
-                  helperText="El primer email será el principal"
-                />
+                <div className="min-w-0">
+                  <MultiContactInput
+                    label="Email"
+                    icon={<Mail className="h-4 w-4" />}
+                    values={emails}
+                    onChange={setEmails}
+                    placeholder="contacto@ejemplo.com"
+                    type="email"
+                    required
+                    helperText="El primer email será el principal"
+                  />
+                </div>
                 
-                <PhoneInputWithCountry
-                  label="Teléfono"
-                  icon={<Phone className="h-4 w-4" />}
-                  values={phones}
-                  onChange={setPhones}
-                  helperText="Solo ingresa los dígitos del número"
-                  showValidation={showPhoneValidation}
-                />
+                <div className="min-w-0">
+                  <PhoneInputWithCountry
+                    label="Teléfono"
+                    icon={<Phone className="h-4 w-4" />}
+                    values={phones}
+                    onChange={setPhones}
+                    helperText="Solo ingresa los dígitos del número"
+                    showValidation={showPhoneValidation}
+                  />
+                </div>
                 
-                <PhoneInputWithCountry
-                  label="WhatsApp"
-                  icon={<MessageCircle className="h-4 w-4" />}
-                  values={whatsappNumbers}
-                  onChange={setWhatsappNumbers}
-                  helperText="Solo ingresa los dígitos del número"
-                  showValidation={showPhoneValidation}
-                />
+                <div className="min-w-0">
+                  <PhoneInputWithCountry
+                    label="WhatsApp"
+                    icon={<MessageCircle className="h-4 w-4" />}
+                    values={whatsappNumbers}
+                    onChange={setWhatsappNumbers}
+                    helperText="Solo ingresa los dígitos del número"
+                    showValidation={showPhoneValidation}
+                  />
+                </div>
               </div>
             </div>
 
