@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.delete-user]
 verify_jwt = false
+
+[functions.upgrade-subscription]
+verify_jwt = false

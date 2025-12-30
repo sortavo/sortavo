@@ -44,20 +44,25 @@ export default function Subscription() {
   const handleUpgrade = async (planKey: PlanKey, period: BillingPeriod) => {
     setIsLoading(true);
     try {
-      // Si ya tiene suscripción activa, usar Customer Portal para cambiar de plan
-      // Esto evita crear suscripciones duplicadas en Stripe
+      const priceId = getPriceId(planKey, period);
+      
+      // Si ya tiene suscripción activa, hacer upgrade directo vía API
       if (currentStatus === "active" && organization?.stripe_subscription_id) {
-        const { data, error } = await supabase.functions.invoke("customer-portal");
+        const { data, error } = await supabase.functions.invoke("upgrade-subscription", {
+          body: { priceId },
+        });
+        
         if (error) throw error;
-        if (data?.url) {
-          window.open(data.url, "_blank");
-          toast.info("Usa el portal de Stripe para cambiar tu plan");
+        
+        if (data?.success) {
+          toast.success(`¡Plan actualizado a ${STRIPE_PLANS[planKey].name}! Los cambios se reflejarán en unos segundos.`);
+          // Recargar la página para reflejar los cambios del webhook
+          setTimeout(() => window.location.reload(), 2000);
         }
         return;
       }
       
       // Si no tiene suscripción (trial o sin plan), crear checkout normal
-      const priceId = getPriceId(planKey, period);
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { priceId },
       });
