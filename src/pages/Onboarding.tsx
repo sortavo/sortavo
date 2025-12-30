@@ -483,10 +483,7 @@ export default function Onboarding() {
                       <SelectContent>
                         {COUNTRIES.map((country) => (
                           <SelectItem key={country.code} value={country.code}>
-                            <span className="flex items-center gap-2">
-                              <span>{country.flag}</span>
-                              <span>{country.name}</span>
-                            </span>
+                            {country.flag} {country.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -506,11 +503,7 @@ export default function Onboarding() {
                       <SelectContent>
                         {CURRENCIES.map((currency) => (
                           <SelectItem key={currency.code} value={currency.code}>
-                            <span className="flex items-center gap-2">
-                              <span>{currency.flag}</span>
-                              <span>{currency.code}</span>
-                              <span className="text-gray-400 text-xs">- {currency.name}</span>
-                            </span>
+                            {currency.flag} {currency.code} - {currency.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
