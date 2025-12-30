@@ -16,7 +16,7 @@ import { PremiumHero } from '@/components/layout/PremiumBackground';
 import { cn } from '@/lib/utils';
 
 export default function Pricing() {
-  const [isAnnual, setIsAnnual] = useState(true);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   const plans = [
     {
