@@ -46,6 +46,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  refreshOrganization: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -202,6 +203,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
+  const refreshOrganization = async () => {
+    if (!profile?.organization_id) return;
+    
+    try {
+      const { data: orgData, error: orgError } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", profile.organization_id)
+        .maybeSingle();
+
+      if (orgError) throw orgError;
+      setOrganization(orgData);
+    } catch (error) {
+      console.error("Error refreshing organization:", error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -216,6 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         signOut,
         resetPassword,
+        refreshOrganization,
       }}
     >
       {children}

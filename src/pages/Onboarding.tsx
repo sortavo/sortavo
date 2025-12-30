@@ -82,11 +82,12 @@ const steps = [
 export default function Onboarding() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, organization, isLoading } = useAuth();
+  const { user, organization, isLoading, refreshOrganization } = useAuth();
   
   const initialStep = parseInt(searchParams.get("step") || "1");
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
   // Step 1: Organization Info
   const [businessName, setBusinessName] = useState("");
@@ -103,6 +104,63 @@ export default function Onboarding() {
   const initialPlan = urlPlan && validPlans.includes(urlPlan) ? urlPlan : "pro";
   const [selectedPlan, setSelectedPlan] = useState<PlanKey>(initialPlan);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
+
+  // Handle successful Stripe checkout return
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const sessionId = searchParams.get("session_id");
+    
+    if (success === "true" && sessionId) {
+      setIsProcessingPayment(true);
+      
+      // Poll for subscription update
+      let pollCount = 0;
+      const maxPolls = 20; // 20 polls * 1.5s = 30 seconds max
+      
+      const pollSubscription = async () => {
+        pollCount++;
+        
+        // Refresh organization data from the database
+        if (refreshOrganization) {
+          await refreshOrganization();
+        }
+        
+        // Check if subscription is now active or trial
+        const { data: orgData } = await supabase
+          .from("organizations")
+          .select("subscription_status, onboarding_completed")
+          .eq("id", organization?.id)
+          .single();
+        
+        if (orgData?.subscription_status && ["active", "trial"].includes(orgData.subscription_status)) {
+          // Mark onboarding as completed if not already
+          if (!orgData.onboarding_completed) {
+            await supabase
+              .from("organizations")
+              .update({ onboarding_completed: true })
+              .eq("id", organization?.id);
+          }
+          
+          setIsProcessingPayment(false);
+          toast.success("¡Suscripción activada exitosamente!");
+          navigate("/dashboard");
+          return;
+        }
+        
+        if (pollCount < maxPolls) {
+          setTimeout(pollSubscription, 1500);
+        } else {
+          // Max polls reached - still redirect to dashboard, webhook might be delayed
+          setIsProcessingPayment(false);
+          toast.info("Procesando tu suscripción. Puede tardar unos segundos.");
+          navigate("/dashboard");
+        }
+      };
+      
+      // Start polling after a short delay to allow webhook to process
+      setTimeout(pollSubscription, 2000);
+    }
+  }, [searchParams, organization?.id, navigate, refreshOrganization]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -243,6 +301,24 @@ export default function Onboarding() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show processing state when returning from Stripe checkout
+  if (isProcessingPayment) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted gap-4">
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg shadow-primary/25">
+            <Loader2 className="h-8 w-8 animate-spin text-primary-foreground" />
+          </div>
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-semibold text-foreground">Procesando tu suscripción</h2>
+          <p className="text-muted-foreground">Esto solo tomará unos segundos...</p>
+        </div>
       </div>
     );
   }
