@@ -259,17 +259,20 @@ const Index = () => {
         </div>
       </motion.nav>
 
-      {/* Hero Section - Premium Black & Emerald */}
+      {/* Hero Section - TIER S: Premium Black & Emerald */}
       <section className="relative min-h-screen flex items-center pt-20 lg:pt-0 overflow-hidden">
         {/* Premium Multi-Layer Background */}
         <div className="absolute inset-0 bg-premium-hero" />
         
-        {/* Animated emerald gradient orbs */}
-        <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-emerald-600/20 rounded-full blur-[100px] animate-blob" />
-        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] bg-amber-500/15 rounded-full blur-[80px] animate-blob animation-delay-2000" />
-        <div className="absolute bottom-1/4 left-1/3 w-[350px] h-[350px] bg-emerald-500/15 rounded-full blur-[80px] animate-blob animation-delay-4000" />
+        {/* 6 Animated orbs - TIER S: Stripe/Linear level with 120px blur */}
+        <div className="absolute top-[10%] -left-[10%] w-[600px] h-[600px] bg-emerald-600/20 rounded-full blur-[120px] animate-blob" />
+        <div className="absolute top-[5%] -right-[15%] w-[500px] h-[500px] bg-amber-500/12 rounded-full blur-[120px] animate-blob animation-delay-2000" />
+        <div className="absolute top-[40%] left-[20%] w-[400px] h-[400px] bg-teal-500/15 rounded-full blur-[100px] animate-blob animation-delay-4000" />
+        <div className="absolute bottom-[30%] right-[10%] w-[350px] h-[350px] bg-violet-500/10 rounded-full blur-[100px] animate-blob animation-delay-1000" />
+        <div className="absolute bottom-[10%] left-[5%] w-[300px] h-[300px] bg-emerald-500/15 rounded-full blur-[80px] animate-blob animation-delay-500" />
+        <div className="absolute top-[60%] right-[30%] w-[250px] h-[250px] bg-teal-400/10 rounded-full blur-[80px] animate-blob animation-delay-300" />
         
-        {/* Grid pattern overlay - premium */}
+        {/* Grid pattern overlay - premium 64px */}
         <div className="absolute inset-0 bg-grid-premium" />
         
         {/* Noise texture for depth */}
@@ -297,23 +300,23 @@ const Index = () => {
                 </span>
               </motion.div>
 
-              {/* Headline - DRAMATIC PREMIUM TYPOGRAPHY */}
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.9] tracking-[-0.04em]">
+              {/* Headline - TIER S: DRAMATIC PREMIUM TYPOGRAPHY */}
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black leading-[0.85] tracking-[-0.05em]">
                 <span className="text-gradient-premium">Sorteos que </span>
-                <span className="relative">
-                  <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 bg-clip-text text-transparent">
+                <span className="relative inline-block">
+                  <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent">
                     Enamoran
                   </span>
-                  <svg className="absolute -bottom-2 left-0 w-full h-3 text-emerald-500/30" viewBox="0 0 200 12" preserveAspectRatio="none">
+                  <svg className="absolute -bottom-1 lg:-bottom-2 left-0 w-full h-2 lg:h-3 text-emerald-500/40" viewBox="0 0 200 12" preserveAspectRatio="none">
                     <path d="M0,8 Q50,0 100,8 T200,8" stroke="currentColor" strokeWidth="4" fill="none" />
                   </svg>
                 </span>
               </h1>
 
-              {/* Subheadline - Enhanced */}
-              <p className="text-xl sm:text-2xl lg:text-3xl text-white/60 max-w-xl mx-auto lg:mx-0 leading-relaxed tracking-tight">
+              {/* Subheadline - Enhanced with better contrast */}
+              <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl text-white/50 max-w-2xl mx-auto lg:mx-0 leading-snug tracking-tight">
                 La plataforma más potente para gestionar rifas y sorteos. 
-                <span className="text-white font-medium"> Segura, rápida y hermosa.</span>
+                <span className="text-white font-semibold"> Segura, rápida y hermosa.</span>
               </p>
 
               {/* CTAs */}
@@ -345,25 +348,25 @@ const Index = () => {
                 </Button>
               </motion.div>
 
-              {/* Stats inline - PREMIUM */}
+              {/* Stats inline - TIER S PREMIUM */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="grid grid-cols-4 gap-4 pt-8 border-t border-white/10"
+                className="grid grid-cols-4 gap-6 pt-10 border-t border-white/10"
               >
                 {stats.map((stat, index) => (
                   <motion.div 
                     key={index} 
-                    className="text-center lg:text-left"
+                    className="text-center lg:text-left group"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 + index * 0.1 }}
                   >
-                    <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white tracking-tight">
+                    <div className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-white tracking-[-0.03em] group-hover:text-emerald-400 transition-colors">
                       {stat.value}
                     </div>
-                    <div className="text-[10px] sm:text-xs uppercase tracking-[0.15em] text-white/40 mt-1">
+                    <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/40 mt-2">
                       {stat.label}
                     </div>
                   </motion.div>
@@ -496,26 +499,41 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* How it Works - Premium */}
-      <section className="py-24 lg:py-32 bg-card relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-background to-card" />
+      {/* How it Works - TIER S Premium with contrasting background */}
+      <section className="py-28 lg:py-36 xl:py-44 relative overflow-hidden">
+        {/* Contrasting emerald gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/50 via-emerald-900/30 to-teal-950/40" />
+        
+        {/* Subtle orbs for this section */}
+        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-teal-500/8 rounded-full blur-[80px]" />
+        
+        {/* Grid pattern with higher visibility */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        
+        {/* Top and bottom border glow */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+        
+        {/* Noise texture */}
+        <div className="absolute inset-0 noise-texture" />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16 lg:mb-20"
+            className="text-center mb-20 lg:mb-24"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-semibold mb-6">
+            <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500/15 backdrop-blur-sm rounded-full text-emerald-400 text-sm font-semibold mb-8 border border-emerald-500/20">
               <Clock className="w-4 h-4" />
               Simple y Rápido
             </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-6 tracking-[-0.03em]">
               3 Pasos para el{" "}
-              <span className="text-primary">Éxito</span>
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Éxito</span>
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl lg:text-2xl text-white/50 max-w-2xl mx-auto">
               Desde la idea hasta el sorteo en minutos. Sin complicaciones.
             </p>
           </motion.div>
@@ -532,23 +550,23 @@ const Index = () => {
               >
                 {/* Connector line */}
                 {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-16 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-border to-transparent" />
+                  <div className="hidden md:block absolute top-20 left-[60%] w-[80%] h-px bg-gradient-to-r from-emerald-500/30 to-transparent" />
                 )}
                 
-                <div className="relative bg-background rounded-2xl p-8 border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+                <div className="relative bg-white/[0.03] backdrop-blur-sm rounded-2xl p-10 border border-white/[0.08] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 hover-glow">
                   {/* Step number */}
-                  <span className="absolute -top-4 -left-4 w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/25">
+                  <span className="absolute -top-5 -left-3 w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-xl shadow-emerald-500/30">
                     {step.number}
                   </span>
                   
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <step.icon className="w-8 h-8 text-primary" />
+                  <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/20">
+                    <step.icon className="w-10 h-10 text-white" />
                   </div>
                   
-                  <h3 className="text-xl font-bold text-foreground mb-3">
+                  <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">
                     {step.title}
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-white/60 leading-relaxed text-lg">
                     {step.description}
                   </p>
                 </div>
@@ -558,24 +576,37 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section - Premium Grid */}
-      <section id="features" className="py-24 lg:py-32 bg-background relative scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Features Section - TIER S Premium Grid */}
+      <section id="features" className="py-28 lg:py-36 xl:py-44 relative scroll-mt-20 overflow-hidden">
+        {/* Ultra-dark background */}
+        <div className="absolute inset-0 bg-ultra-dark" />
+        
+        {/* Subtle orbs */}
+        <div className="absolute top-1/4 -right-[10%] w-[400px] h-[400px] bg-amber-500/8 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 -left-[10%] w-[350px] h-[350px] bg-emerald-500/10 rounded-full blur-[100px]" />
+        
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-grid-premium" />
+        
+        {/* Noise texture */}
+        <div className="absolute inset-0 noise-texture" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16 lg:mb-20"
+            className="text-center mb-20 lg:mb-24"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-secondary/10 rounded-full text-secondary text-sm font-semibold mb-6">
+            <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500/10 backdrop-blur-sm rounded-full text-amber-400 text-sm font-semibold mb-8 border border-amber-500/20">
               <Sparkles className="w-4 h-4" />
               Funcionalidades
             </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-6 tracking-[-0.03em]">
               Todo para{" "}
-              <span className="text-primary">Triunfar</span>
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Triunfar</span>
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl lg:text-2xl text-white/50 max-w-2xl mx-auto">
               Herramientas profesionales para organizadores que buscan resultados extraordinarios.
             </p>
           </motion.div>
@@ -588,20 +619,20 @@ const Index = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="group relative bg-card rounded-2xl p-8 border border-border hover:border-primary/20 transition-all duration-300 card-lift"
+                className="group relative bg-white/[0.03] backdrop-blur-sm rounded-2xl p-10 border border-white/[0.08] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 hover-glow"
               >
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
-                  <feature.icon className="w-7 h-7 text-white" />
+                <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-xl`}>
+                  <feature.icon className="w-10 h-10 text-white" />
                 </div>
                 
-                <h3 className="text-xl font-bold text-foreground mb-3 tracking-tight">
+                <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-white/60 leading-relaxed text-lg">
                   {feature.description}
                 </p>
                 
-                <div className="mt-6 flex items-center text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-8 flex items-center text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-sm">Saber más</span>
                   <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
