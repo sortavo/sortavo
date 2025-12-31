@@ -310,9 +310,9 @@ export function TemplateHeroLayout({
   };
 
   const InfoSection = ({ className = "" }: { className?: string }) => (
-    <div className={`space-y-6 ${className}`}>
-      {/* Premium Badge */}
-      <div className="flex flex-wrap items-center gap-3">
+    <div className={`space-y-8 ${className}`}>
+      {/* Premium Badge - centered */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg shadow-emerald-600/25">
           <Zap className="w-4 h-4" />
           Sorteo Activo
@@ -321,54 +321,57 @@ export function TemplateHeroLayout({
       </div>
 
       {showUrgencyBadge && raffle.draw_date && (
-        <UrgencyBadge
-          drawDate={raffle.draw_date}
-          totalTickets={raffle.total_tickets}
-          ticketsSold={raffle.ticketsSold}
-        />
+        <div className="flex justify-center">
+          <UrgencyBadge
+            drawDate={raffle.draw_date}
+            totalTickets={raffle.total_tickets}
+            ticketsSold={raffle.ticketsSold}
+          />
+        </div>
       )}
 
-      {/* Title with emerald gradient - /pricing style */}
-      <div className="space-y-4">
-        <h1 
-          className={`text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-[0.95] tracking-tight ${
-            contentAlignment === 'center' ? 'text-center' : ''
-          }`}
+      {/* Title with emerald gradient - /pricing style - CENTERED */}
+      <div className="space-y-6 text-center">
+        <motion.h1 
+          className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-[0.95] tracking-tight"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
           <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 bg-clip-text text-transparent">
             {raffle.title}
           </span>
-        </h1>
+        </motion.h1>
         
         {raffle.description && (
-          <p 
-            className={`text-base sm:text-lg lg:text-xl text-gray-300 ${contentAlignment === 'center' ? 'text-center' : ''}`}
-          >
+          <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto">
             {raffle.description}
           </p>
         )}
       </div>
 
-      <PrizeShowcase 
-        raffle={raffle as any}
-        prizes={raffle.prizes || []}
-        displayMode={(raffle.prize_display_mode as any) || 'hierarchical'}
-        currency={currency}
-        primaryColor="#10b981"
-        accentColor="#14b8a6"
-        textColor="#ffffff"
-        textMuted="rgba(255,255,255,0.6)"
-        cardBg="rgba(255,255,255,0.03)"
-        isDarkTemplate={true}
-      />
+      <div className="flex justify-center">
+        <PrizeShowcase 
+          raffle={raffle as any}
+          prizes={raffle.prizes || []}
+          displayMode={(raffle.prize_display_mode as any) || 'hierarchical'}
+          currency={currency}
+          primaryColor="#10b981"
+          accentColor="#14b8a6"
+          textColor="#ffffff"
+          textMuted="rgba(255,255,255,0.6)"
+          cardBg="rgba(255,255,255,0.03)"
+          isDarkTemplate={true}
+        />
+      </div>
 
-      {/* Info cards with glassmorphism - /pricing style */}
-      <div className={`grid grid-cols-2 gap-4 ${contentAlignment === 'center' ? 'max-w-md mx-auto' : ''}`}>
+      {/* Info cards with glassmorphism - /pricing style - CENTERED */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
         <motion.div 
-          className="p-5 rounded-2xl bg-gray-900/80 border border-white/10 hover:border-emerald-500/30 transition-all duration-300"
+          className="p-5 rounded-2xl bg-gray-900/80 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 text-center"
           whileHover={{ scale: 1.02 }}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg">
               <Ticket className="w-6 h-6 text-white" />
             </div>
@@ -381,10 +384,10 @@ export function TemplateHeroLayout({
           </div>
         </motion.div>
         <motion.div 
-          className="p-5 rounded-2xl bg-gray-900/80 border border-white/10 hover:border-emerald-500/30 transition-all duration-300"
+          className="p-5 rounded-2xl bg-gray-900/80 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 text-center"
           whileHover={{ scale: 1.02 }}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg">
               <Calendar className="w-6 h-6 text-white" />
             </div>
@@ -399,11 +402,43 @@ export function TemplateHeroLayout({
             </div>
           </div>
         </motion.div>
+        <motion.div 
+          className="p-5 rounded-2xl bg-gray-900/80 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 text-center"
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Boletos</p>
+              <p className="text-xl font-bold text-white">
+                {raffle.total_tickets.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+        <motion.div 
+          className="p-5 rounded-2xl bg-gray-900/80 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 text-center"
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg">
+              <CheckCircle2 className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Vendidos</p>
+              <p className="text-xl font-bold text-emerald-400">
+                {raffle.ticketsSold.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Progress bar with emerald gradient - /pricing style */}
+      {/* Progress bar with emerald gradient - /pricing style - CENTERED */}
       {showStats && (
-        <div className="space-y-3">
+        <div className="space-y-3 max-w-2xl mx-auto">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium text-gray-200">
               {raffle.ticketsSold} de {raffle.total_tickets} vendidos
@@ -422,18 +457,18 @@ export function TemplateHeroLayout({
             />
           </div>
           
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 text-center">
             {raffle.ticketsAvailable} boletos disponibles
           </p>
         </div>
       )}
 
-      {/* CTA Buttons - /pricing style with gradient */}
-      <div className={`flex gap-4 ${contentAlignment === 'center' ? 'justify-center' : ''}`}>
-        <motion.div className="flex-1 max-w-xs" whileTap={{ scale: 0.98 }}>
+      {/* CTA Buttons - /pricing style with gradient - CENTERED */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <motion.div whileTap={{ scale: 0.98 }}>
           <Button
             size="lg"
-            className="w-full text-lg py-6 font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-xl shadow-emerald-600/25"
+            className="text-lg px-10 py-6 font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-xl shadow-emerald-600/25"
             onClick={onScrollToTickets}
           >
             <Ticket className="w-5 h-5 mr-2" />
@@ -446,7 +481,7 @@ export function TemplateHeroLayout({
           <Button
             size="lg"
             variant="outline"
-            className="border-2 py-6 border-white/20 text-white hover:bg-white/[0.05] hover:border-emerald-500/50"
+            className="border-2 px-8 py-6 border-white/20 text-white hover:bg-white/[0.05] hover:border-emerald-500/50"
             onClick={onShare}
           >
             <Share2 className="w-5 h-5 mr-2" />
@@ -455,10 +490,8 @@ export function TemplateHeroLayout({
         </motion.div>
       </div>
 
-      {/* Trust badges - /pricing style */}
-      <div 
-        className={`flex flex-wrap items-center gap-6 pt-6 border-t border-white/10 ${contentAlignment === 'center' ? 'justify-center' : ''}`}
-      >
+      {/* Trust badges - /pricing style - CENTERED */}
+      <div className="flex flex-wrap items-center justify-center gap-6 pt-6 border-t border-white/10">
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-500/10">
             <Shield className="w-4 h-4 text-emerald-400" />
@@ -662,17 +695,70 @@ export function TemplateHeroLayout({
       
       case 'side-by-side':
       default:
+        // Premium centered layout inspired by /pricing page
         return (
-          <div className="relative py-12 lg:py-20">
+          <div className="relative py-16 lg:py-24">
             <PatternOverlay />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-                {/* Left: Gallery */}
-                <div className="relative order-2 lg:order-1">
-                  <div className="relative">
-                    <GalleryComponent />
-                    <PriceDisplay />
-                  </div>
+            
+            {/* Animated orbs like /pricing */}
+            <div className="absolute top-1/4 -left-32 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl animate-blob pointer-events-none" />
+            <div className="absolute top-1/3 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-blob animation-delay-2000 pointer-events-none" />
+            <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl animate-blob animation-delay-4000 pointer-events-none" />
+            
+            {/* Grid pattern like /pricing */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
+            
+            <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col items-center gap-12 lg:gap-16">
+                {/* Top: Centered Info Section */}
+                <div className="w-full text-center">
+                  <InfoSection className="[&>*]:justify-center [&_.flex]:justify-center [&_.grid]:max-w-xl [&_.grid]:mx-auto" />
+                </div>
+                
+                {/* Bottom: Prominent Gallery */}
+                <div className="w-full max-w-4xl mx-auto">
+                  <motion.div 
+                    className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-gray-900/50"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                  >
+                    {/* Main image - prominent 16:9 aspect ratio */}
+                    <div className="aspect-[16/10] relative overflow-hidden cursor-pointer group" onClick={() => setLightboxOpen(true)}>
+                      <img 
+                        src={mainImage} 
+                        alt={raffle.prize_name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <PriceDisplay />
+                    </div>
+                    
+                    {/* Thumbnails below image */}
+                    {raffle.prize_images && raffle.prize_images.length > 1 && (
+                      <div className="p-4 bg-gray-900/80 border-t border-white/10">
+                        <div className="flex gap-3 justify-center">
+                          {raffle.prize_images.slice(0, 5).map((img, idx) => (
+                            <motion.div 
+                              key={idx}
+                              className={`w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden shadow-md cursor-pointer border-2 transition-all ${
+                                idx === 0 ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-white/10 hover:border-emerald-500/50'
+                              }`}
+                              whileHover={{ scale: 1.1 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLightboxIndex(idx);
+                                setLightboxOpen(true);
+                              }}
+                            >
+                              <img src={img} alt="" className="w-full h-full object-cover" />
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                  
                   {showVideo && raffle.prize_video_url && (
                     <PrizeVideoPlayer 
                       videoUrl={raffle.prize_video_url} 
@@ -681,9 +767,6 @@ export function TemplateHeroLayout({
                     />
                   )}
                 </div>
-
-                {/* Right: Info */}
-                <InfoSection className="order-1 lg:order-2" />
               </div>
             </div>
           </div>
