@@ -91,36 +91,79 @@ export function MobileHero({
     : null;
 
   return (
-    <div className="relative bg-ultra-dark">
-      {/* Premium Header - Glassmorphism */}
-      <div className="backdrop-blur-2xl border-b bg-ultra-dark/95 border-ultra-dark-subtle">
+    <div className="relative bg-ultra-dark overflow-hidden">
+      {/* TIER S: 5 Animated background orbs */}
+      <motion.div 
+        className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"
+        animate={{ 
+          x: [0, 30, 0], 
+          y: [0, -20, 0],
+          scale: [1, 1.1, 1]
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div 
+        className="absolute bottom-1/4 left-0 w-[350px] h-[350px] bg-teal-500/8 rounded-full blur-[120px] pointer-events-none"
+        animate={{ 
+          x: [0, -20, 0], 
+          y: [0, 25, 0]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+      />
+      <motion.div 
+        className="absolute top-1/3 left-1/2 w-[300px] h-[300px] bg-emerald-400/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2"
+        animate={{ 
+          scale: [1, 1.2, 1],
+          opacity: [0.4, 0.7, 0.4]
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+      />
+      <motion.div 
+        className="absolute bottom-0 right-1/3 w-[280px] h-[280px] bg-violet-500/5 rounded-full blur-[120px] pointer-events-none"
+        animate={{ 
+          x: [0, 15, 0], 
+          y: [0, -20, 0]
+        }}
+        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 6 }}
+      />
+      <motion.div 
+        className="absolute top-1/2 right-0 w-[250px] h-[250px] bg-teal-400/5 rounded-full blur-[120px] pointer-events-none"
+        animate={{ 
+          x: [0, -25, 0], 
+          y: [0, 15, 0]
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 8 }}
+      />
+      
+      {/* Premium Header - TIER S Glassmorphism */}
+      <div className="relative backdrop-blur-2xl border-b bg-ultra-dark/95 border-white/[0.08]">
         {/* Top row: Avatar, Name, Share */}
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-5 py-4">
           <Link 
             to={organization.slug ? `/${organization.slug}` : '#'}
-            className="flex items-center gap-3 flex-1 min-w-0"
+            className="flex items-center gap-4 flex-1 min-w-0"
           >
             <div className="relative">
-              {/* Subtle glow behind avatar */}
-              <div className="absolute inset-0 blur-xl opacity-30 bg-emerald-500" />
-              <Avatar className="h-11 w-11 relative border-2 flex-shrink-0 border-emerald-500/30">
+              {/* Enhanced glow behind avatar */}
+              <div className="absolute inset-0 blur-xl opacity-40 bg-emerald-500" />
+              <Avatar className="h-14 w-14 relative border-2 flex-shrink-0 border-emerald-500/40 shadow-lg shadow-emerald-500/20">
                 <AvatarImage src={organization.logo_url || undefined} alt={organization.name} />
-                <AvatarFallback className="font-bold text-white bg-emerald-700">
+                <AvatarFallback className="font-bold text-white bg-gradient-to-br from-emerald-600 to-teal-600 text-lg">
                   {organization.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-white truncate tracking-tight">
+                <h2 className="font-bold text-white truncate tracking-tight text-lg">
                   {organization.name}
                 </h2>
                 {organization.verified && (
-                  <Check className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+                  <Check className="w-5 h-5 flex-shrink-0 text-emerald-400" />
                 )}
               </div>
               {organization.city && (
-                <p className="text-xs text-ultra-dark-muted">
+                <p className="text-sm text-white/50">
                   {organization.city}
                 </p>
               )}
@@ -128,26 +171,26 @@ export function MobileHero({
           </Link>
           <button
             onClick={onShare}
-            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl transition-colors bg-ultra-dark-card text-ultra-dark-muted"
+            className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-xl transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/60 border border-white/[0.08]"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Menu row - subtle buttons */}
-        <div className="flex items-center gap-2 px-4 pb-3">
+        {/* Menu row - TIER S subtle buttons */}
+        <div className="flex items-center gap-3 px-5 pb-4">
           {organization.slug && (
             <Link to={`/${organization.slug}`}>
-              <button className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors bg-ultra-dark-card text-white/70">
-                <Home className="w-3.5 h-3.5" />
+              <button className="h-10 px-4 text-sm font-medium rounded-xl flex items-center gap-2 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/70 border border-white/[0.08]">
+                <Home className="w-4 h-4" />
                 Ver sorteos
               </button>
             </Link>
           )}
           {whatsappLink && (
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-              <button className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors bg-ultra-dark-card text-white/70">
-                <MessageCircle className="w-3.5 h-3.5" />
+              <button className="h-10 px-4 text-sm font-medium rounded-xl flex items-center gap-2 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/70 border border-white/[0.08]">
+                <MessageCircle className="w-4 h-4" />
                 Contactar
               </button>
             </a>
@@ -183,21 +226,21 @@ export function MobileHero({
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{ 
-            background: 'linear-gradient(to bottom, rgba(3,7,18,0.4) 0%, transparent 30%, transparent 50%, rgba(3,7,18,0.95) 100%)' 
+            background: 'linear-gradient(to bottom, rgba(3,7,18,0.5) 0%, transparent 25%, transparent 45%, rgba(3,7,18,0.97) 100%)' 
           }}
         />
 
-        {/* Pagination dots - minimal white */}
+        {/* Pagination dots - TIER S minimal white */}
         {mediaItems.length > 1 && (
-          <div className="absolute bottom-28 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
             {mediaItems.map((item, idx) => (
               <button
                 key={idx}
                 onClick={() => emblaApi?.scrollTo(idx)}
-                className={`transition-all duration-200 ${
+                className={`transition-all duration-300 ${
                   idx === selectedIndex 
-                    ? 'w-6 h-1.5 bg-white rounded-full' 
-                    : 'w-1.5 h-1.5 bg-white/40 rounded-full hover:bg-white/60'
+                    ? 'w-8 h-2 bg-white rounded-full shadow-lg' 
+                    : 'w-2 h-2 bg-white/40 rounded-full hover:bg-white/60'
                 }`}
                 aria-label={`Ir a ${item.type === 'video' ? 'video' : `imagen ${idx + 1}`}`}
               />
@@ -205,20 +248,20 @@ export function MobileHero({
           </div>
         )}
 
-        {/* Prize info overlay - DRAMATIC PREMIUM typography */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 space-y-3 pointer-events-none">
-          {/* Title - Large and dramatic */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[0.95] tracking-[-0.03em]">
+        {/* Prize info overlay - TIER S DRAMATIC PREMIUM typography */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 space-y-4 pointer-events-none">
+          {/* Title - TIER S Large and dramatic */}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[0.9] tracking-[-0.04em]">
             {raffle.title}
           </h1>
           
           {/* Prize name with value */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-white/80 text-base tracking-tight">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-white/80 text-lg tracking-tight">
               {raffle.prize_name}
             </span>
             {raffle.prize_value && (
-              <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 shimmer-badge">
+              <span className="px-3 py-1.5 rounded-lg text-sm font-bold bg-emerald-500/15 text-emerald-400 shimmer-badge border border-emerald-500/30">
                 {formatCurrency(raffle.prize_value, currency)}
               </span>
             )}
@@ -226,18 +269,19 @@ export function MobileHero({
         </div>
       </div>
 
-      {/* Ticket Price Section - DRAMATIC PREMIUM */}
-      <div className="py-5 px-5 bg-ultra-dark">
+      {/* Ticket Price Section - TIER S DRAMATIC PREMIUM */}
+      <div className="relative py-8 px-6 bg-ultra-dark">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-emerald-500/10 ambient-glow">
-              <Ticket className="w-7 h-7 text-emerald-400" />
+          <div className="flex items-center gap-5">
+            {/* TIER S: w-20 h-20 icon container */}
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-xl shadow-emerald-500/20 border border-emerald-500/20">
+              <Ticket className="w-10 h-10 text-emerald-400" />
             </div>
             <div>
-              <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-ultra-dark-dimmed">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/40 mb-1">
                 Precio por boleto
               </p>
-              <p className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-[-0.03em]">
+              <p className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-[-0.04em]">
                 {formatCurrency(raffle.ticket_price, currency)}
               </p>
             </div>
@@ -245,10 +289,10 @@ export function MobileHero({
         </div>
       </div>
 
-      {/* Countdown Timer - Enterprise lottery style */}
+      {/* Countdown Timer - TIER S Enterprise lottery style */}
       {raffle.draw_date && (
-        <div className="py-6 px-4 bg-ultra-dark">
-          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-center mb-4 text-ultra-dark-dimmed">
+        <div className="relative py-8 px-5 bg-ultra-dark">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-center mb-5 text-white/40">
             El sorteo se realizará en
           </p>
           <CountdownTimer 
@@ -258,58 +302,58 @@ export function MobileHero({
         </div>
       )}
 
-      {/* Progress bar - Minimal emerald */}
-      <div className="px-5 py-5 space-y-3 bg-ultra-dark">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-white/70">
+      {/* Progress bar - TIER S Minimal emerald */}
+      <div className="relative px-6 py-8 space-y-4 bg-ultra-dark">
+        <div className="flex items-center justify-between text-base">
+          <span className="text-white/60">
             {raffle.ticketsSold.toLocaleString()} de {raffle.total_tickets.toLocaleString()} vendidos
           </span>
-          <span className="font-semibold text-emerald-400">
+          <span className="font-bold text-emerald-400 text-lg">
             {Math.round(progress)}%
           </span>
         </div>
         
-        <div className="relative h-1.5 rounded-full overflow-hidden bg-white/5">
+        <div className="relative h-2.5 rounded-full overflow-hidden bg-white/[0.06]">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-700 to-emerald-400"
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"
           />
         </div>
         
-        <p className="text-sm text-center text-ultra-dark-muted">
-          <span className="font-medium text-emerald-400">
+        <p className="text-base text-center text-white/50">
+          <span className="font-bold text-emerald-400">
             {raffle.ticketsAvailable.toLocaleString()}
           </span>
           {' '}boletos disponibles
         </p>
       </div>
 
-      {/* Primary CTA - White button (inverted) with premium touch feedback */}
-      <div className="px-5 py-5 bg-ultra-dark">
+      {/* Primary CTA - TIER S White button (inverted) with premium touch feedback */}
+      <div className="relative px-6 py-8 bg-ultra-dark">
         <motion.div whileTap={{ scale: 0.97 }}>
           <Button
             variant="inverted"
             size="lg"
-            className="w-full h-14 text-base font-bold rounded-xl shadow-lg touch-active btn-mobile tracking-tight"
+            className="w-full h-16 text-lg font-bold rounded-2xl shadow-xl touch-active btn-mobile tracking-tight"
             onClick={onScrollToTickets}
           >
             Comprar Boletos
-            <ChevronRight className="w-5 h-5 ml-2" />
+            <ChevronRight className="w-6 h-6 ml-2" />
           </Button>
         </motion.div>
         
         {/* Scroll indicator - minimal */}
         <motion.div 
-          className="flex flex-col items-center mt-5"
-          animate={{ y: [0, 4, 0] }}
+          className="flex flex-col items-center mt-6"
+          animate={{ y: [0, 5, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         >
-          <span className="text-[10px] uppercase tracking-widest text-ultra-dark-dimmed">
+          <span className="text-xs uppercase tracking-[0.2em] text-white/40">
             Desliza para ver boletos
           </span>
-          <ChevronDown className="w-4 h-4 mt-1 text-ultra-dark-dimmed" />
+          <ChevronDown className="w-5 h-5 mt-1.5 text-white/40" />
         </motion.div>
       </div>
     </div>
