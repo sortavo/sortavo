@@ -45,9 +45,11 @@ export default {
         "2xs": ["0.625rem", { lineHeight: "0.75rem" }],
         "3xl": ["1.875rem", { lineHeight: "2.25rem", letterSpacing: "-0.02em" }],
         "4xl": ["2.25rem", { lineHeight: "2.5rem", letterSpacing: "-0.02em" }],
-        "5xl": ["3rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
-        "6xl": ["3.75rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
-        "7xl": ["4.5rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
+        "5xl": ["3rem", { lineHeight: "1.05", letterSpacing: "-0.03em" }],
+        "6xl": ["3.75rem", { lineHeight: "1", letterSpacing: "-0.03em" }],
+        "7xl": ["4.5rem", { lineHeight: "0.95", letterSpacing: "-0.04em" }],
+        "8xl": ["6rem", { lineHeight: "0.9", letterSpacing: "-0.04em" }],
+        "9xl": ["8rem", { lineHeight: "0.85", letterSpacing: "-0.05em" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -172,8 +174,9 @@ export default {
         },
         blob: {
           "0%": { transform: "translate(0px, 0px) scale(1)" },
-          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
-          "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+          "25%": { transform: "translate(20px, -40px) scale(1.05)" },
+          "50%": { transform: "translate(-30px, 30px) scale(0.95)" },
+          "75%": { transform: "translate(40px, 10px) scale(1.02)" },
           "100%": { transform: "translate(0px, 0px) scale(1)" },
         },
         float: {
@@ -192,6 +195,10 @@ export default {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        "glow-pulse": {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(16, 185, 129, 0.3)" },
+          "50%": { boxShadow: "0 0 40px rgba(16, 185, 129, 0.5)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -202,11 +209,13 @@ export default {
         "slide-down": "slide-down 0.3s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "slide-in-left": "slide-in-left 0.3s ease-out",
-        blob: "blob 7s infinite",
+        blob: "blob 25s ease-in-out infinite",
+        "blob-slow": "blob 35s ease-in-out infinite",
         float: "float 3s ease-in-out infinite",
         shimmer: "shimmer 2s infinite",
         "pulse-slow": "pulse 3s ease-in-out infinite",
         "scale-in": "scale-in 0.2s ease-out",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
       },
       transitionDuration: {
         "400": "400ms",

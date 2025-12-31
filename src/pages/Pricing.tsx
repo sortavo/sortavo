@@ -130,7 +130,7 @@ export default function Pricing() {
       {/* Premium Navigation */}
       <PremiumNavbar variant="solid" />
 
-      {/* Hero Section */}
+      {/* Hero Section - TIER S */}
       <PremiumHero>
         <div className="container mx-auto px-4 text-center">
           <motion.div
@@ -138,8 +138,8 @@ export default function Pricing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Badge className="mb-6 px-4 py-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-sm font-semibold">
-              <Sparkles className="w-3.5 h-3.5 mr-2" />
+            <Badge className="mb-8 px-5 py-2.5 bg-emerald-500/15 text-emerald-400 border-emerald-500/20 text-sm font-semibold shadow-lg shadow-emerald-500/10">
+              <Sparkles className="w-4 h-4 mr-2" />
               Sin comisiones por venta
             </Badge>
           </motion.div>
@@ -148,9 +148,9 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="mb-6 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight"
+            className="mb-8 text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black tracking-[-0.04em] leading-[0.9]"
           >
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent">
               Precios Simples
             </span>
             <br />
@@ -161,10 +161,10 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-10 text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto"
+            className="mb-12 text-xl lg:text-2xl text-white/50 max-w-2xl mx-auto"
           >
             Elige el plan perfecto para tu negocio de sorteos. Sin sorpresas, sin costos ocultos.
-            <span className="block mt-2 text-emerald-400 font-medium">
+            <span className="block mt-3 text-emerald-400 font-semibold">
               Más de 500+ organizadores confían en Sortavo
             </span>
           </motion.p>
@@ -174,7 +174,7 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mb-16"
+            className="mb-20"
           >
             <PricingToggle isAnnual={isAnnual} onToggle={setIsAnnual} />
           </motion.div>
@@ -229,22 +229,35 @@ export default function Pricing() {
       {/* Social Proof */}
       <SocialProofSection />
 
-      {/* Feature Comparison Table */}
-      <section className="py-20 bg-ultra-dark-elevated">
-        <div className="container mx-auto px-4">
+      {/* Feature Comparison Table - TIER S */}
+      <section className="py-28 lg:py-36 relative overflow-hidden">
+        {/* Contrasting background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/40 via-emerald-900/20 to-teal-950/30" />
+        
+        {/* Subtle orbs */}
+        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-teal-500/8 rounded-full blur-[80px]" />
+        
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        
+        {/* Top border glow */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+            <h2 className="text-4xl lg:text-5xl xl:text-6xl font-black mb-6 tracking-[-0.03em]">
               <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                 Comparación de Planes
               </span>
             </h2>
-            <p className="text-gray-400 max-w-xl mx-auto">
+            <p className="text-xl text-white/50 max-w-xl mx-auto">
               Encuentra el plan que mejor se adapte a tus necesidades
             </p>
           </motion.div>
@@ -317,22 +330,26 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-20 bg-ultra-dark">
-        <div className="container mx-auto px-4">
+      {/* FAQ Section - TIER S */}
+      <section className="py-28 lg:py-36 bg-ultra-dark relative overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute inset-0 bg-grid-premium" />
+        <div className="absolute top-1/4 -right-[10%] w-[400px] h-[400px] bg-violet-500/8 rounded-full blur-[100px]" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+            <h2 className="text-4xl lg:text-5xl xl:text-6xl font-black mb-6 tracking-[-0.03em]">
               <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                 Preguntas Frecuentes
               </span>
             </h2>
-            <p className="text-gray-400 max-w-xl mx-auto">
+            <p className="text-xl text-white/50 max-w-xl mx-auto">
               Todo lo que necesitas saber sobre nuestros planes y precios
             </p>
           </motion.div>

@@ -84,7 +84,8 @@ export function PricingCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className={cn(
-        'relative flex flex-col rounded-3xl border bg-card/80 backdrop-blur-sm p-6 lg:p-8 transition-all duration-500',
+        'relative flex flex-col rounded-3xl border p-8 lg:p-10 transition-all duration-500',
+        'bg-white/[0.03] backdrop-blur-xl hover-glow',
         styles.border,
         styles.glow,
         popular && 'scale-105 z-10'
@@ -93,48 +94,48 @@ export function PricingCard({
       {/* Popular badge */}
       {popular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-          <Badge className={cn('px-4 py-1.5 shadow-lg text-sm font-bold', styles.badge)}>
-            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+          <Badge className={cn('px-5 py-2 shadow-xl text-sm font-bold shimmer-badge', styles.badge)}>
+            <Sparkles className="w-4 h-4 mr-2" />
             {badge}
           </Badge>
         </div>
       )}
 
       {/* Header */}
-      <div className="text-center mb-6">
-        {/* Icon */}
+      <div className="text-center mb-8">
+        {/* Icon - TIER S: w-20 h-20 */}
         <motion.div
           whileHover={{ scale: 1.1, rotate: 5 }}
           className={cn(
-            'mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl shadow-xl',
+            'mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl shadow-xl',
             styles.iconBg
           )}
         >
-          <Icon className="h-8 w-8 text-white" />
+          <Icon className="h-10 w-10 text-white" />
         </motion.div>
 
         {/* Badge for non-popular */}
         {!popular && (
-          <Badge variant="outline" className="mb-3">
+          <Badge variant="outline" className="mb-4 border-white/20 text-white/70">
             {badge}
           </Badge>
         )}
 
         {/* Plan name */}
-        <h3 className="text-2xl font-bold text-foreground mb-1">{name}</h3>
-        <p className="text-sm text-muted-foreground">{idealFor}</p>
+        <h3 className="text-2xl font-bold text-white mb-2">{name}</h3>
+        <p className="text-sm text-white/50">{idealFor}</p>
       </div>
 
-      {/* Price */}
-      <div className="text-center mb-4">
+      {/* Price - TIER S dramatic typography */}
+      <div className="text-center mb-6">
         <div className="flex items-baseline justify-center gap-1">
-          <span className="text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <span className="text-5xl lg:text-6xl font-black bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent tracking-tight">
             ${monthlyEquivalent.toLocaleString()}
           </span>
-          <span className="text-muted-foreground text-lg">USD/mes</span>
+          <span className="text-white/50 text-lg">USD/mes</span>
         </div>
         {isAnnual && (
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-white/40 mt-2">
             Facturado anualmente (${price.toLocaleString()} USD)
           </p>
         )}
