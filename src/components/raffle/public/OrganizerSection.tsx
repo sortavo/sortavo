@@ -81,33 +81,33 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="py-16 border-y border-border/50"
+      className="py-16 border-y border-white/[0.06]"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground mb-3">
+          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-3">
             Organizador
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Sobre el Organizador
           </h2>
         </div>
 
-        <div className="bg-card/50 rounded-2xl border border-border/50 overflow-hidden">
+        <div className="bg-white/[0.03] rounded-2xl border border-white/[0.06] backdrop-blur-sm overflow-hidden">
           {/* Content */}
           <div className="p-6 sm:p-8">
             {/* Avatar and info */}
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6">
-              <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-border">
+              <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-emerald-500/30">
                 <AvatarImage src={organization.logo_url || undefined} alt={organization.name} />
-                <AvatarFallback className="text-xl sm:text-2xl font-bold bg-muted text-foreground">
+                <AvatarFallback className="text-xl sm:text-2xl font-bold bg-white/[0.05] text-white">
                   {organization.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               
               <div className="text-center sm:text-left flex-1">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
-                  <h3 className="text-xl sm:text-2xl font-bold text-foreground">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white">
                     {organization.name}
                   </h3>
                   {organization.verified && (
@@ -118,13 +118,13 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
                   )}
                 </div>
                 {organization.city && (
-                  <div className="flex items-center justify-center sm:justify-start gap-1 text-muted-foreground">
+                  <div className="flex items-center justify-center sm:justify-start gap-1 text-white/50">
                     <MapPin className="w-4 h-4 shrink-0" />
                     <span>{organization.city}</span>
                   </div>
                 )}
                 {organization.description && (
-                  <p className="text-muted-foreground mt-3 text-sm">
+                  <p className="text-white/50 mt-3 text-sm">
                     {organization.description}
                   </p>
                 )}
@@ -134,23 +134,23 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
             {/* Stats */}
             <div className="flex flex-wrap justify-center sm:justify-start gap-3 mb-6">
               {organization.years_experience && organization.years_experience > 0 && (
-                <div className="text-center px-4 py-2 bg-muted/50 rounded-lg border border-border/50">
-                  <p className="text-xs text-muted-foreground">Experiencia</p>
-                  <p className="font-semibold text-foreground text-sm">
+                <div className="text-center px-4 py-2 bg-white/[0.03] rounded-lg border border-white/[0.06]">
+                  <p className="text-xs text-white/40">Experiencia</p>
+                  <p className="font-semibold text-white text-sm">
                     {organization.years_experience} {organization.years_experience === 1 ? "año" : "años"}
                   </p>
                 </div>
               )}
               {organization.total_raffles_completed && organization.total_raffles_completed > 0 && (
-                <div className="text-center px-4 py-2 bg-muted/50 rounded-lg border border-border/50">
-                  <p className="text-xs text-muted-foreground">Rifas realizadas</p>
-                  <p className="font-semibold text-foreground text-sm">{organization.total_raffles_completed}</p>
+                <div className="text-center px-4 py-2 bg-white/[0.03] rounded-lg border border-white/[0.06]">
+                  <p className="text-xs text-white/40">Rifas realizadas</p>
+                  <p className="font-semibold text-white text-sm">{organization.total_raffles_completed}</p>
                 </div>
               )}
               {timeOnPlatform && (
-                <div className="text-center px-4 py-2 bg-muted/50 rounded-lg border border-border/50">
-                  <p className="text-xs text-muted-foreground">En plataforma</p>
-                  <p className="font-semibold text-foreground text-sm">{timeOnPlatform}</p>
+                <div className="text-center px-4 py-2 bg-white/[0.03] rounded-lg border border-white/[0.06]">
+                  <p className="text-xs text-white/40">En plataforma</p>
+                  <p className="font-semibold text-white text-sm">{timeOnPlatform}</p>
                 </div>
               )}
             </div>
@@ -164,7 +164,7 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
                     href={link.url!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full flex items-center justify-center bg-muted/50 border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.05] border border-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors"
                     title={link.label}
                   >
                     <link.icon className="w-5 h-5" />
@@ -198,7 +198,7 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
                   asChild
                   variant="outline"
                   size="lg"
-                  className="flex-1 border-border/50 text-foreground hover:bg-muted"
+                  className="flex-1 border-white/[0.08] text-white hover:bg-white/[0.05]"
                 >
                   <Link to={`/${organization.slug}`}>
                     Ver todos los sorteos

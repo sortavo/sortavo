@@ -257,14 +257,14 @@ export function FAQSection({ raffle, organization, customization, className }: F
   return (
     <div className={cn("max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16", className)}>
       <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm font-medium mb-4 border border-border/50">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] text-white/60 text-sm font-medium mb-4 border border-white/[0.06]">
           <HelpCircle className="w-4 h-4" />
           Resolvemos tus dudas
         </div>
-        <h2 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight mb-3">
+        <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight mb-3">
           Preguntas Frecuentes
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-white/50">
           Todo lo que necesitas saber sobre este sorteo
         </p>
       </div>
@@ -278,8 +278,8 @@ export function FAQSection({ raffle, organization, customization, className }: F
             <div key={cat.id} className="space-y-3">
               <div className="flex items-center gap-2 px-1">
                 <Icon className="w-5 h-5 text-emerald-400" />
-                <h3 className="font-semibold text-foreground">{cat.label}</h3>
-                <span className="text-sm text-muted-foreground">({faqs.length})</span>
+                <h3 className="font-semibold text-white">{cat.label}</h3>
+                <span className="text-sm text-white/40">({faqs.length})</span>
               </div>
               
               <Accordion type="single" collapsible className="w-full space-y-2">
@@ -287,17 +287,17 @@ export function FAQSection({ raffle, organization, customization, className }: F
                   <AccordionItem 
                     key={faq.id} 
                     value={faq.id} 
-                    className="bg-card/50 rounded-xl border border-border/50 px-4 sm:px-5 overflow-hidden"
+                    className="bg-white/[0.03] rounded-xl border border-white/[0.06] px-4 sm:px-5 overflow-hidden backdrop-blur-sm"
                   >
-                    <AccordionTrigger className="text-left font-medium hover:no-underline text-sm sm:text-base py-4 text-foreground">
+                    <AccordionTrigger className="text-left font-medium hover:no-underline text-sm sm:text-base py-4 text-white">
                       <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/[0.05] text-white/60 flex items-center justify-center">
                           {faq.icon}
                         </div>
                         <span>{faq.question}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground text-sm pb-4 pl-11">
+                    <AccordionContent className="text-white/60 text-sm pb-4 pl-11">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
