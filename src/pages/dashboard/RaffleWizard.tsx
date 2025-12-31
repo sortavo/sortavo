@@ -490,6 +490,7 @@ export default function RaffleWizard() {
           <Step5Design 
             form={form}
             organization={organization}
+            subscriptionTier={organization?.subscription_tier as SubscriptionTier}
             stepValidations={stepValidations}
             canPublish={canPublish}
             hasPaymentMethods={hasEnabledPaymentMethods}

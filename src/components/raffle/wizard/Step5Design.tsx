@@ -11,8 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Palette, Type, Layout, ImagePlus, Sparkles, Megaphone, Eye, ShoppingCart, Zap, Bell, Star, BarChart3, Trophy, Shuffle, Heart, AlertCircle, Settings, Wand2 } from 'lucide-react';
+import { Palette, Type, Layout, ImagePlus, Sparkles, Megaphone, Eye, ShoppingCart, Zap, Bell, Star, BarChart3, Trophy, Shuffle, Heart, AlertCircle, Settings, Wand2, Lock } from 'lucide-react';
 import { RAFFLE_TEMPLATES, GOOGLE_FONTS_TITLES, GOOGLE_FONTS_BODY, DESIGN_SECTIONS } from '@/lib/raffle-utils';
+import { getSubscriptionLimits, SubscriptionTier } from '@/lib/subscription-limits';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { FAQEditor } from './FAQEditor';
 import { ValidationSummary } from './ValidationSummary';
@@ -28,6 +30,7 @@ interface OrganizationInfo {
 interface Step5Props {
   form: UseFormReturn<any>;
   organization?: OrganizationInfo | null;
+  subscriptionTier?: SubscriptionTier;
   stepValidations?: StepValidation[];
   canPublish?: boolean;
   hasPaymentMethods?: boolean;
@@ -100,15 +103,21 @@ const MARKETING_FEATURES = [
 export const Step5Design = ({ 
   form, 
   organization,
+  subscriptionTier,
   stepValidations, 
   canPublish, 
   hasPaymentMethods,
   onNavigateToStep 
 }: Step5Props) => {
+  const { toast } = useToast();
   const selectedTemplate = form.watch('template_id') || 'modern';
   const customization = form.watch('customization') || {};
   const primaryColor = customization.primary_color || '#2563EB';
   const secondaryColor = customization.secondary_color || '#F97316';
+
+  // Get subscription limits for template access
+  const limits = getSubscriptionLimits(subscriptionTier);
+  const templatesAvailable = limits.templatesAvailable;
 
   const updateCustomization = (key: string, value: unknown) => {
     const current = form.getValues('customization') || {};
@@ -150,21 +159,46 @@ export const Step5Design = ({
                   <FormItem>
                     <FormControl>
                       <RadioGroup
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          const templateIndex = RAFFLE_TEMPLATES.findIndex(t => t.id === value);
+                          if (templateIndex >= templatesAvailable) {
+                            toast({
+                              title: 'Template no disponible',
+                              description: 'Este template está disponible desde el plan Pro. Mejora tu plan para acceder a todos los diseños.',
+                              variant: 'destructive',
+                            });
+                            return;
+                          }
+                          field.onChange(value);
+                        }}
                         defaultValue={field.value || 'modern'}
                         className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 sm:gap-3"
                       >
-                        {RAFFLE_TEMPLATES.map((template) => (
-                          <div key={template.id}>
+                        {RAFFLE_TEMPLATES.map((template, index) => {
+                          const isLocked = index >= templatesAvailable;
+                          return (
+                          <div key={template.id} className="relative">
+                            {isLocked && (
+                              <div className="absolute top-1 right-1 z-10">
+                                <Badge variant="secondary" className="text-[8px] px-1.5 py-0.5 bg-muted/90 backdrop-blur-sm">
+                                  <Lock className="w-2.5 h-2.5 mr-0.5" />
+                                  Pro+
+                                </Badge>
+                              </div>
+                            )}
                             <RadioGroupItem
                               value={template.id}
                               id={template.id}
                               className="peer sr-only"
+                              disabled={isLocked}
                             />
                             <label
                               htmlFor={template.id}
                               className={cn(
-                                "flex flex-col items-center justify-center rounded-lg border-2 border-muted p-2 sm:p-3 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-all",
+                                "flex flex-col items-center justify-center rounded-lg border-2 border-muted p-2 sm:p-3 transition-all",
+                                isLocked 
+                                  ? "opacity-50 cursor-not-allowed bg-muted/30" 
+                                  : "hover:bg-accent hover:text-accent-foreground cursor-pointer",
                                 "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:shadow-md"
                               )}
                             >
@@ -234,7 +268,8 @@ export const Step5Design = ({
                               </Badge>
                             </label>
                           </div>
-                        ))}
+                        );
+                        })}
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
