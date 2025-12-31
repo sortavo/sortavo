@@ -41,6 +41,8 @@ interface OrganizerSectionProps {
     // Experience fields
     years_experience?: number | null;
     total_raffles_completed?: number | null;
+    // Address field
+    address?: string | null;
   };
   raffleTitle: string;
   brandColor: string;
@@ -139,8 +141,14 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
                   </div>
                   {organization.city && (
                     <div className="flex items-center justify-center sm:justify-start gap-1 text-gray-500">
-                      <MapPin className="w-4 h-4" />
+                      <MapPin className="w-4 h-4 shrink-0" />
                       <span>{organization.city}</span>
+                    </div>
+                  )}
+                  {organization.address && (
+                    <div className="flex items-start justify-center sm:justify-start gap-1 text-gray-500 mt-1">
+                      <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span className="text-sm">{organization.address}</span>
                     </div>
                   )}
                 </div>
