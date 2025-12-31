@@ -42,13 +42,13 @@ export function HowToParticipate({ className = "" }: HowToParticipateProps) {
             >
               {/* Connector line for desktop */}
               {index < steps.length - 1 && (
-                <div className="hidden sm:block absolute top-8 left-[60%] w-full h-px bg-border/50" />
+                <div className="hidden sm:block absolute top-8 left-[60%] w-full h-px bg-white/[0.08]" />
               )}
               
               <div className="flex sm:flex-col items-start sm:items-center gap-4 sm:gap-3 text-left sm:text-center">
                 {/* Icon with number */}
                 <div className="relative flex-shrink-0">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-muted border border-border/50 flex items-center justify-center">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
                     <step.icon className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -58,10 +58,10 @@ export function HowToParticipate({ className = "" }: HowToParticipateProps) {
                 
                 {/* Text */}
                 <div className="flex-1 sm:flex-initial">
-                  <h3 className="font-semibold text-foreground mb-1">
+                  <h3 className="font-semibold text-white mb-1">
                     {step.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-white/50">
                     {step.description}
                   </p>
                 </div>

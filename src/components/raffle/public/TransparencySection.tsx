@@ -36,7 +36,7 @@ export function TransparencySection({
   className = "" 
 }: TransparencySectionProps) {
   return (
-    <section className={`py-16 border-y border-border/50 ${className}`}>
+    <section className={`py-16 border-y border-white/[0.06] ${className}`}>
       <div className="max-w-4xl mx-auto px-5">
         {/* Header */}
         <div className="text-center mb-10">
@@ -44,10 +44,10 @@ export function TransparencySection({
             <Shield className="w-4 h-4" />
             Garantía de Transparencia
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Sorteo 100% Verificable
           </h2>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-white/50 mt-2">
             Tu confianza es nuestra prioridad
           </p>
         </div>
@@ -61,16 +61,16 @@ export function TransparencySection({
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="flex items-start gap-4 p-5 bg-card/50 rounded-xl border border-border/50"
+              className="flex items-start gap-4 p-5 bg-white/[0.03] rounded-xl border border-white/[0.06] backdrop-blur-sm"
             >
-              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-white/[0.05] flex items-center justify-center flex-shrink-0">
                 <item.icon className="w-6 h-6 text-emerald-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground mb-1">
+                <h3 className="font-semibold text-white mb-1">
                   {item.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/50">
                   {item.description}
                 </p>
               </div>
@@ -82,7 +82,7 @@ export function TransparencySection({
         {/* Draw method badge */}
         {drawMethod && (
           <div className="mt-8 text-center">
-            <span className="inline-flex items-center gap-2 bg-muted text-foreground px-4 py-2 rounded-full text-sm font-medium border border-border/50">
+            <span className="inline-flex items-center gap-2 bg-white/[0.03] text-white px-4 py-2 rounded-full text-sm font-medium border border-white/[0.06]">
               <Award className="w-4 h-4 text-emerald-400" />
               Método: {drawMethod === 'lottery_nacional' ? 'Lotería Nacional' : 
                        drawMethod === 'random_org' ? 'Random.org Certificado' : 'Sorteo Manual'}

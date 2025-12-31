@@ -414,7 +414,7 @@ export default function PublicRaffle() {
 
         {/* How It Works - Desktop only (mobile uses compact version above) */}
         {!isMobile && showHowItWorks && (
-          <div className="bg-white/[0.02] border-y border-white/[0.06] py-16">
+          <div className="bg-white/[0.03] border-y border-white/[0.06] py-16 backdrop-blur-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-12">
                 <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-3">Proceso</p>
