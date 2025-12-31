@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { 
   ArrowLeft, 
   LayoutDashboard, 
@@ -10,8 +11,15 @@ import {
   Clock, 
   BarChart3,
   Trophy,
-  Pencil
+  Pencil,
+  MoreHorizontal
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useRaffles } from '@/hooks/useRaffles';
 import { useAuth } from '@/hooks/useAuth';
 import { OverviewTab } from '@/components/raffle/detail/OverviewTab';
@@ -23,11 +31,13 @@ import { ExportMenu } from '@/components/raffle/detail/ExportMenu';
 import { RaffleDetailSkeleton } from '@/components/ui/skeletons';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PageTransition } from '@/components/layout/PageTransition';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function RaffleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role } = useAuth();
+  const isMobile = useIsMobile();
   
   const { useRaffleById, toggleRaffleStatus } = useRaffles();
   const { data: raffle, isLoading, error } = useRaffleById(id);
@@ -67,67 +77,97 @@ export default function RaffleDetail() {
     { value: 'analytics', label: 'Analíticas', icon: BarChart3 },
   ];
 
+  const canDraw = raffle.status === 'active' && 
+                  raffle.tickets_sold > 0 && 
+                  !raffle.winner_ticket_number &&
+                  (role === 'owner' || role === 'admin');
+
   return (
     <DashboardLayout>
       <PageTransition>
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-4">
         {/* Header */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <Button 
               variant="ghost" 
               size="icon"
-              className="flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9"
+              className="flex-shrink-0 h-8 w-8"
               onClick={() => navigate('/dashboard/raffles')}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-2xl font-bold truncate">{raffle.title}</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">{raffle.prize_name}</p>
+              <h1 className="text-base sm:text-2xl font-bold truncate">{raffle.title}</h1>
+              <p className="text-xs text-muted-foreground truncate">{raffle.prize_name}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <ExportMenu raffleId={raffle.id} raffleName={raffle.title} />
-            {raffle.status === 'active' && 
-             raffle.tickets_sold > 0 && 
-             !raffle.winner_ticket_number &&
-             (role === 'owner' || role === 'admin') && (
+            
+            {/* Desktop actions */}
+            <div className="hidden sm:flex items-center gap-2">
+              <ExportMenu raffleId={raffle.id} raffleName={raffle.title} />
+              {canDraw && (
+                <Button 
+                  size="sm"
+                  className="h-8 gap-1.5"
+                  onClick={() => navigate(`/dashboard/raffles/${id}/draw`)}
+                >
+                  <Trophy className="h-4 w-4" />
+                  Sortear
+                </Button>
+              )}
               <Button 
+                variant="outline" 
                 size="sm"
                 className="h-8 gap-1.5"
-                onClick={() => navigate(`/dashboard/raffles/${id}/draw`)}
+                onClick={() => navigate(`/dashboard/raffles/${id}/edit`)}
               >
-                <Trophy className="h-4 w-4" />
-                <span className="hidden xs:inline">Sortear</span>
+                <Pencil className="h-4 w-4" />
+                Editar
               </Button>
-            )}
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="h-8 gap-1.5"
-              onClick={() => navigate(`/dashboard/raffles/${id}/edit`)}
-            >
-              <Pencil className="h-4 w-4" />
-              <span className="hidden xs:inline">Editar</span>
-            </Button>
+            </div>
+
+            {/* Mobile actions dropdown */}
+            <div className="sm:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate(`/dashboard/raffles/${id}/edit`)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Editar
+                  </DropdownMenuItem>
+                  {canDraw && (
+                    <DropdownMenuItem onClick={() => navigate(`/dashboard/raffles/${id}/draw`)}>
+                      <Trophy className="h-4 w-4 mr-2" />
+                      Sortear
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid grid-cols-5 h-auto w-full gap-1 p-1">
-            {tabs.map((tab) => (
-              <TabsTrigger 
-                key={tab.value} 
-                value={tab.value} 
-                className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-sm h-auto"
-              >
-                <tab.icon className="h-4 w-4 shrink-0" />
-                <span className="truncate w-full text-center sm:w-auto">{tab.label}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        {/* Tabs with horizontal scroll on mobile */}
+        <Tabs defaultValue="overview" className="space-y-4">
+          <ScrollArea className="w-full" type="scroll">
+            <TabsList className="inline-flex h-auto w-max min-w-full gap-1 p-1">
+              {tabs.map((tab) => (
+                <TabsTrigger 
+                  key={tab.value} 
+                  value={tab.value} 
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span>{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <ScrollBar orientation="horizontal" className="invisible" />
+          </ScrollArea>
 
           <TabsContent value="overview">
             <OverviewTab 

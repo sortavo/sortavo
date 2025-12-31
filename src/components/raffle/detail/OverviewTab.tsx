@@ -276,9 +276,9 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
   }, 0);
 
   return (
-    <div className="space-y-6">
-      {/* Hero Section */}
-      <div className="relative rounded-lg overflow-hidden bg-muted h-48">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Hero Section - Taller on mobile */}
+      <div className="relative rounded-lg overflow-hidden bg-muted h-40 sm:h-48">
         {raffle.prize_images && raffle.prize_images[0] ? (
           <img 
             src={raffle.prize_images[0]} 
@@ -287,10 +287,10 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
           />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
-            <Ticket className="h-16 w-16" />
+            <Ticket className="h-12 w-12 sm:h-16 sm:w-16" />
           </div>
         )}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
           <RaffleStatusBadge status={raffle.status || 'draft'} />
         </div>
       </div>
@@ -357,40 +357,40 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
         </Card>
       )}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-        <Button onClick={onEdit} variant="outline" size="sm" className="gap-1.5 text-xs sm:text-sm">
-          <Edit className="h-4 w-4 shrink-0" />
-          <span className="truncate">Editar</span>
+      {/* Quick Actions - 2x3 grid on mobile */}
+      <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
+        <Button onClick={onEdit} variant="outline" size="sm" className="gap-1 text-[11px] sm:text-sm h-9 px-2 sm:px-3">
+          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+          <span>Editar</span>
         </Button>
         <Button 
           onClick={onToggleStatus} 
           variant="outline" 
           size="sm"
           disabled={isTogglingStatus || raffle.status === 'draft' || raffle.status === 'completed'}
-          className="gap-1.5 text-xs sm:text-sm"
+          className="gap-1 text-[11px] sm:text-sm h-9 px-2 sm:px-3"
         >
           {raffle.status === 'active' ? (
             <>
-              <Pause className="h-4 w-4 shrink-0" />
-              <span className="truncate">Pausar</span>
+              <Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span>Pausar</span>
             </>
           ) : (
             <>
-              <Play className="h-4 w-4 shrink-0" />
-              <span className="truncate">Reanudar</span>
+              <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span>Activar</span>
             </>
           )}
         </Button>
-        <Button variant="outline" size="sm" onClick={handleShare} className="gap-1.5 text-xs sm:text-sm">
-          <Share2 className="h-4 w-4 shrink-0" />
-          <span className="truncate">Compartir</span>
+        <Button variant="outline" size="sm" onClick={handleShare} className="gap-1 text-[11px] sm:text-sm h-9 px-2 sm:px-3">
+          <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+          <span>Compartir</span>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" disabled={isExporting} className="gap-1.5 text-xs sm:text-sm">
-              <Download className="h-4 w-4 shrink-0" />
-              <span className="truncate">{isExporting ? 'Exportando...' : 'Exportar'}</span>
+            <Button variant="outline" size="sm" disabled={isExporting} className="gap-1 text-[11px] sm:text-sm h-9 px-2 sm:px-3">
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span>{isExporting ? '...' : 'Exportar'}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
@@ -412,26 +412,26 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="outline" size="sm" asChild className="gap-1.5 text-xs sm:text-sm col-span-2 sm:col-span-1">
+        <Button variant="outline" size="sm" asChild className="gap-1 text-[11px] sm:text-sm h-9 px-2 sm:px-3 col-span-2 sm:col-span-1">
           <a href={`/r/${raffle.slug}`} target="_blank" rel="noopener noreferrer">
-            <Eye className="h-4 w-4 shrink-0" />
-            <span className="truncate">Ver Público</span>
+            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span>Ver Público</span>
           </a>
         </Button>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+      {/* KPI Cards - More compact on mobile */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {kpis.map((kpi) => (
           <Card key={kpi.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-3 sm:p-4">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate pr-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 sm:pb-2 p-2 sm:p-4">
+              <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate pr-1">
                 {kpi.title}
               </CardTitle>
-              <kpi.icon className={`h-4 w-4 shrink-0 ${kpi.color}`} />
+              <kpi.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 ${kpi.color}`} />
             </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0">
-              <div className="text-lg sm:text-2xl font-bold truncate">{kpi.value}</div>
+            <CardContent className="p-2 sm:p-4 pt-0">
+              <div className="text-sm sm:text-2xl font-bold truncate">{kpi.value}</div>
             </CardContent>
           </Card>
         ))}
