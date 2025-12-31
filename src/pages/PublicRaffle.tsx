@@ -137,10 +137,10 @@ export default function PublicRaffle() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="min-h-screen flex items-center justify-center bg-[#030712]">
         <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Cargando sorteo...</p>
+          <div className="w-12 h-12 border-2 border-white/20 border-t-emerald-500 rounded-full animate-spin mx-auto" />
+          <p className="text-white/50 text-sm">Cargando sorteo...</p>
         </div>
       </div>
     );
@@ -148,15 +148,15 @@ export default function PublicRaffle() {
 
   if (error || !raffle) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-background via-background to-primary/5 px-4">
-        <div className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-xl">
-          <Trophy className="w-10 h-10 text-primary-foreground" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-[#030712] px-4">
+        <div className="w-20 h-20 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center justify-center">
+          <Trophy className="w-10 h-10 text-emerald-400" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground">Sorteo no encontrado</h1>
-        <p className="text-muted-foreground text-center">Este sorteo no existe o ya no está activo.</p>
+        <h1 className="text-2xl font-bold text-white tracking-tight">Sorteo no encontrado</h1>
+        <p className="text-white/50 text-center">Este sorteo no existe o ya no está activo.</p>
         <Button 
           onClick={() => navigate("/")}
-          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+          className="bg-white text-[#030712] hover:bg-white/90 font-semibold"
         >
           Volver al inicio
         </Button>
@@ -239,9 +239,8 @@ export default function PublicRaffle() {
       </Helmet>
 
       <div 
-        className="min-h-screen transition-colors duration-300"
+        className="min-h-screen transition-colors duration-300 bg-[#030712]"
         style={{ 
-          backgroundColor: bgColor,
           fontFamily: `"${fontBody}", sans-serif`,
         }}
       >
@@ -290,9 +289,9 @@ export default function PublicRaffle() {
           </>
         ) : isMobile ? (
           /* Mobile without hero - simple header */
-          <div className="bg-gradient-to-br from-primary/10 to-accent/10 py-8 px-4">
-            <h1 className="text-2xl font-bold text-foreground text-center">{raffle.title}</h1>
-            <p className="text-muted-foreground text-center mt-2">{raffle.prize_name}</p>
+          <div className="bg-[#030712] py-8 px-4 border-b border-white/[0.06]">
+            <h1 className="text-2xl font-bold text-white text-center tracking-tight">{raffle.title}</h1>
+            <p className="text-white/50 text-center mt-2">{raffle.prize_name}</p>
           </div>
         ) : null}
         
@@ -335,12 +334,12 @@ export default function PublicRaffle() {
 
             {/* Desktop Countdown */}
             {showCountdown && raffle.draw_date && (
-              <div className="py-8" style={{ background: gradient }}>
+              <div className="py-12 bg-[#030712] border-y border-white/[0.06]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="text-center mb-4">
-                    <p className="text-white/80 text-sm font-medium uppercase tracking-wider">El sorteo se realizará en</p>
+                  <div className="text-center mb-6">
+                    <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40">El sorteo se realizará en</p>
                   </div>
-                  <CountdownTimer targetDate={new Date(raffle.draw_date)} />
+                  <CountdownTimer targetDate={new Date(raffle.draw_date)} variant="lottery" />
                 </div>
               </div>
             )}
@@ -349,10 +348,10 @@ export default function PublicRaffle() {
 
         {/* Desktop without hero - simple header */}
         {!isMobile && !showHero && (
-          <div className="bg-gradient-to-br from-primary/10 to-accent/10 py-12 px-4">
+          <div className="bg-[#030712] py-16 px-4 border-b border-white/[0.06]">
             <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-3xl lg:text-4xl font-bold text-foreground">{raffle.title}</h1>
-              <p className="text-muted-foreground mt-3 text-lg">{raffle.prize_name}</p>
+              <h1 className="text-3xl lg:text-5xl font-bold text-white tracking-tight">{raffle.title}</h1>
+              <p className="text-white/50 mt-4 text-lg">{raffle.prize_name}</p>
             </div>
           </div>
         )}
@@ -364,37 +363,42 @@ export default function PublicRaffle() {
 
         {/* Ticket Selection Section */}
         {showTicketGrid && (
-          <div ref={ticketsRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16" id="tickets">
-            <div className="text-center mb-8 lg:mb-12">
-              <h2 className="text-2xl lg:text-4xl font-bold text-foreground mb-2 lg:mb-3">
-                {isMobile ? "Elige tus Boletos" : "Selecciona tus Boletos de la Suerte"}
-              </h2>
-              <p className="text-base lg:text-lg text-muted-foreground">
-                {isMobile ? "¡La suerte te espera!" : "Elige los números que te llevarán a la victoria"}
-              </p>
-            </div>
-
-            <TicketSelector
-              raffleId={raffle.id}
-              totalTickets={raffle.total_tickets}
-              ticketPrice={Number(raffle.ticket_price)}
-              currencyCode={currency}
-              maxPerPurchase={raffle.max_tickets_per_purchase || 100}
-              packages={showPackages ? (raffle.packages || []) : []}
-              onContinue={handleContinue}
-              showRandomPicker={showRandomPicker}
-              showLuckyNumbers={showLuckyNumbers}
-              showWinnersHistory={showWinnersHistory}
-              showProbabilityStats={showStats && showProbabilityStats}
-              ticketsSold={showStats ? raffle.ticketsSold : 0}
-              ticketsAvailable={raffle.ticketsAvailable}
-            />
-
-            {showSocialProof && (
-              <div className="mt-12">
-                <SocialProof raffleId={raffle.id} className="max-w-2xl mx-auto" />
+          <div ref={ticketsRef} className="py-16 lg:py-24" id="tickets">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-10 lg:mb-16">
+                <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-3">
+                  Selección de boletos
+                </p>
+                <h2 className="text-3xl lg:text-5xl font-bold text-white tracking-tight mb-3">
+                  {isMobile ? "Elige tus Boletos" : "Selecciona tus Boletos"}
+                </h2>
+                <p className="text-base lg:text-lg text-white/50">
+                  {isMobile ? "¡La suerte te espera!" : "Elige los números que te llevarán a la victoria"}
+                </p>
               </div>
-            )}
+
+              <TicketSelector
+                raffleId={raffle.id}
+                totalTickets={raffle.total_tickets}
+                ticketPrice={Number(raffle.ticket_price)}
+                currencyCode={currency}
+                maxPerPurchase={raffle.max_tickets_per_purchase || 100}
+                packages={showPackages ? (raffle.packages || []) : []}
+                onContinue={handleContinue}
+                showRandomPicker={showRandomPicker}
+                showLuckyNumbers={showLuckyNumbers}
+                showWinnersHistory={showWinnersHistory}
+                showProbabilityStats={showStats && showProbabilityStats}
+                ticketsSold={showStats ? raffle.ticketsSold : 0}
+                ticketsAvailable={raffle.ticketsAvailable}
+              />
+
+              {showSocialProof && (
+                <div className="mt-16">
+                  <SocialProof raffleId={raffle.id} className="max-w-2xl mx-auto" />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -406,11 +410,12 @@ export default function PublicRaffle() {
 
         {/* How It Works - Desktop only (mobile uses compact version above) */}
         {!isMobile && showHowItWorks && (
-          <div className="bg-gradient-to-br from-violet-50 via-white to-indigo-50 py-16">
+          <div className="bg-white/[0.02] border-y border-white/[0.06] py-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-gray-900 mb-3">¿Cómo Participar?</h2>
-                <p className="text-lg text-gray-600">Es muy fácil, solo sigue estos pasos</p>
+                <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-3">Proceso</p>
+                <h2 className="text-3xl font-bold text-white tracking-tight mb-3">¿Cómo Participar?</h2>
+                <p className="text-lg text-white/50">Es muy fácil, solo sigue estos pasos</p>
               </div>
               <HowToParticipate />
             </div>
@@ -471,32 +476,32 @@ export default function PublicRaffle() {
 
         {/* Terms Section */}
         {raffle.prize_terms && (
-          <div className="bg-muted/50 py-12 lg:py-16">
+          <div className="bg-white/[0.02] border-y border-white/[0.06] py-12 lg:py-16">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-6">Términos y Condiciones</h2>
-              <Card className="border-0 shadow-lg">
-                <CardContent className="pt-6 prose prose-sm max-w-none text-muted-foreground">
-                  <p className="whitespace-pre-wrap">{raffle.prize_terms}</p>
-                </CardContent>
-              </Card>
+              <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-4">Legal</p>
+              <h2 className="text-xl lg:text-2xl font-bold text-white tracking-tight mb-6">Términos y Condiciones</h2>
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+                <p className="whitespace-pre-wrap text-white/70 text-sm leading-relaxed">{raffle.prize_terms}</p>
+              </div>
             </div>
           </div>
         )}
 
         {/* Share Section */}
         {showShareButtons && (
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 text-center">
-            <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-4">¡Comparte y gana!</h2>
-            <p className="text-muted-foreground mb-6">Comparte este sorteo con tus amigos</p>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20 text-center">
+            <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-3">Compartir</p>
+            <h2 className="text-xl lg:text-2xl font-bold text-white tracking-tight mb-3">¡Comparte y gana!</h2>
+            <p className="text-white/50 mb-8">Comparte este sorteo con tus amigos</p>
             <ShareButtons url={url} title={raffle.title} description={raffle.description || undefined} />
           </div>
         )}
 
         {/* Footer */}
         {!limits.canRemoveBranding && (
-          <footer className="border-t border-border py-8 bg-muted/30">
-            <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-              <p>Powered by <span className="font-semibold text-primary">Sortavo</span></p>
+          <footer className="border-t border-white/[0.06] py-8 bg-[#030712]">
+            <div className="max-w-7xl mx-auto px-4 text-center text-sm text-white/30">
+              <p>Powered by <span className="font-medium text-white/50">Sortavo</span></p>
             </div>
           </footer>
         )}

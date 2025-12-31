@@ -553,31 +553,43 @@ export function TicketSelector({
         />
       )}
 
-      {/* Premium container */}
-      <div className="bg-white rounded-3xl border-2 border-gray-200 p-6 lg:p-8 shadow-xl">
+      {/* Premium dark container */}
+      <div className="bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.06] p-5 sm:p-6 lg:p-8">
         <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
           <TabsList className={cn(
-            "grid w-full mb-8 bg-gray-100 p-1 rounded-xl",
+            "grid w-full mb-8 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]",
             visibleTabs.length === 2 && "grid-cols-2",
             visibleTabs.length === 3 && "grid-cols-3",
             visibleTabs.length === 4 && "grid-cols-4"
           )}>
-            <TabsTrigger value="manual" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs sm:text-sm">
+            <TabsTrigger 
+              value="manual" 
+              className="rounded-lg text-white/40 data-[state=active]:bg-white/[0.06] data-[state=active]:text-white data-[state=active]:shadow-none text-xs sm:text-sm transition-all duration-200"
+            >
               Manual
             </TabsTrigger>
             {showRandomPicker && (
-              <TabsTrigger value="random" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs sm:text-sm">
+              <TabsTrigger 
+                value="random" 
+                className="rounded-lg text-white/40 data-[state=active]:bg-white/[0.06] data-[state=active]:text-white data-[state=active]:shadow-none text-xs sm:text-sm transition-all duration-200"
+              >
                 Al Azar
               </TabsTrigger>
             )}
             {showLuckyNumbers && (
-              <TabsTrigger value="lucky" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs sm:text-sm flex items-center gap-1">
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-pink-500" />
+              <TabsTrigger 
+                value="lucky" 
+                className="rounded-lg text-white/40 data-[state=active]:bg-white/[0.06] data-[state=active]:text-white data-[state=active]:shadow-none text-xs sm:text-sm flex items-center gap-1 transition-all duration-200"
+              >
+                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
                 <span className="hidden sm:inline">Mis Números</span>
                 <span className="sm:hidden">Suerte</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="search" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs sm:text-sm">
+            <TabsTrigger 
+              value="search" 
+              className="rounded-lg text-white/40 data-[state=active]:bg-white/[0.06] data-[state=active]:text-white data-[state=active]:shadow-none text-xs sm:text-sm transition-all duration-200"
+            >
               Buscar
             </TabsTrigger>
           </TabsList>
@@ -617,17 +629,17 @@ export function TicketSelector({
                     value={manualFilter}
                     onChange={(e) => setManualFilter(e.target.value.replace(/[^0-9]/g, ''))}
                     onKeyDown={handleManualKeyDown}
-                    className="h-12 text-lg border-2 pr-12"
+                    className="h-12 text-lg bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 pr-12 focus:border-emerald-500/50 focus:ring-emerald-500/20"
                   />
                   {isManualSearching ? (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      <Loader2 className="h-5 w-5 animate-spin text-white/40" />
                     </div>
                   ) : manualFilter ? (
                     <button
                       type="button"
                       onClick={() => setManualFilter('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                     >
                       ✕
                     </button>
@@ -636,7 +648,7 @@ export function TicketSelector({
                 <Button
                   onClick={handleGoToTicket}
                   disabled={!manualFilter.trim() || isNavigating}
-                  className="h-12 px-4 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                  className="h-12 px-4 bg-white text-[#030712] hover:bg-white/90 font-semibold"
                 >
                   {isNavigating ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -653,21 +665,21 @@ export function TicketSelector({
               {hasManualSearched && (
                 <div className="space-y-4">
                   {manualResults.length === 0 ? (
-                    <div className="p-4 bg-muted rounded-xl text-center">
-                      <Ticket className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm font-medium text-muted-foreground">
+                    <div className="p-6 bg-white/[0.02] border border-white/[0.06] rounded-xl text-center">
+                      <Ticket className="w-8 h-8 text-white/30 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-white/50">
                         No se encontraron boletos con "{manualFilter}"
                       </p>
                     </div>
                   ) : (
                     <>
                       {/* Results summary */}
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-muted/50 rounded-xl">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl">
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
-                          <span className="font-medium">
+                          <span className="font-medium text-white/70">
                             {manualResults.length} encontrados
                           </span>
-                          <span className="text-green-600">
+                          <span className="text-emerald-400">
                             ✓ {manualResults.filter(t => t.status === 'available').length} disponibles
                           </span>
                         </div>
@@ -697,7 +709,7 @@ export function TicketSelector({
                                 toast.success(`${newTickets.length} boletos agregados`);
                               }
                             }}
-                            className="text-xs w-full sm:w-auto sm:ml-auto"
+                            className="text-xs w-full sm:w-auto sm:ml-auto bg-white/[0.06] border-white/[0.08] text-white hover:bg-white/[0.1]"
                           >
                             <Check className="w-3 h-3 mr-1" />
                             Seleccionar
@@ -724,21 +736,21 @@ export function TicketSelector({
                             return (
                               <motion.button
                                 key={ticket.id}
-                                whileHover={isAvailable ? { scale: 1.05 } : {}}
-                                whileTap={isAvailable ? { scale: 0.95 } : {}}
+                                whileHover={isAvailable ? { scale: 1.02 } : {}}
+                                whileTap={isAvailable ? { scale: 0.98 } : {}}
                                 onClick={() => handleSelectSearchResult(ticket.ticket_number, ticket.status)}
                                 disabled={!isAvailable}
                                 className={cn(
-                                  "relative p-2 rounded-lg text-xs font-mono font-bold transition-all border-2",
-                                  isAvailable && !isSelected && "bg-green-50 border-green-300 text-green-700 hover:bg-green-100 cursor-pointer",
-                                  isAvailable && isSelected && "bg-green-500 border-green-600 text-white ring-2 ring-green-400 ring-offset-1",
-                                  !isAvailable && "bg-muted border-muted text-muted-foreground cursor-not-allowed opacity-60"
+                                  "relative p-2 rounded-lg text-xs font-mono font-bold transition-all duration-200 border",
+                                  isAvailable && !isSelected && "bg-white/[0.03] border-white/[0.06] text-white/70 hover:bg-white/[0.06] hover:border-white/[0.1] cursor-pointer",
+                                  isAvailable && isSelected && "bg-emerald-500 border-emerald-400 text-white",
+                                  !isAvailable && "bg-white/[0.02] border-white/[0.04] text-white/20 cursor-not-allowed"
                                 )}
                               >
                                 {ticket.ticket_number}
                                 {isSelected && (
-                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                                    <Check className="w-3 h-3 text-green-600" />
+                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#030712] rounded-full flex items-center justify-center border border-emerald-500">
+                                    <Check className="w-2.5 h-2.5 text-emerald-400" />
                                   </span>
                                 )}
                               </motion.button>
@@ -756,7 +768,7 @@ export function TicketSelector({
                         />
                       )}
 
-                      <p className="text-xs text-muted-foreground text-center">
+                      <p className="text-xs text-white/30 text-center">
                         {manualResults.length} boleto{manualResults.length !== 1 ? 's' : ''} cargados
                         {hasMoreManual && ' • Desplaza para ver más'}
                         {manualResults.length > 300 && ' • Vista optimizada'}
@@ -772,13 +784,14 @@ export function TicketSelector({
                     id="show-available"
                     checked={showOnlyAvailable}
                     onCheckedChange={setShowOnlyAvailable}
+                    className="data-[state=checked]:bg-emerald-500"
                   />
-                  <Label htmlFor="show-available" className="text-sm">Solo disponibles</Label>
+                  <Label htmlFor="show-available" className="text-sm text-white/60">Solo disponibles</Label>
                 </div>
                 
                 <Button 
                   variant="outline"
-                  className="border-2 hover:border-primary hover:text-primary h-12"
+                  className="border border-white/[0.08] text-white/70 hover:border-white/[0.12] hover:text-white hover:bg-white/[0.06] h-12 bg-transparent"
                   onClick={handleRandomGenerate}
                   disabled={randomMutation.isPending}
                 >
@@ -795,7 +808,7 @@ export function TicketSelector({
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 rounded-xl border-2 border-primary/20 dark:border-primary/30"
+                  className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -803,15 +816,15 @@ export function TicketSelector({
                         key={selectedTickets.length}
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
-                        className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center"
+                        className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center"
                       >
-                        <span className="text-primary-foreground font-bold">{selectedTickets.length}</span>
+                        <span className="text-white font-bold">{selectedTickets.length}</span>
                       </motion.div>
                       <div>
-                        <p className="font-semibold text-foreground">
+                        <p className="font-semibold text-white">
                           Boletos seleccionados
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-white/50">
                           {selectedTickets.slice(0, 5).join(', ')}
                           {selectedTickets.length > 5 && ` +${selectedTickets.length - 5} más`}
                         </p>
@@ -823,14 +836,14 @@ export function TicketSelector({
                         variant="ghost"
                         size="sm"
                         onClick={handleClearSelection}
-                        className="text-muted-foreground hover:text-destructive"
+                        className="text-white/50 hover:text-red-400 hover:bg-red-500/10"
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
                         Limpiar
                       </Button>
                       <Button
                         size="lg"
-                        className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg"
+                        className="bg-white text-[#030712] hover:bg-white/90 font-semibold shadow-lg"
                         onClick={() => onContinue(selectedTickets)}
                       >
                         {formatCurrency(calculateTotal(), currencyCode)}
@@ -845,7 +858,7 @@ export function TicketSelector({
             {/* Premium ticket grid with swipe gestures */}
             {isLoading ? (
               <div className="flex justify-center py-16">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <div className="w-10 h-10 border-2 border-white/20 border-t-emerald-500 rounded-full animate-spin" />
               </div>
             ) : (
               <div
@@ -883,7 +896,7 @@ export function TicketSelector({
                 
                 {/* Mobile swipe hint */}
                 {isMobile && effectiveTotalPages > 1 && (
-                  <p className="text-xs text-center text-muted-foreground mt-3">
+                  <p className="text-xs text-center text-white/30 mt-3">
                     ← Desliza para cambiar de página →
                   </p>
                 )}
@@ -892,10 +905,10 @@ export function TicketSelector({
 
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-white/40">
                 Página {page} de {effectiveTotalPages}
                 {isLargeRaffle && effectiveTotalPages < totalPages && (
-                  <span className="text-amber-600 ml-2">
+                  <span className="text-amber-400/70 ml-2">
                     (usa búsqueda para ver más)
                   </span>
                 )}
@@ -907,7 +920,7 @@ export function TicketSelector({
                   size="icon"
                   onClick={() => setPage(1)}
                   disabled={page === 1}
-                  className="h-10 w-10 border-2"
+                  className="h-10 w-10 bg-transparent border-white/[0.08] text-white/50 hover:bg-white/[0.06] hover:text-white disabled:opacity-30"
                 >
                   <ChevronsLeft className="h-4 w-4" />
                 </Button>
@@ -916,7 +929,7 @@ export function TicketSelector({
                   size="icon"
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="h-10 w-10 border-2"
+                  className="h-10 w-10 bg-transparent border-white/[0.08] text-white/50 hover:bg-white/[0.06] hover:text-white disabled:opacity-30"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -924,10 +937,10 @@ export function TicketSelector({
                 <select
                   value={page}
                   onChange={(e) => setPage(Number(e.target.value))}
-                  className="h-10 px-3 rounded-lg border-2 border-gray-200 bg-white text-sm min-w-[70px]"
+                  className="h-10 px-3 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white text-sm min-w-[70px] focus:outline-none focus:border-emerald-500/50"
                 >
                   {Array.from({ length: effectiveTotalPages }, (_, i) => i + 1).map(p => (
-                    <option key={p} value={p}>{p}</option>
+                    <option key={p} value={p} className="bg-[#030712] text-white">{p}</option>
                   ))}
                 </select>
                 
@@ -936,7 +949,7 @@ export function TicketSelector({
                   size="icon"
                   onClick={() => setPage(p => Math.min(effectiveTotalPages, p + 1))}
                   disabled={page === effectiveTotalPages}
-                  className="h-10 w-10 border-2"
+                  className="h-10 w-10 bg-transparent border-white/[0.08] text-white/50 hover:bg-white/[0.06] hover:text-white disabled:opacity-30"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -945,7 +958,7 @@ export function TicketSelector({
                   size="icon"
                   onClick={() => setPage(effectiveTotalPages)}
                   disabled={page === effectiveTotalPages}
-                  className="h-10 w-10 border-2"
+                  className="h-10 w-10 bg-transparent border-white/[0.08] text-white/50 hover:bg-white/[0.06] hover:text-white disabled:opacity-30"
                 >
                   <ChevronsRight className="h-4 w-4" />
                 </Button>
