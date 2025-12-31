@@ -67,24 +67,12 @@ export function usePublicRaffle(slug: string | undefined) {
       if (error) throw error;
       if (!raffle) return null;
 
-      // Get ticket counts and revenue data using count queries (no limit issues)
-      const [soldResult, reservedResult, availableResult, revenueResult] = await Promise.all([
-        supabase
-          .from('tickets')
-          .select('*', { count: 'exact', head: true })
-          .eq('raffle_id', raffle.id)
-          .eq('status', 'sold'),
-        supabase
-          .from('tickets')
-          .select('*', { count: 'exact', head: true })
-          .eq('raffle_id', raffle.id)
-          .eq('status', 'reserved'),
-        supabase
-          .from('tickets')
-          .select('*', { count: 'exact', head: true })
-          .eq('raffle_id', raffle.id)
-          .eq('status', 'available'),
-        // Get revenue by summing unique order_total per payment_reference group
+      // Use SECURITY DEFINER RPC for public-safe counts (bypasses RLS for anon users)
+      const [countsResult, revenueResult] = await Promise.all([
+        supabase.rpc('get_public_ticket_counts', {
+          p_raffle_id: raffle.id,
+        }),
+        // Revenue query - will return empty for anon users (fine, revenue is org-only data)
         supabase
           .from('tickets')
           .select('payment_reference, order_total')
@@ -93,9 +81,11 @@ export function usePublicRaffle(slug: string | undefined) {
           .not('payment_reference', 'is', null),
       ]);
 
-      const ticketsSold = soldResult.count || 0;
-      const ticketsReserved = reservedResult.count || 0;
-      const ticketsAvailable = availableResult.count || 0;
+      // Extract counts from RPC result (works for anonymous users)
+      const counts = countsResult.data?.[0];
+      const ticketsSold = Number(counts?.sold_count) || 0;
+      const ticketsReserved = Number(counts?.reserved_count) || 0;
+      const ticketsAvailable = Number(counts?.available_count) || 0;
 
       // Calculate total revenue from unique payment groups
       let totalRevenue = 0;
