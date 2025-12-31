@@ -140,267 +140,141 @@ export const Step5Design = ({
         />
       )}
       <Card className="border-0 shadow-none md:border md:shadow-sm">
-        <CardHeader className="px-0 md:px-6 pt-0 md:pt-6">
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <Layout className="w-5 h-5" />
+        <CardHeader className="px-0 md:px-6 pt-0 md:pt-6 pb-3">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Layout className="w-4 h-4" />
             Plantilla
           </CardTitle>
-          <CardDescription>Selecciona un diseño base para tu sorteo</CardDescription>
         </CardHeader>
         <CardContent className="px-0 md:px-6">
-          {/* Template selector with live preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: Template options */}
-            <div>
-              <FormField
-                control={form.control}
-                name="template_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={(value) => {
-                          const templateIndex = RAFFLE_TEMPLATES.findIndex(t => t.id === value);
-                          if (templateIndex >= templatesAvailable) {
-                            toast({
-                              title: 'Template no disponible',
-                              description: 'Este template está disponible desde el plan Pro. Mejora tu plan para acceder a todos los diseños.',
-                              variant: 'destructive',
-                            });
-                            return;
-                          }
-                          field.onChange(value);
-                        }}
-                        defaultValue={field.value || 'modern'}
-                        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 sm:gap-3"
-                      >
-                        {RAFFLE_TEMPLATES.map((template, index) => {
-                          const isLocked = index >= templatesAvailable;
-                          return (
-                          <div key={template.id} className="relative">
-                            {isLocked && (
-                              <div className="absolute top-1 right-1 z-10">
-                                <Badge variant="secondary" className="text-[8px] px-1.5 py-0.5 bg-muted/90 backdrop-blur-sm">
-                                  <Lock className="w-2.5 h-2.5 mr-0.5" />
-                                  Pro+
-                                </Badge>
-                              </div>
-                            )}
-                            <RadioGroupItem
-                              value={template.id}
-                              id={template.id}
-                              className="peer sr-only"
-                              disabled={isLocked}
-                            />
-                            <label
-                              htmlFor={template.id}
-                              className={cn(
-                                "flex flex-col items-center justify-center rounded-lg border-2 border-muted p-2 sm:p-3 transition-all",
-                                isLocked 
-                                  ? "opacity-50 cursor-not-allowed bg-muted/30" 
-                                  : "hover:bg-accent hover:text-accent-foreground cursor-pointer",
-                                "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:shadow-md"
-                              )}
-                            >
-                              <div 
-                                className="w-full aspect-video rounded mb-2 flex items-center justify-center relative overflow-hidden"
-                                style={{ 
-                                  background: `linear-gradient(135deg, ${template.colors.background}, ${template.colors.cardBg})`,
-                                  borderRadius: template.effects.borderRadius,
-                                }}
-                              >
-                                {/* Mini layout preview */}
-                                <div className="absolute inset-1 flex gap-1">
-                                  {template.layout.heroStyle === 'side-by-side' && (
-                                    <>
-                                      <div className="w-1/2 bg-gray-300/50 rounded" />
-                                      <div className="w-1/2 flex flex-col gap-0.5 p-0.5">
-                                        <div className="h-1.5 w-3/4 rounded" style={{ backgroundColor: template.colors.primary }} />
-                                        <div className="h-1 w-full bg-gray-300/50 rounded" />
-                                        <div className="flex-1" />
-                                        <div className="h-2 rounded" style={{ background: template.effects.gradient }} />
-                                      </div>
-                                    </>
-                                  )}
-                                  {template.layout.heroStyle === 'centered' && (
-                                    <div className="w-full flex flex-col items-center gap-0.5 p-0.5">
-                                      <div className="w-3/4 h-6 bg-gray-300/50 rounded" />
-                                      <div className="h-1.5 w-1/2 rounded" style={{ backgroundColor: template.colors.primary }} />
-                                      <div className="h-2 w-2/3 rounded mt-auto" style={{ background: template.effects.gradient }} />
-                                    </div>
-                                  )}
-                                  {template.layout.heroStyle === 'full-width' && (
-                                    <div className="w-full flex flex-col gap-0.5">
-                                      <div className="flex-1 bg-gray-300/50 rounded relative">
-                                        <div className="absolute bottom-0.5 left-0.5 right-0.5 h-3 rounded" style={{ backgroundColor: template.colors.cardBg }} />
-                                      </div>
-                                    </div>
-                                  )}
-                                  {template.layout.heroStyle === 'asymmetric' && (
-                                    <>
-                                      <div className="w-2/5 flex flex-col gap-0.5 p-0.5">
-                                        <div className="h-1.5 w-3/4 rounded" style={{ backgroundColor: template.colors.primary }} />
-                                        <div className="h-1 w-full bg-gray-300/50 rounded" />
-                                        <div className="flex-1" />
-                                        <div className="h-2 rounded" style={{ background: template.effects.gradient }} />
-                                      </div>
-                                      <div className="w-3/5 bg-gray-300/50 rounded" />
-                                    </>
-                                  )}
-                                </div>
-                                
-                                {/* Template icon overlay */}
-                                <span className="text-lg relative z-10 opacity-30">
-                                  {template.icon}
-                                </span>
-                              </div>
-                              <span className="font-medium text-xs sm:text-sm">{template.name}</span>
-                              <span className="text-[10px] sm:text-xs text-muted-foreground text-center">
-                                {template.description}
-                              </span>
-                              
-                              {/* Layout badge */}
-                              <Badge variant="outline" className="mt-1 text-[8px] sm:text-[10px] px-1.5 py-0">
-                                {template.layout.heroStyle === 'side-by-side' && 'Lado a lado'}
-                                {template.layout.heroStyle === 'centered' && 'Centrado'}
-                                {template.layout.heroStyle === 'full-width' && 'Ancho completo'}
-                                {template.layout.heroStyle === 'asymmetric' && 'Asimétrico'}
+          <FormField
+            control={form.control}
+            name="template_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={(value) => {
+                      const templateIndex = RAFFLE_TEMPLATES.findIndex(t => t.id === value);
+                      if (templateIndex >= templatesAvailable) {
+                        toast({
+                          title: 'Template no disponible',
+                          description: 'Este template está disponible desde el plan Pro.',
+                          variant: 'destructive',
+                        });
+                        return;
+                      }
+                      field.onChange(value);
+                    }}
+                    defaultValue={field.value || 'modern'}
+                    className="grid grid-cols-3 sm:grid-cols-6 gap-2"
+                  >
+                    {RAFFLE_TEMPLATES.map((template, index) => {
+                      const isLocked = index >= templatesAvailable;
+                      const isSelected = field.value === template.id;
+                      return (
+                        <div key={template.id} className="relative">
+                          {isLocked && (
+                            <div className="absolute -top-1 -right-1 z-10">
+                              <Badge variant="secondary" className="text-[8px] px-1 py-0 bg-muted/90">
+                                <Lock className="w-2 h-2" />
                               </Badge>
-                            </label>
-                          </div>
-                        );
-                        })}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            {/* Right: Live preview */}
-            <div className="hidden lg:block">
-              <div className="sticky top-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Wand2 className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Vista Previa en Tiempo Real</span>
-                  <Badge variant="secondary" className="text-[10px]">
-                    <Sparkles className="w-2.5 h-2.5 mr-1" />
-                    Interactivo
-                  </Badge>
-                </div>
-                <div className="w-full max-w-[200px] mx-auto">
-                  <TemplatePreview
-                    templateId={selectedTemplate}
-                    prizeName={form.watch('prizes')?.[0]?.name || form.watch('prize_name') || 'Premio Principal'}
-                    prizeImage={form.watch('prize_images')?.[0]}
-                    organizationName={organization?.name || 'Tu Organización'}
-                    organizationLogo={organization?.logo_url}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground text-center mt-3">
-                  El diseño se actualiza al seleccionar diferentes plantillas
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Mobile preview - shows below template selector */}
-          <div className="lg:hidden mt-4 pt-4 border-t">
-            <div className="flex items-center gap-2 mb-3">
-              <Wand2 className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">Vista Previa</span>
-            </div>
-            <div className="w-full max-w-[180px] mx-auto">
-              <TemplatePreview
-                templateId={selectedTemplate}
-                prizeName={form.watch('prizes')?.[0]?.name || form.watch('prize_name') || 'Premio Principal'}
-                prizeImage={form.watch('prize_images')?.[0]}
-                organizationName={organization?.name || 'Tu Organización'}
-                organizationLogo={organization?.logo_url}
-              />
-            </div>
-          </div>
+                            </div>
+                          )}
+                          <RadioGroupItem
+                            value={template.id}
+                            id={template.id}
+                            className="peer sr-only"
+                            disabled={isLocked}
+                          />
+                          <label
+                            htmlFor={template.id}
+                            className={cn(
+                              "flex flex-col items-center justify-center rounded-lg border-2 p-2 transition-all cursor-pointer",
+                              isLocked 
+                                ? "opacity-40 cursor-not-allowed border-muted" 
+                                : "border-muted hover:border-primary/50",
+                              isSelected && "border-primary bg-primary/5"
+                            )}
+                          >
+                            <div 
+                              className="w-full aspect-[4/3] rounded mb-1.5 flex items-center justify-center"
+                              style={{ 
+                                background: `linear-gradient(135deg, ${template.colors.background}, ${template.colors.cardBg})`,
+                              }}
+                            >
+                              <span className="text-base opacity-50">{template.icon}</span>
+                            </div>
+                            <span className="font-medium text-[10px] sm:text-xs text-center leading-tight">{template.name}</span>
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </CardContent>
       </Card>
 
+      {/* Colores y Tipografía combinados */}
       <Card className="border-0 shadow-none md:border md:shadow-sm">
-        <CardHeader className="px-0 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <Palette className="w-5 h-5" />
-            Colores
+        <CardHeader className="px-0 md:px-6 pb-3">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Palette className="w-4 h-4" />
+            Colores y Tipografía
           </CardTitle>
-          <CardDescription>Personaliza los colores de tu sorteo</CardDescription>
         </CardHeader>
         <CardContent className="px-0 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <FormItem>
-              <FormLabel>Color Primario</FormLabel>
-              <div className="flex gap-2">
+              <FormLabel className="text-xs">Color Primario</FormLabel>
+              <div className="flex gap-1.5">
                 <Input
                   type="color"
                   value={primaryColor}
                   onChange={(e) => updateCustomization('primary_color', e.target.value)}
-                  className="w-12 h-10 p-1 cursor-pointer"
+                  className="w-10 h-9 p-0.5 cursor-pointer"
                 />
                 <Input
                   value={primaryColor}
                   onChange={(e) => updateCustomization('primary_color', e.target.value)}
-                  placeholder="#2563EB"
-                  className="flex-1"
+                  className="flex-1 text-xs h-9"
                 />
               </div>
-              <FormDescription>
-                Color principal de tu marca
-              </FormDescription>
             </FormItem>
 
             <FormItem>
-              <FormLabel>Color Secundario</FormLabel>
-              <div className="flex gap-2">
+              <FormLabel className="text-xs">Color Secundario</FormLabel>
+              <div className="flex gap-1.5">
                 <Input
                   type="color"
                   value={secondaryColor}
                   onChange={(e) => updateCustomization('secondary_color', e.target.value)}
-                  className="w-12 h-10 p-1 cursor-pointer"
+                  className="w-10 h-9 p-0.5 cursor-pointer"
                 />
                 <Input
                   value={secondaryColor}
                   onChange={(e) => updateCustomization('secondary_color', e.target.value)}
-                  placeholder="#F97316"
-                  className="flex-1"
+                  className="flex-1 text-xs h-9"
                 />
               </div>
-              <FormDescription>
-                Color de acento para botones y highlights
-              </FormDescription>
             </FormItem>
-          </div>
-        </CardContent>
-      </Card>
 
-      <Card className="border-0 shadow-none md:border md:shadow-sm">
-        <CardHeader className="px-0 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <Type className="w-5 h-5" />
-            Tipografía
-          </CardTitle>
-          <CardDescription>Elige las fuentes para tu sorteo</CardDescription>
-        </CardHeader>
-        <CardContent className="px-0 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormItem>
-              <FormLabel>Fuente de Títulos</FormLabel>
+              <FormLabel className="text-xs">Fuente Títulos</FormLabel>
               <Select 
                 defaultValue={customization.title_font || 'Montserrat'}
                 onValueChange={(v) => updateCustomization('title_font', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {GOOGLE_FONTS_TITLES.map((font) => (
-                    <SelectItem key={font} value={font}>
+                    <SelectItem key={font} value={font} className="text-xs">
                       {font}
                     </SelectItem>
                   ))}
@@ -409,17 +283,17 @@ export const Step5Design = ({
             </FormItem>
 
             <FormItem>
-              <FormLabel>Fuente de Texto</FormLabel>
+              <FormLabel className="text-xs">Fuente Texto</FormLabel>
               <Select 
                 defaultValue={customization.body_font || 'Open Sans'}
                 onValueChange={(v) => updateCustomization('body_font', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {GOOGLE_FONTS_BODY.map((font) => (
-                    <SelectItem key={font} value={font}>
+                    <SelectItem key={font} value={font} className="text-xs">
                       {font}
                     </SelectItem>
                   ))}
@@ -430,204 +304,175 @@ export const Step5Design = ({
         </CardContent>
       </Card>
 
+      {/* Logo y Secciones combinados */}
       <Card className="border-0 shadow-none md:border md:shadow-sm">
-        <CardHeader className="px-0 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <ImagePlus className="w-5 h-5" />
-            Logo
+        <CardHeader className="px-0 md:px-6 pb-3">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <ImagePlus className="w-4 h-4" />
+            Logo y Secciones
           </CardTitle>
-          <CardDescription>Tu logo se hereda de la configuración de tu organización</CardDescription>
         </CardHeader>
         <CardContent className="px-0 md:px-6 space-y-4">
-          {organization?.logo_url ? (
-            <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={organization.logo_url} alt="Logo" />
-                <AvatarFallback>{organization.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Logo de {organization.name}</p>
-                <p className="text-xs text-muted-foreground mb-2">Este logo aparecerá en tu sorteo</p>
+          {/* Logo preview inline */}
+          <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/30 border">
+            <div className="flex items-center gap-3">
+              {organization?.logo_url ? (
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={organization.logo_url} alt="Logo" />
+                  <AvatarFallback className="text-xs">{organization.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                  <ImagePlus className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium">{organization?.name || 'Tu Organización'}</p>
                 <Link 
                   to="/dashboard/settings" 
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  className="text-xs text-primary hover:underline"
                 >
-                  <Settings className="w-3 h-3" />
-                  Cambiar en Configuración
+                  Cambiar logo
                 </Link>
               </div>
             </div>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Sin logo configurado</AlertTitle>
-              <AlertDescription>
-                Agrega un logo en{' '}
-                <Link to="/dashboard/settings" className="font-medium underline hover:no-underline">
-                  Configuración
-                </Link>{' '}
-                para que aparezca en tus rifas.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <FormItem>
-            <FormLabel>Posición del Logo</FormLabel>
             <RadioGroup
               defaultValue={customization.logo_position || 'top-left'}
               onValueChange={(v) => updateCustomization('logo_position', v)}
-              className="flex flex-col sm:flex-row gap-2 sm:gap-4"
+              className="flex gap-2"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="top-left" id="top-left" />
-                <label htmlFor="top-left" className="text-sm">Arriba Izquierda</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="top-center" id="top-center" />
-                <label htmlFor="top-center" className="text-sm">Arriba Centro</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="top-right" id="top-right" />
-                <label htmlFor="top-right" className="text-sm">Arriba Derecha</label>
-              </div>
-            </RadioGroup>
-          </FormItem>
-        </CardContent>
-      </Card>
-
-      <Card className="border-0 shadow-none md:border md:shadow-sm">
-        <CardHeader className="px-0 md:px-6">
-          <CardTitle className="text-lg md:text-xl">Secciones</CardTitle>
-          <CardDescription>Activa o desactiva las secciones de tu página</CardDescription>
-        </CardHeader>
-        <CardContent className="px-0 md:px-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {DESIGN_SECTIONS.map((section) => {
-              const sections = customization.sections || {};
-              const isEnabled = sections[section.id] !== false;
-
-              return (
-                <div key={section.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={section.id}
-                    checked={isEnabled}
-                    onCheckedChange={(checked) => {
-                      const current = customization.sections || {};
-                      updateCustomization('sections', { ...current, [section.id]: checked });
-                    }}
-                  />
-                  <label htmlFor={section.id} className="text-sm cursor-pointer">
-                    {section.label}
+              {[
+                { value: 'top-left', label: '←' },
+                { value: 'top-center', label: '↑' },
+                { value: 'top-right', label: '→' },
+              ].map((pos) => (
+                <div key={pos.value}>
+                  <RadioGroupItem value={pos.value} id={pos.value} className="peer sr-only" />
+                  <label
+                    htmlFor={pos.value}
+                    className="flex h-8 w-8 items-center justify-center rounded-md border-2 border-muted text-xs cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                  >
+                    {pos.label}
                   </label>
                 </div>
-              );
-            })}
+              ))}
+            </RadioGroup>
+          </div>
+
+          {/* Secciones grid compacto */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Secciones visibles</p>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {DESIGN_SECTIONS.map((section) => {
+                const sections = customization.sections || {};
+                const isEnabled = sections[section.id] !== false;
+
+                return (
+                  <div key={section.id} className="flex items-center gap-1.5">
+                    <Checkbox
+                      id={section.id}
+                      checked={isEnabled}
+                      onCheckedChange={(checked) => {
+                        const current = customization.sections || {};
+                        updateCustomization('sections', { ...current, [section.id]: checked });
+                      }}
+                      className="h-3.5 w-3.5"
+                    />
+                    <label htmlFor={section.id} className="text-xs cursor-pointer truncate">
+                      {section.label}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Buyer Experience - Ticket Selector Features */}
-      <Card className="border-0 shadow-none md:border md:border-primary/20 md:bg-gradient-to-br md:from-primary/5 md:to-accent/5">
-        <CardHeader className="px-0 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <Sparkles className="w-5 h-5 text-primary" />
-            Experiencia del Comprador
+      {/* Features combinados - Experiencia y Marketing */}
+      <Card className="border-0 shadow-none md:border md:shadow-sm">
+        <CardHeader className="px-0 md:px-6 pb-3">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Sparkles className="w-4 h-4" />
+            Funciones Opcionales
           </CardTitle>
-          <CardDescription>
-            Configura qué herramientas de selección verán tus compradores
-          </CardDescription>
         </CardHeader>
-        <CardContent className="px-0 md:px-6 space-y-3">
-          {TICKET_SELECTOR_FEATURES.map((feature) => {
-            const Icon = feature.icon;
-            const isEnabled = getFeatureValue(feature.id, feature.defaultValue);
-            
-            return (
-              <div 
-                key={feature.id} 
-                className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-primary/50 transition-colors gap-3"
-              >
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                  <div className={cn(
-                    "w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0",
-                    isEnabled ? "bg-primary/10" : "bg-muted"
-                  )}>
-                    <Icon className={cn(
-                      "w-4 h-4 sm:w-5 sm:h-5",
-                      isEnabled ? "text-primary" : "text-muted-foreground"
-                    )} />
+        <CardContent className="px-0 md:px-6 space-y-4">
+          {/* Experiencia del Comprador */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-primary" />
+              Experiencia del Comprador
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {TICKET_SELECTOR_FEATURES.map((feature) => {
+                const Icon = feature.icon;
+                const isEnabled = getFeatureValue(feature.id, feature.defaultValue);
+                
+                return (
+                  <div 
+                    key={feature.id} 
+                    className={cn(
+                      "flex items-center justify-between p-2.5 rounded-lg border transition-colors gap-2",
+                      isEnabled ? "border-primary/30 bg-primary/5" : "border-border"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <Icon className={cn(
+                        "w-4 h-4 shrink-0",
+                        isEnabled ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <span className="text-xs font-medium truncate">{feature.label}</span>
+                    </div>
+                    <Switch
+                      id={feature.id}
+                      checked={isEnabled}
+                      onCheckedChange={(checked) => updateCustomization(feature.id, checked)}
+                      className="shrink-0 scale-90"
+                    />
                   </div>
-                  <div className="min-w-0">
-                    <Label htmlFor={feature.id} className="font-medium cursor-pointer text-sm">
-                      {feature.label}
-                    </Label>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id={feature.id}
-                  checked={isEnabled}
-                  onCheckedChange={(checked) => updateCustomization(feature.id, checked)}
-                  className="shrink-0"
-                />
-              </div>
-            );
-          })}
-          
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* Marketing & Urgency Features */}
-      <Card className="border-0 shadow-none md:border md:border-warning/20 md:bg-gradient-to-br md:from-warning/5 md:to-warning/10">
-        <CardHeader className="px-0 md:px-6">
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <Megaphone className="w-5 h-5 text-warning" />
-            Marketing y Urgencia
-          </CardTitle>
-          <CardDescription>
-            Configura los elementos que incentivan la compra
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-0 md:px-6 space-y-3">
-          {MARKETING_FEATURES.map((feature) => {
-            const Icon = feature.icon;
-            const isEnabled = getFeatureValue(feature.id, feature.defaultValue);
-            
-            return (
-              <div 
-                key={feature.id} 
-                className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-warning/50 transition-colors gap-3"
-              >
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                  <div className={cn(
-                    "w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0",
-                    isEnabled ? "bg-warning/10" : "bg-muted"
-                  )}>
-                    <Icon className={cn(
-                      "w-4 h-4 sm:w-5 sm:h-5",
-                      isEnabled ? "text-warning" : "text-muted-foreground"
-                    )} />
+          {/* Marketing */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Megaphone className="w-3 h-3 text-warning" />
+              Marketing y Urgencia
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {MARKETING_FEATURES.map((feature) => {
+                const Icon = feature.icon;
+                const isEnabled = getFeatureValue(feature.id, feature.defaultValue);
+                
+                return (
+                  <div 
+                    key={feature.id} 
+                    className={cn(
+                      "flex items-center justify-between p-2.5 rounded-lg border transition-colors gap-2",
+                      isEnabled ? "border-warning/30 bg-warning/5" : "border-border"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <Icon className={cn(
+                        "w-4 h-4 shrink-0",
+                        isEnabled ? "text-warning" : "text-muted-foreground"
+                      )} />
+                      <span className="text-xs font-medium truncate">{feature.label}</span>
+                    </div>
+                    <Switch
+                      id={feature.id}
+                      checked={isEnabled}
+                      onCheckedChange={(checked) => updateCustomization(feature.id, checked)}
+                      className="shrink-0 scale-90"
+                    />
                   </div>
-                  <div className="min-w-0">
-                    <Label htmlFor={feature.id} className="font-medium cursor-pointer text-sm">
-                      {feature.label}
-                    </Label>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id={feature.id}
-                  checked={isEnabled}
-                  onCheckedChange={(checked) => updateCustomization(feature.id, checked)}
-                  className="shrink-0"
-                />
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
