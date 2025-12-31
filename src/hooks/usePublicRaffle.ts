@@ -29,10 +29,14 @@ export interface RaffleWithStats extends Raffle {
     city: string | null;
     verified: boolean | null;
     created_at: string | null;
-    // New array fields for multiple contacts
+    // Array fields for multiple contacts
     emails: string[] | null;
     phones: string[] | null;
     whatsapp_numbers: string[] | null;
+    // Additional trust/location fields
+    address: string | null;
+    years_experience: number | null;
+    total_raffles_completed: number | null;
   };
   packages?: {
     id: string;
@@ -57,7 +61,8 @@ export function usePublicRaffle(slug: string | undefined) {
             id, name, logo_url, phone, email, brand_color, slug,
             description, whatsapp_number, facebook_url, instagram_url,
             tiktok_url, website_url, city, verified, created_at,
-            emails, phones, whatsapp_numbers
+            emails, phones, whatsapp_numbers, address,
+            years_experience, total_raffles_completed
           )
         `)
         .eq('slug', slug)

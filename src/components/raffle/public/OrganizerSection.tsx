@@ -7,13 +7,16 @@ import {
   CheckCircle2, 
   MapPin, 
   MessageCircle,
-  ChevronRight
+  ChevronRight,
+  Phone,
+  Mail
 } from "lucide-react";
 import { 
   FaFacebook, 
   FaInstagram, 
   FaTiktok, 
-  FaGlobe 
+  FaGlobe,
+  FaWhatsapp
 } from "react-icons/fa";
 
 interface OrganizerSectionProps {
@@ -65,16 +68,32 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
 
   const timeOnPlatform = getTimeOnPlatform();
 
-  // Get all whatsapp numbers
-  const whatsappList = organization.whatsapp_numbers?.filter(w => w) || 
-    (organization.whatsapp_number ? [organization.whatsapp_number] : []);
+  // Get all contact methods - combine arrays with legacy single values
+  const allWhatsApps = [
+    ...(organization.whatsapp_numbers || []),
+    ...(organization.whatsapp_number && !organization.whatsapp_numbers?.includes(organization.whatsapp_number) 
+      ? [organization.whatsapp_number] 
+      : [])
+  ].filter(Boolean);
+
+  const allPhones = (organization.phones || []).filter(Boolean);
+  const allEmails = (organization.emails || []).filter(Boolean);
   
-  // Primary WhatsApp link
+  // WhatsApp message template
   const whatsappMessage = `¡Hola! Vi su sorteo "${raffleTitle}" y tengo una pregunta.`;
-  const primaryWhatsapp = whatsappList[0];
-  const whatsappLink = primaryWhatsapp 
-    ? `https://wa.me/${primaryWhatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
-    : null;
+  
+  const formatWhatsAppLink = (number: string) => {
+    const cleanNumber = number.replace(/\D/g, '');
+    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+  };
+
+  const formatPhoneLink = (number: string) => {
+    const cleanNumber = number.replace(/\D/g, '');
+    return `tel:+${cleanNumber}`;
+  };
+
+  const hasContactInfo = allWhatsApps.length > 0 || allPhones.length > 0 || allEmails.length > 0;
+  const hasLocation = organization.city || organization.address;
 
   return (
     <motion.section
@@ -117,12 +136,6 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
                     </Badge>
                   )}
                 </div>
-                {organization.city && (
-                  <div className="flex items-center justify-center sm:justify-start gap-1 text-white/50">
-                    <MapPin className="w-4 h-4 shrink-0" />
-                    <span>{organization.city}</span>
-                  </div>
-                )}
                 {organization.description && (
                   <p className="text-white/50 mt-3 text-sm">
                     {organization.description}
@@ -155,58 +168,138 @@ export function OrganizerSection({ organization, raffleTitle, brandColor }: Orga
               )}
             </div>
 
-            {/* Social links */}
-            {socialLinks.length > 0 && (
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-6">
-                {socialLinks.map((link, idx) => (
-                  <a
-                    key={idx}
-                    href={link.url!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.05] border border-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors"
-                    title={link.label}
-                  >
-                    <link.icon className="w-5 h-5" />
-                  </a>
-                ))}
+            {/* Location Section */}
+            {hasLocation && (
+              <div className="flex items-start gap-3 p-4 bg-white/[0.02] rounded-xl border border-white/[0.04] mb-6">
+                <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center shrink-0">
+                  <MapPin className="w-5 h-5 text-rose-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Ubicación</p>
+                  {organization.city && (
+                    <p className="text-sm text-white font-medium">{organization.city}</p>
+                  )}
+                  {organization.address && (
+                    <p className="text-xs text-white/50 mt-0.5">{organization.address}</p>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              {whatsappLink && (
-                <Button
-                  asChild
-                  size="lg"
-                  className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white"
-                >
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    Contactar por WhatsApp
-                    {whatsappList.length > 1 && (
-                      <span className="ml-1 text-xs opacity-75">
-                        (+{whatsappList.length - 1})
-                      </span>
-                    )}
-                  </a>
-                </Button>
-              )}
-              
-              {organization.slug && (
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="flex-1 border-white/[0.08] text-white hover:bg-white/[0.05]"
-                >
-                  <Link to={`/${organization.slug}`}>
-                    Ver todos los sorteos
-                    <ChevronRight className="w-5 h-5 ml-2" />
-                  </Link>
-                </Button>
-              )}
-            </div>
+            {/* Contact Methods Section */}
+            {hasContactInfo && (
+              <div className="space-y-4 mb-6">
+                {/* WhatsApp Numbers */}
+                {allWhatsApps.length > 0 && (
+                  <div className="p-4 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+                    <p className="text-xs text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <FaWhatsapp className="w-3.5 h-3.5 text-emerald-500" />
+                      WhatsApp
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allWhatsApps.map((number, idx) => (
+                        <a
+                          key={idx}
+                          href={formatWhatsAppLink(number)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/30 rounded-lg px-3 py-2 transition-all group"
+                        >
+                          <FaWhatsapp className="w-4 h-4 text-emerald-500" />
+                          <span className="text-sm text-white/80 group-hover:text-white">
+                            {number}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Phone Numbers */}
+                {allPhones.length > 0 && (
+                  <div className="p-4 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+                    <p className="text-xs text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5 text-blue-500" />
+                      Teléfonos
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allPhones.map((number, idx) => (
+                        <a
+                          key={idx}
+                          href={formatPhoneLink(number)}
+                          className="flex items-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/30 rounded-lg px-3 py-2 transition-all group"
+                        >
+                          <Phone className="w-4 h-4 text-blue-500" />
+                          <span className="text-sm text-white/80 group-hover:text-white">
+                            {number}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Email Addresses */}
+                {allEmails.length > 0 && (
+                  <div className="p-4 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+                    <p className="text-xs text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-purple-500" />
+                      Correos electrónicos
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allEmails.map((email, idx) => (
+                        <a
+                          key={idx}
+                          href={`mailto:${email}?subject=Consulta sobre sorteo: ${raffleTitle}`}
+                          className="flex items-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/30 rounded-lg px-3 py-2 transition-all group"
+                        >
+                          <Mail className="w-4 h-4 text-purple-500" />
+                          <span className="text-sm text-white/80 group-hover:text-white truncate max-w-[220px]">
+                            {email}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Social links */}
+            {socialLinks.length > 0 && (
+              <div className="mb-6">
+                <p className="text-xs text-white/40 uppercase tracking-wider mb-3">Redes Sociales</p>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                  {socialLinks.map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link.url!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.05] border border-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors"
+                      title={link.label}
+                    >
+                      <link.icon className="w-5 h-5" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* View all raffles button */}
+            {organization.slug && (
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="w-full border-white/[0.08] text-white hover:bg-white/[0.05]"
+              >
+                <Link to={`/${organization.slug}`}>
+                  Ver todos los sorteos de {organization.name}
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
