@@ -435,7 +435,9 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
               <kpi.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 ${kpi.color}`} />
             </CardHeader>
             <CardContent className="p-2 sm:p-4 pt-0">
-              <div className="text-sm sm:text-2xl font-bold truncate">{kpi.value}</div>
+              <div className="text-[13px] sm:text-2xl font-bold leading-tight break-words">
+                {kpi.value}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -452,10 +454,10 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
             <span className="font-medium">{soldPercentage.toFixed(1)}%</span>
           </div>
           <Progress value={soldPercentage} className="h-3" />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{raffle.tickets_sold.toLocaleString()} vendidos</span>
-            <span>{raffle.tickets_reserved} reservados</span>
-            <span>{raffle.tickets_available.toLocaleString()} disponibles</span>
+          <div className="grid grid-cols-3 gap-2 text-[11px] sm:text-sm text-muted-foreground">
+            <span className="text-center truncate">{raffle.tickets_sold.toLocaleString()} vendidos</span>
+            <span className="text-center truncate">{raffle.tickets_reserved} reservados</span>
+            <span className="text-center truncate">{raffle.tickets_available.toLocaleString()} disponibles</span>
           </div>
         </CardContent>
       </Card>
@@ -472,14 +474,27 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
                 {timeRemaining}
               </div>
               <p className="text-muted-foreground">
-                Fecha del sorteo: {new Date(raffle.draw_date).toLocaleDateString('es-MX', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                <span className="md:hidden">
+                  Fecha del sorteo:{" "}
+                  {new Date(raffle.draw_date).toLocaleDateString('es-MX', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+                <span className="hidden md:inline">
+                  Fecha del sorteo:{" "}
+                  {new Date(raffle.draw_date).toLocaleDateString('es-MX', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
               </p>
             </div>
           </CardContent>

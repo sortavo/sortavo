@@ -103,10 +103,10 @@ export default function RaffleDetail() {
             </div>
             
             {/* Desktop actions */}
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <ExportMenu raffleId={raffle.id} raffleName={raffle.title} />
               {canDraw && (
-                <Button 
+                <Button
                   size="sm"
                   className="h-8 gap-1.5"
                   onClick={() => navigate(`/dashboard/raffles/${id}/draw`)}
@@ -115,8 +115,8 @@ export default function RaffleDetail() {
                   Sortear
                 </Button>
               )}
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 className="h-8 gap-1.5"
                 onClick={() => navigate(`/dashboard/raffles/${id}/edit`)}
@@ -126,8 +126,8 @@ export default function RaffleDetail() {
               </Button>
             </div>
 
-            {/* Mobile actions dropdown */}
-            <div className="sm:hidden">
+            {/* Mobile/tablet actions dropdown */}
+            <div className="md:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" className="h-8 w-8">
@@ -153,27 +153,21 @@ export default function RaffleDetail() {
 
         {/* Tabs with horizontal scroll on mobile */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <div className="relative">
-            {/* Left fade indicator */}
-            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none md:hidden" />
-            <ScrollArea className="w-full" type="scroll">
-              <TabsList className="inline-flex h-auto w-max min-w-full gap-0.5 p-1">
-                {tabs.map((tab) => (
-                  <TabsTrigger 
-                    key={tab.value} 
-                    value={tab.value} 
-                    className="flex items-center gap-1 px-2 py-1.5 text-[11px] sm:text-sm whitespace-nowrap"
-                  >
-                    <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                    <span>{tab.label}</span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-            {/* Right fade indicator */}
-            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none md:hidden" />
-          </div>
+          <ScrollArea className="w-full -mx-4 px-4" type="scroll">
+            <TabsList className="inline-flex h-auto w-max gap-0.5 p-1">
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs md:text-sm whitespace-nowrap"
+                >
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span className="sr-only md:not-sr-only">{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <ScrollBar orientation="horizontal" className="h-2" />
+          </ScrollArea>
 
           <TabsContent value="overview">
             <OverviewTab 
