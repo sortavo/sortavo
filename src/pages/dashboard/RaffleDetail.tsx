@@ -153,21 +153,27 @@ export default function RaffleDetail() {
 
         {/* Tabs with horizontal scroll on mobile */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <ScrollArea className="w-full" type="scroll">
-            <TabsList className="inline-flex h-auto w-max min-w-full gap-1 p-1">
-              {tabs.map((tab) => (
-                <TabsTrigger 
-                  key={tab.value} 
-                  value={tab.value} 
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap"
-                >
-                  <tab.icon className="h-4 w-4 shrink-0" />
-                  <span>{tab.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <ScrollBar orientation="horizontal" className="invisible" />
-          </ScrollArea>
+          <div className="relative">
+            {/* Left fade indicator */}
+            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none md:hidden" />
+            <ScrollArea className="w-full" type="scroll">
+              <TabsList className="inline-flex h-auto w-max min-w-full gap-0.5 p-1">
+                {tabs.map((tab) => (
+                  <TabsTrigger 
+                    key={tab.value} 
+                    value={tab.value} 
+                    className="flex items-center gap-1 px-2 py-1.5 text-[11px] sm:text-sm whitespace-nowrap"
+                  >
+                    <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                    <span>{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+            {/* Right fade indicator */}
+            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none md:hidden" />
+          </div>
 
           <TabsContent value="overview">
             <OverviewTab 

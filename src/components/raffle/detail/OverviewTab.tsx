@@ -277,14 +277,18 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Hero Section - Taller on mobile */}
-      <div className="relative rounded-lg overflow-hidden bg-muted h-40 sm:h-48">
+      {/* Hero Section - Taller on mobile with centered image */}
+      <div className="relative rounded-lg overflow-hidden bg-muted h-44 sm:h-56">
         {raffle.prize_images && raffle.prize_images[0] ? (
-          <img 
-            src={raffle.prize_images[0]} 
-            alt={raffle.prize_name}
-            className="w-full h-full object-cover"
-          />
+          <>
+            <img 
+              src={raffle.prize_images[0]} 
+              alt={raffle.prize_name}
+              className="w-full h-full object-cover object-center"
+            />
+            {/* Gradient overlay for better badge visibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+          </>
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             <Ticket className="h-12 w-12 sm:h-16 sm:w-16" />
