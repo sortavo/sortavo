@@ -520,6 +520,41 @@
   .focus-ring-inset {
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset;
   }
+  
+  /* TIER S Dashboard Typography */
+  .heading-page {
+    @apply text-2xl font-bold tracking-tight text-foreground;
+  }
+  
+  .heading-section {
+    @apply text-lg font-semibold tracking-tight text-foreground;
+  }
+  
+  .heading-card {
+    @apply text-base font-semibold tracking-tight text-foreground;
+  }
+  
+  /* TIER S Icon Size System */
+  .icon-sm {
+    @apply w-4 h-4;
+  }
+  
+  .icon-md {
+    @apply w-5 h-5;
+  }
+  
+  .icon-lg {
+    @apply w-6 h-6;
+  }
+  
+  /* TIER S Spacing System */
+  .dashboard-section {
+    @apply space-y-6;
+  }
+  
+  .dashboard-grid {
+    @apply gap-4 lg:gap-6;
+  }
 }
 
 /* Smooth scrolling - respects reduced motion */

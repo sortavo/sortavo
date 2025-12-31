@@ -199,7 +199,7 @@ export default function Dashboard() {
       {statsLoading ? (
         <DashboardSkeleton />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Premium Welcome Banner */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-4 sm:p-6 lg:p-8">
             {/* Decorative elements - hidden on mobile */}
@@ -233,20 +233,17 @@ export default function Dashboard() {
           </div>
 
           {/* Premium Stats Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {statCards.map((stat, index) => (
               <div
                 key={index}
-                className="group relative overflow-hidden rounded-2xl bg-card border border-border hover:border-primary/20 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="group relative overflow-hidden rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow duration-200"
               >
-                {/* Background gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-                
-                <div className="relative p-3 sm:p-4 lg:p-6">
+                <div className="relative p-4 lg:p-6">
                   {/* Icon and Change */}
-                  <div className="flex items-center justify-between mb-2 sm:mb-4">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                      <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md`}>
+                      <stat.icon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                     </div>
                     
                     {/* Change indicator - only show when there's comparative data */}
@@ -265,17 +262,14 @@ export default function Dashboard() {
                   </div>
 
                   {/* Value */}
-                  <div className="space-y-0.5 sm:space-y-1">
-                    <p className="text-lg sm:text-xl lg:text-3xl font-bold text-foreground group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-primary group-hover:to-accent transition-all duration-300 truncate">
+                  <div className="space-y-1">
+                    <p className="text-xl lg:text-2xl font-bold tracking-tight text-foreground truncate">
                       {stat.value}
                     </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate">
+                    <p className="text-sm text-muted-foreground font-medium truncate">
                       {stat.title}
                     </p>
                   </div>
-
-                  {/* Subtle animation line */}
-                  <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left`}></div>
                 </div>
               </div>
             ))}
@@ -285,7 +279,7 @@ export default function Dashboard() {
           <div className="space-y-4">
             {/* Date Range Picker */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground">Análisis de Ventas</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Análisis de Ventas</h2>
               <DateRangePicker 
                 dateRange={dateRange}
                 onDateRangeChange={setDateRange}
@@ -311,10 +305,10 @@ export default function Dashboard() {
           {/* Content Grid */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Active Raffles */}
-            <div className="bg-card rounded-2xl border border-border p-6 hover:shadow-xl transition-shadow duration-300">
+            <div className="bg-card rounded-xl border border-border shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">Sorteos Activos</h3>
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Sorteos Activos</h3>
                   <p className="text-sm text-muted-foreground">
                     {stats?.activeRaffles && stats.activeRaffles > 0 
                       ? `${stats.activeRaffles} sorteo${stats.activeRaffles > 1 ? 's' : ''} en curso`
@@ -372,7 +366,7 @@ export default function Dashboard() {
                   <Button 
                     size="lg"
                     onClick={() => navigate('/dashboard/raffles/new')}
-                    className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-xl shadow-primary/30"
+                    className="shadow-lg"
                   >
                     <Plus className="w-5 h-5 mr-2" />
                     Crear mi primer sorteo
@@ -382,10 +376,10 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-card rounded-2xl border border-border p-6 hover:shadow-xl transition-shadow duration-300">
+            <div className="bg-card rounded-xl border border-border shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">Actividad Reciente</h3>
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Actividad Reciente</h3>
                   <p className="text-sm text-muted-foreground">Últimas acciones en tu cuenta</p>
                 </div>
                 {stats?.pendingApprovals && stats.pendingApprovals > 0 && (
@@ -403,10 +397,10 @@ export default function Dashboard() {
                     return (
                       <div 
                         key={index}
-                        className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group"
+                        className="flex items-center gap-4 p-4 rounded-xl hover:bg-muted/40 transition-colors duration-150 cursor-pointer group"
                       >
                         {/* Icon */}
-                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0`}>
                           <ActivityIcon className="w-5 h-5 text-white" />
                         </div>
                         

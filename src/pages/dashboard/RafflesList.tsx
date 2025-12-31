@@ -124,7 +124,7 @@ export default function RafflesList() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Sorteos</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Sorteos</h1>
             <p className="text-muted-foreground text-sm sm:text-base">
               Gestiona todos tus sorteos y rifas
             </p>
@@ -187,7 +187,7 @@ export default function RafflesList() {
             {raffles.map((raffle) => (
               <Card 
                 key={raffle.id} 
-                className="hover:shadow-md transition-shadow cursor-pointer"
+                className="cursor-pointer"
                 onClick={() => navigate(`/dashboard/raffles/${raffle.id}`)}
               >
                 <CardContent className="p-3 sm:p-4">
