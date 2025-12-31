@@ -260,42 +260,90 @@ export function TemplateHeroLayout({
     if (mediaItems.length === 0) return null;
     if (!showGallery && !hasVideo) return null;
 
-    // Render current item (image or video)
+    // Navigation functions
+    const canGoPrev = currentMediaIndex > 0;
+    const canGoNext = currentMediaIndex < mediaItems.length - 1;
+    const goToPrev = () => {
+      if (canGoPrev) {
+        setCurrentMediaIndex(prev => prev - 1);
+        setVideoPlaying(false);
+      }
+    };
+    const goToNext = () => {
+      if (canGoNext) {
+        setCurrentMediaIndex(prev => prev + 1);
+        setVideoPlaying(false);
+      }
+    };
+
+    // Render current item (image or video) with navigation arrows
     const renderCurrentItem = (aspectClass = "aspect-[16/10]") => {
       if (!currentItem) return null;
       
-      if (currentItem.type === 'image') {
-        return (
-          <motion.div 
-            key={currentMediaIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className={`${aspectClass} rounded-2xl overflow-hidden shadow-2xl border border-white/[0.06] cursor-pointer`}
-            onClick={() => {
-              if (currentItem.type === 'image') {
-                setLightboxIndex(currentMediaIndex);
-                setLightboxOpen(true);
-              }
-            }}
-          >
-            <img 
-              src={currentItem.url} 
-              alt={raffle.prize_name} 
-              className="w-full h-full object-cover"
-            />
-          </motion.div>
-        );
-      } else {
-        return (
-          <motion.div
-            key={`video-${currentMediaIndex}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <VideoSlide videoUrl={currentItem.url} className={`${aspectClass} !rounded-2xl`} />
-          </motion.div>
-        );
-      }
+      const showArrows = mediaItems.length > 1;
+      
+      return (
+        <div className="relative group">
+          {currentItem.type === 'image' ? (
+            <motion.div 
+              key={currentMediaIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className={`${aspectClass} rounded-2xl overflow-hidden shadow-2xl border border-white/[0.06] cursor-pointer`}
+              onClick={() => {
+                if (currentItem.type === 'image') {
+                  setLightboxIndex(currentMediaIndex);
+                  setLightboxOpen(true);
+                }
+              }}
+            >
+              <img 
+                src={currentItem.url} 
+                alt={raffle.prize_name} 
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`video-${currentMediaIndex}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <VideoSlide videoUrl={currentItem.url} className={`${aspectClass} !rounded-2xl`} />
+            </motion.div>
+          )}
+          
+          {/* Navigation arrows */}
+          {showArrows && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); goToPrev(); }}
+                disabled={!canGoPrev}
+                className={`absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 flex items-center justify-center transition-all ${
+                  canGoPrev 
+                    ? 'opacity-0 group-hover:opacity-100 hover:bg-black/80 hover:scale-110 cursor-pointer' 
+                    : 'opacity-0 cursor-not-allowed'
+                }`}
+                aria-label="Anterior"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); goToNext(); }}
+                disabled={!canGoNext}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 flex items-center justify-center transition-all ${
+                  canGoNext 
+                    ? 'opacity-0 group-hover:opacity-100 hover:bg-black/80 hover:scale-110 cursor-pointer' 
+                    : 'opacity-0 cursor-not-allowed'
+                }`}
+                aria-label="Siguiente"
+              >
+                <ChevronRight className="w-5 h-5 text-white" />
+              </button>
+            </>
+          )}
+        </div>
+      );
     };
 
     // Render thumbnails for all media items
