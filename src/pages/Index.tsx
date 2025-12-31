@@ -577,7 +577,7 @@ const Index = () => {
       </section>
 
       {/* Features Section - TIER S Premium Grid */}
-      <section id="features" className="py-28 lg:py-36 xl:py-44 relative scroll-mt-20 overflow-hidden">
+      <section id="features" className="py-32 lg:py-40 xl:py-48 relative scroll-mt-20 overflow-hidden">
         {/* Ultra-dark background */}
         <div className="absolute inset-0 bg-ultra-dark" />
         
@@ -596,7 +596,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-20 lg:mb-24"
+            className="text-center mb-20 lg:mb-28"
           >
             <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500/10 backdrop-blur-sm rounded-full text-amber-400 text-sm font-semibold mb-8 border border-amber-500/20">
               <Sparkles className="w-4 h-4" />
@@ -611,7 +611,7 @@ const Index = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -619,20 +619,21 @@ const Index = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="group relative bg-white/[0.03] backdrop-blur-sm rounded-2xl p-10 border border-white/[0.08] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 hover-glow"
+                className="group relative bg-white/[0.03] backdrop-blur-xl rounded-2xl p-10 lg:p-12 border border-white/[0.08] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 hover-glow"
               >
-                <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-xl`}>
-                  <feature.icon className="w-10 h-10 text-white" />
+                {/* TIER S: w-24 h-24 icon container */}
+                <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-10 group-hover:scale-110 transition-transform shadow-2xl`}>
+                  <feature.icon className="w-12 h-12 text-white" />
                 </div>
                 
-                <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">
+                <h3 className="text-2xl lg:text-3xl font-bold text-white mb-5 tracking-tight">
                   {feature.title}
                 </h3>
-                <p className="text-white/60 leading-relaxed text-lg">
+                <p className="text-white/60 leading-relaxed text-lg lg:text-xl">
                   {feature.description}
                 </p>
                 
-                <div className="mt-8 flex items-center text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-10 flex items-center text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-sm">Saber más</span>
                   <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
