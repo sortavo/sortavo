@@ -469,6 +469,12 @@ export default function PublicRaffle() {
               verified: org.verified,
               brand_color: org.brand_color,
               created_at: org.created_at,
+              emails: org.emails || [],
+              phones: org.phones || [],
+              whatsapp_numbers: org.whatsapp_numbers || [],
+              address: org.address,
+              years_experience: org.years_experience,
+              total_raffles_completed: org.total_raffles_completed,
             }}
             raffleTitle={raffle.title}
             brandColor={primaryColor}
