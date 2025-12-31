@@ -229,20 +229,26 @@ export default function Pricing() {
       {/* Social Proof */}
       <SocialProofSection />
 
-      {/* Feature Comparison Table - TIER S */}
-      <section className="py-28 lg:py-36 relative overflow-hidden">
+      {/* Feature Comparison Table - TIER S with increased spacing */}
+      <section className="py-32 lg:py-40 xl:py-48 relative overflow-hidden">
         {/* Contrasting background */}
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/40 via-emerald-900/20 to-teal-950/30" />
         
-        {/* Subtle orbs */}
-        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-teal-500/8 rounded-full blur-[80px]" />
+        {/* TIER S: 4 animated orbs with blur-120px */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/12 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-teal-500/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 right-0 w-[350px] h-[350px] bg-emerald-400/8 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 left-0 w-[300px] h-[300px] bg-teal-400/6 rounded-full blur-[100px]" />
         
         {/* Grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
         
-        {/* Top border glow */}
+        {/* Top and bottom border glow */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+        
+        {/* Noise texture */}
+        <div className="absolute inset-0 noise-texture" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
@@ -250,14 +256,14 @@ export default function Pricing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-16"
+            className="text-center mb-20 lg:mb-24"
           >
-            <h2 className="text-4xl lg:text-5xl xl:text-6xl font-black mb-6 tracking-[-0.03em]">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black mb-8 tracking-[-0.03em]">
               <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                 Comparación de Planes
               </span>
             </h2>
-            <p className="text-xl text-white/50 max-w-xl mx-auto">
+            <p className="text-xl lg:text-2xl text-white/50 max-w-xl mx-auto">
               Encuentra el plan que mejor se adapte a tus necesidades
             </p>
           </motion.div>
@@ -269,19 +275,19 @@ export default function Pricing() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="overflow-x-auto"
           >
-            <table className="w-full max-w-5xl mx-auto bg-gray-900/80 rounded-2xl shadow-xl border border-white/10 overflow-hidden">
+            <table className="w-full max-w-5xl mx-auto bg-white/[0.03] backdrop-blur-xl rounded-2xl shadow-2xl border border-white/[0.08] overflow-hidden">
               <thead>
                 <tr className="bg-gradient-to-r from-emerald-600/20 via-teal-500/20 to-emerald-600/20">
-                  <th className="py-5 px-6 text-left font-semibold text-gray-400">Característica</th>
-                  <th className="py-5 px-4 text-center font-semibold text-gray-200">Básico</th>
-                  <th className="py-5 px-4 text-center font-semibold text-emerald-400 bg-emerald-500/10 relative">
+                  <th className="py-6 px-6 text-left font-semibold text-gray-400">Característica</th>
+                  <th className="py-6 px-4 text-center font-semibold text-gray-200">Básico</th>
+                  <th className="py-6 px-4 text-center font-semibold text-emerald-400 bg-emerald-500/10 relative">
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <Badge className="bg-emerald-500 text-white text-xs">Popular</Badge>
                     </div>
                     Pro
                   </th>
-                  <th className="py-5 px-4 text-center font-semibold text-amber-400">Premium</th>
-                  <th className="py-5 px-4 text-center font-semibold text-purple-400">Enterprise</th>
+                  <th className="py-6 px-4 text-center font-semibold text-amber-400">Premium</th>
+                  <th className="py-6 px-4 text-center font-semibold text-purple-400">Enterprise</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
@@ -301,23 +307,23 @@ export default function Pricing() {
                   ['Soporte 24/7', false, false, false, true],
                 ].map(([feature, basic, pro, premium, enterprise], idx) => (
                   <tr key={idx} className={cn("hover:bg-white/5 transition-colors", idx === 0 && "bg-emerald-500/5")}>
-                    <td className={cn("py-4 px-6 text-gray-200 font-medium", idx === 0 && "text-emerald-400")}>{feature}</td>
-                    <td className="py-4 px-4 text-center">
+                    <td className={cn("py-5 px-6 text-gray-200 font-medium", idx === 0 && "text-emerald-400")}>{feature}</td>
+                    <td className="py-5 px-4 text-center">
                       {typeof basic === 'boolean' ? (
                         basic ? <Check className="h-5 w-5 mx-auto text-emerald-400" /> : <X className="h-5 w-5 mx-auto text-gray-600" />
                       ) : <span className={cn("text-gray-400", idx === 0 && "text-emerald-400 font-medium")}>{basic}</span>}
                     </td>
-                    <td className="py-4 px-4 text-center bg-emerald-500/5">
+                    <td className="py-5 px-4 text-center bg-emerald-500/5">
                       {typeof pro === 'boolean' ? (
                         pro ? <Check className="h-5 w-5 mx-auto text-emerald-400" /> : <X className="h-5 w-5 mx-auto text-gray-600" />
                       ) : <span className="text-gray-200">{pro}</span>}
                     </td>
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-5 px-4 text-center">
                       {typeof premium === 'boolean' ? (
                         premium ? <Check className="h-5 w-5 mx-auto text-amber-400" /> : <X className="h-5 w-5 mx-auto text-gray-600" />
                       ) : <span className="text-gray-200">{premium}</span>}
                     </td>
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-5 px-4 text-center">
                       {typeof enterprise === 'boolean' ? (
                         enterprise ? <Check className="h-5 w-5 mx-auto text-purple-400" /> : <X className="h-5 w-5 mx-auto text-gray-600" />
                       ) : <span className="text-gray-200">{enterprise}</span>}
@@ -330,11 +336,17 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* FAQ Section - TIER S */}
-      <section className="py-28 lg:py-36 bg-ultra-dark relative overflow-hidden">
-        {/* Background elements */}
-        <div className="absolute inset-0 bg-grid-premium" />
-        <div className="absolute top-1/4 -right-[10%] w-[400px] h-[400px] bg-violet-500/8 rounded-full blur-[100px]" />
+      {/* FAQ Section - TIER S: WHITE CONTRAST SECTION */}
+      <section className="py-32 lg:py-40 xl:py-48 relative overflow-hidden">
+        {/* Dramatic white/emerald gradient - CONTRAST with dark sections */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-emerald-50/50 to-white" />
+        
+        {/* Subtle emerald orbs for depth */}
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-emerald-400/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-teal-400/8 rounded-full blur-[100px]" />
+        
+        {/* Grid pattern - subtle on light bg */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
@@ -342,14 +354,14 @@ export default function Pricing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-16"
+            className="text-center mb-20 lg:mb-24"
           >
-            <h2 className="text-4xl lg:text-5xl xl:text-6xl font-black mb-6 tracking-[-0.03em]">
-              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black mb-8 tracking-[-0.03em]">
+              <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
                 Preguntas Frecuentes
               </span>
             </h2>
-            <p className="text-xl text-white/50 max-w-xl mx-auto">
+            <p className="text-xl lg:text-2xl text-gray-600 max-w-xl mx-auto">
               Todo lo que necesitas saber sobre nuestros planes y precios
             </p>
           </motion.div>
@@ -361,17 +373,17 @@ export default function Pricing() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="max-w-3xl mx-auto"
           >
-            <Accordion type="single" collapsible className="space-y-4">
+            <Accordion type="single" collapsible className="space-y-5">
               {faqs.map((faq, idx) => (
                 <AccordionItem 
                   key={idx} 
                   value={`item-${idx}`}
-                  className="bg-gray-900/80 border border-white/10 rounded-xl px-6 overflow-hidden"
+                  className="bg-white border border-gray-200/80 rounded-xl px-8 overflow-hidden shadow-lg shadow-emerald-500/5 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300"
                 >
-                  <AccordionTrigger className="text-left text-gray-200 hover:text-emerald-400 hover:no-underline py-5">
+                  <AccordionTrigger className="text-left text-gray-800 hover:text-emerald-600 hover:no-underline py-6 text-lg font-medium">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-400 pb-5">
+                  <AccordionContent className="text-gray-600 pb-6 text-base leading-relaxed">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -381,10 +393,12 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 via-teal-500/20 to-emerald-600/20" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+      {/* CTA Section - TIER S Premium */}
+      <section className="py-28 lg:py-36 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_100%_at_50%_0%,rgba(255,255,255,0.1),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(212,160,22,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
         
         <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div
@@ -393,28 +407,27 @@ export default function Pricing() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl lg:text-5xl font-bold mb-6 text-white">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black mb-8 text-white tracking-[-0.03em]">
               ¿Listo para empezar?
             </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl lg:text-2xl text-white/80 mb-12 max-w-2xl mx-auto">
               Únete a más de 500 organizadores que ya confían en Sortavo para sus sorteos profesionales.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-5 justify-center">
               <Button 
                 size="lg" 
-                variant="gradient"
-                className="text-lg px-8 py-6 shadow-xl shadow-emerald-600/25"
+                className="text-lg px-10 py-7 bg-white text-emerald-700 hover:bg-white/90 shadow-xl shadow-black/20 group font-bold"
                 asChild
               >
                 <Link to="/auth?tab=signup">
                   Comenzar Gratis
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
-                className="text-lg px-8 py-6 border-2 border-white/20 hover:border-emerald-500/50 hover:bg-emerald-500/10 bg-white/5 text-white"
+                className="text-lg px-10 py-7 border-2 border-white/30 hover:border-white/50 hover:bg-white/10 bg-transparent text-white font-medium"
                 asChild
               >
                 <Link to="/contact">
@@ -424,9 +437,9 @@ export default function Pricing() {
               </Button>
             </div>
             
-            <p className="mt-8 text-gray-400">
+            <p className="mt-10 text-white/70 text-lg">
               ¿Tienes preguntas? Escríbenos a{' '}
-              <a href="mailto:ventas@sortavo.com" className="text-emerald-400 hover:text-emerald-300 underline">
+              <a href="mailto:ventas@sortavo.com" className="text-white hover:text-white/80 underline font-medium">
                 ventas@sortavo.com
               </a>
             </p>
