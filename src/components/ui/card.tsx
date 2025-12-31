@@ -4,14 +4,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "rounded-lg text-card-foreground transition-all duration-300",
+  "rounded-xl text-card-foreground transition-shadow duration-200",
   {
     variants: {
       variant: {
-        // Standard card for dashboard (light mode)
-        default: "border bg-card shadow-sm",
+        // Standard card for dashboard - TIER S: shadow-sm base, subtle hover
+        default: "border border-border bg-card shadow-sm hover:shadow-md",
         // Elevated card with larger shadow
-        elevated: "border bg-card rounded-xl shadow-lg hover:shadow-xl",
+        elevated: "border border-border bg-card shadow-md hover:shadow-lg",
         // Glassmorphism for ultra-dark theme (public pages)
         glass: "rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm",
         // Premium glassmorphism with stronger blur and glow

@@ -72,7 +72,7 @@ export default function Analytics() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Analíticas</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Analíticas</h1>
             <p className="text-muted-foreground">
               Visualiza el rendimiento de tus sorteos
             </p>

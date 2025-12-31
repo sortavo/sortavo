@@ -95,7 +95,7 @@ export default function Buyers() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Compradores</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Compradores</h1>
           <p className="text-muted-foreground">
             Gestiona y visualiza todos los compradores de tus sorteos
           </p>
