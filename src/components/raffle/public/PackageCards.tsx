@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency-utils";
 import { Check, Sparkles } from "lucide-react";
 
-
 interface Package {
   id: string;
   quantity: number;
@@ -45,7 +44,7 @@ export function PackageCards({
   return (
     <div className="w-full">
       <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="w-4 h-4" style={{ color: PREMIUM_COLORS.accent.emerald }} />
+        <Sparkles className="w-4 h-4 text-emerald-400" />
         <h3 className="font-semibold text-white text-sm tracking-tight">Paquetes con Descuento</h3>
       </div>
       
@@ -72,25 +71,12 @@ export function PackageCards({
                 "rounded-xl p-4 text-left transition-all duration-200",
                 "border backdrop-blur-sm",
                 // Default state - dark glassmorphism
-                !isSelected && !isBest && [
-                  "border-white/[0.06]",
-                ],
+                !isSelected && !isBest && "border-ultra-dark-subtle bg-ultra-dark-card",
                 // Best value (not selected) - subtle emerald
-                !isSelected && isBest && [
-                  "border-emerald-500/30",
-                ],
+                !isSelected && isBest && "border-emerald-500/30 bg-emerald-500/5",
                 // Selected state - emerald solid
-                isSelected && [
-                  "bg-emerald-500/10 border-emerald-500",
-                ]
+                isSelected && "bg-emerald-500/10 border-emerald-500"
               )}
-              style={{
-                backgroundColor: isSelected 
-                  ? 'rgba(16, 185, 129, 0.1)' 
-                  : isBest 
-                    ? 'rgba(16, 185, 129, 0.05)' 
-                    : PREMIUM_COLORS.bg.card
-              }}
             >
               {/* Best value badge */}
               {isBest && (
@@ -99,13 +85,7 @@ export function PackageCards({
                   animate={{ scale: 1 }}
                   className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10"
                 >
-                  <span 
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
-                    style={{ 
-                      backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                      color: PREMIUM_COLORS.accent.emerald
-                    }}
-                  >
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/15 text-emerald-400">
                     Mejor Valor
                   </span>
                 </motion.div>
@@ -135,10 +115,7 @@ export function PackageCards({
                   >
                     {pkg.quantity}
                   </motion.span>
-                  <p 
-                    className="text-xs"
-                    style={{ color: PREMIUM_COLORS.text.muted }}
-                  >
+                  <p className="text-xs text-ultra-dark-muted">
                     boletos
                   </p>
                 </div>
@@ -153,10 +130,7 @@ export function PackageCards({
                   </p>
                   
                   {hasDiscount && (
-                    <p 
-                      className="text-xs line-through"
-                      style={{ color: PREMIUM_COLORS.text.dimmed }}
-                    >
+                    <p className="text-xs line-through text-ultra-dark-dimmed">
                       {formatCurrency(originalPrice, currency)}
                     </p>
                   )}
@@ -166,13 +140,10 @@ export function PackageCards({
                 {hasDiscount && (
                   <div className="flex justify-center">
                     <span 
-                      className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold"
-                      style={{
-                        backgroundColor: isSelected 
-                          ? 'rgba(16, 185, 129, 0.2)' 
-                          : 'rgba(16, 185, 129, 0.1)',
-                        color: PREMIUM_COLORS.accent.emerald
-                      }}
+                      className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold text-emerald-400",
+                        isSelected ? "bg-emerald-500/20" : "bg-emerald-500/10"
+                      )}
                     >
                       -{pkg.discount_percent}%
                     </span>
@@ -185,8 +156,7 @@ export function PackageCards({
                     key={savings}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-center text-[11px] font-medium"
-                    style={{ color: PREMIUM_COLORS.accent.emerald }}
+                    className="text-center text-[11px] font-medium text-emerald-400"
                   >
                     Ahorras {formatCurrency(savings, currency)}
                   </motion.p>
@@ -194,10 +164,7 @@ export function PackageCards({
                 
                 {/* Label */}
                 {pkg.label && (
-                  <p 
-                    className="text-center text-[10px] truncate"
-                    style={{ color: PREMIUM_COLORS.text.muted }}
-                  >
+                  <p className="text-center text-[10px] truncate text-ultra-dark-muted">
                     {pkg.label}
                   </p>
                 )}

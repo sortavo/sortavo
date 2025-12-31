@@ -42,19 +42,13 @@ export function FloatingCartButton({
             "relative overflow-hidden",
             "backdrop-blur-2xl",
             "rounded-2xl md:rounded-2xl",
-            "border",
-            "shadow-2xl shadow-black/60"
+            "border border-ultra-dark",
+            "shadow-2xl shadow-black/60",
+            "bg-ultra-dark/95"
           )}
-          style={{
-            backgroundColor: 'rgba(3, 7, 18, 0.95)',
-            borderColor: PREMIUM_COLORS.border.subtle
-          }}
         >
           {/* Subtle top accent line */}
-          <div 
-            className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: `linear-gradient(90deg, transparent, ${PREMIUM_COLORS.accent.emerald}40, transparent)` }}
-          />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
           
           <div className="relative p-4 md:p-5">
             {/* Header with ticket count and clear */}
@@ -62,11 +56,8 @@ export function FloatingCartButton({
               <div className="flex items-center gap-3">
                 {/* Ticket icon with count badge */}
                 <div className="relative">
-                  <div 
-                    className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)' }}
-                  >
-                    <Ticket className="w-5 h-5 md:w-6 md:h-6" style={{ color: PREMIUM_COLORS.accent.emerald }} />
+                  <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center bg-emerald-500/15">
+                    <Ticket className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
                   </div>
                   
                   {/* Count badge */}
@@ -84,10 +75,7 @@ export function FloatingCartButton({
                   <p className="font-medium text-white text-sm">
                     {selectedCount} boleto{selectedCount !== 1 && 's'}
                   </p>
-                  <p 
-                    className="text-xs truncate max-w-[100px] md:max-w-[160px]"
-                    style={{ color: PREMIUM_COLORS.text.muted }}
-                  >
+                  <p className="text-xs truncate max-w-[100px] md:max-w-[160px] text-ultra-dark-muted">
                     {selectedTickets.slice(0, 3).join(', ')}
                     {selectedCount > 3 && ` +${selectedCount - 3}`}
                   </p>
@@ -96,8 +84,7 @@ export function FloatingCartButton({
               
               <button
                 onClick={onClear}
-                className="p-2 rounded-lg transition-colors"
-                style={{ color: PREMIUM_COLORS.text.muted }}
+                className="p-2 rounded-lg transition-colors text-ultra-dark-muted hover:text-white"
                 aria-label="Limpiar selección"
               >
                 <X className="w-5 h-5" />
@@ -107,10 +94,7 @@ export function FloatingCartButton({
             {/* Price and CTA */}
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
-                <p 
-                  className="text-[10px] uppercase tracking-widest mb-0.5"
-                  style={{ color: PREMIUM_COLORS.text.dimmed }}
-                >
+                <p className="text-[10px] uppercase tracking-widest mb-0.5 text-ultra-dark-dimmed">
                   Total
                 </p>
                 <motion.p
@@ -129,11 +113,8 @@ export function FloatingCartButton({
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-center gap-1 mt-1"
                   >
-                    <Sparkles className="w-3 h-3" style={{ color: PREMIUM_COLORS.accent.amber }} />
-                    <span 
-                      className="text-xs font-medium"
-                      style={{ color: PREMIUM_COLORS.accent.amber }}
-                    >
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <span className="text-xs font-medium text-amber-400">
                       {winProbability.toFixed(2)}% de ganar
                     </span>
                   </motion.div>
@@ -143,11 +124,10 @@ export function FloatingCartButton({
               {/* White CTA button - inverted for impact */}
               <Button
                 onClick={onContinue}
+                variant="inverted"
                 size="lg"
                 className={cn(
                   "h-12 md:h-14 px-5 md:px-8",
-                  "bg-white text-[#030712]",
-                  "hover:bg-white/90",
                   "shadow-lg",
                   "text-sm font-semibold",
                   "rounded-xl",

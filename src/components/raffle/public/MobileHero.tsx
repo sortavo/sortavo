@@ -91,15 +91,9 @@ export function MobileHero({
     : null;
 
   return (
-    <div className="relative" style={{ backgroundColor: PREMIUM_COLORS.bg.primary }}>
+    <div className="relative bg-ultra-dark">
       {/* Premium Header - Glassmorphism */}
-      <div 
-        className="backdrop-blur-2xl border-b"
-        style={{ 
-          backgroundColor: 'rgba(3, 7, 18, 0.95)',
-          borderColor: PREMIUM_COLORS.border.subtle 
-        }}
-      >
+      <div className="backdrop-blur-2xl border-b bg-ultra-dark/95 border-ultra-dark-subtle">
         {/* Top row: Avatar, Name, Share */}
         <div className="flex items-center justify-between px-4 py-3">
           <Link 
@@ -108,19 +102,10 @@ export function MobileHero({
           >
             <div className="relative">
               {/* Subtle glow behind avatar */}
-              <div 
-                className="absolute inset-0 blur-xl opacity-30"
-                style={{ backgroundColor: PREMIUM_COLORS.accent.emerald }}
-              />
-              <Avatar 
-                className="h-11 w-11 relative border-2 flex-shrink-0"
-                style={{ borderColor: 'rgba(52, 211, 153, 0.3)' }}
-              >
+              <div className="absolute inset-0 blur-xl opacity-30 bg-emerald-500" />
+              <Avatar className="h-11 w-11 relative border-2 flex-shrink-0 border-emerald-500/30">
                 <AvatarImage src={organization.logo_url || undefined} alt={organization.name} />
-                <AvatarFallback 
-                  className="font-bold text-white"
-                  style={{ backgroundColor: PREMIUM_COLORS.accent.emeraldDark }}
-                >
+                <AvatarFallback className="font-bold text-white bg-emerald-700">
                   {organization.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -131,14 +116,11 @@ export function MobileHero({
                   {organization.name}
                 </h2>
                 {organization.verified && (
-                  <Check 
-                    className="w-4 h-4 flex-shrink-0"
-                    style={{ color: PREMIUM_COLORS.accent.emerald }}
-                  />
+                  <Check className="w-4 h-4 flex-shrink-0 text-emerald-400" />
                 )}
               </div>
               {organization.city && (
-                <p className="text-xs" style={{ color: PREMIUM_COLORS.text.muted }}>
+                <p className="text-xs text-ultra-dark-muted">
                   {organization.city}
                 </p>
               )}
@@ -146,11 +128,7 @@ export function MobileHero({
           </Link>
           <button
             onClick={onShare}
-            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl transition-colors"
-            style={{ 
-              backgroundColor: PREMIUM_COLORS.bg.card,
-              color: PREMIUM_COLORS.text.muted 
-            }}
+            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl transition-colors bg-ultra-dark-card text-ultra-dark-muted"
           >
             <Share2 className="w-4 h-4" />
           </button>
@@ -160,13 +138,7 @@ export function MobileHero({
         <div className="flex items-center gap-2 px-4 pb-3">
           {organization.slug && (
             <Link to={`/${organization.slug}`}>
-              <button 
-                className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors"
-                style={{ 
-                  backgroundColor: PREMIUM_COLORS.bg.card,
-                  color: PREMIUM_COLORS.text.secondary 
-                }}
-              >
+              <button className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors bg-ultra-dark-card text-white/70">
                 <Home className="w-3.5 h-3.5" />
                 Ver sorteos
               </button>
@@ -174,13 +146,7 @@ export function MobileHero({
           )}
           {whatsappLink && (
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-              <button 
-                className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors"
-                style={{ 
-                  backgroundColor: PREMIUM_COLORS.bg.card,
-                  color: PREMIUM_COLORS.text.secondary 
-                }}
-              >
+              <button className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors bg-ultra-dark-card text-white/70">
                 <MessageCircle className="w-3.5 h-3.5" />
                 Contactar
               </button>
@@ -252,13 +218,7 @@ export function MobileHero({
               {raffle.prize_name}
             </span>
             {raffle.prize_value && (
-              <span 
-                className="px-2.5 py-1 rounded-lg text-xs font-semibold"
-                style={{ 
-                  backgroundColor: 'rgba(52, 211, 153, 0.15)',
-                  color: PREMIUM_COLORS.accent.emerald
-                }}
-              >
+              <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400">
                 {formatCurrency(raffle.prize_value, currency)}
               </span>
             )}
@@ -267,23 +227,14 @@ export function MobileHero({
       </div>
 
       {/* Ticket Price Section - Dark premium */}
-      <div 
-        className="py-5 px-5"
-        style={{ backgroundColor: PREMIUM_COLORS.bg.primary }}
-      >
+      <div className="py-5 px-5 bg-ultra-dark">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(52, 211, 153, 0.1)' }}
-            >
-              <Ticket className="w-6 h-6" style={{ color: PREMIUM_COLORS.accent.emerald }} />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-500/10">
+              <Ticket className="w-6 h-6 text-emerald-400" />
             </div>
             <div>
-              <p 
-                className="text-[10px] font-medium uppercase tracking-[0.15em]"
-                style={{ color: PREMIUM_COLORS.text.dimmed }}
-              >
+              <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-ultra-dark-dimmed">
                 Precio por boleto
               </p>
               <p className="text-3xl font-black text-white tracking-tight">
@@ -296,14 +247,8 @@ export function MobileHero({
 
       {/* Countdown Timer - Enterprise lottery style */}
       {raffle.draw_date && (
-        <div 
-          className="py-6 px-4"
-          style={{ backgroundColor: PREMIUM_COLORS.bg.primary }}
-        >
-          <p 
-            className="text-[10px] font-medium uppercase tracking-[0.2em] text-center mb-4"
-            style={{ color: PREMIUM_COLORS.text.dimmed }}
-          >
+        <div className="py-6 px-4 bg-ultra-dark">
+          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-center mb-4 text-ultra-dark-dimmed">
             El sorteo se realizará en
           </p>
           <CountdownTimer 
@@ -314,37 +259,27 @@ export function MobileHero({
       )}
 
       {/* Progress bar - Minimal emerald */}
-      <div 
-        className="px-5 py-5 space-y-3"
-        style={{ backgroundColor: PREMIUM_COLORS.bg.primary }}
-      >
+      <div className="px-5 py-5 space-y-3 bg-ultra-dark">
         <div className="flex items-center justify-between text-sm">
-          <span style={{ color: PREMIUM_COLORS.text.secondary }}>
+          <span className="text-white/70">
             {raffle.ticketsSold.toLocaleString()} de {raffle.total_tickets.toLocaleString()} vendidos
           </span>
-          <span 
-            className="font-semibold"
-            style={{ color: PREMIUM_COLORS.accent.emerald }}
-          >
+          <span className="font-semibold text-emerald-400">
             {Math.round(progress)}%
           </span>
         </div>
         
-        <div 
-          className="relative h-1.5 rounded-full overflow-hidden"
-          style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-        >
+        <div className="relative h-1.5 rounded-full overflow-hidden bg-white/5">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="absolute inset-y-0 left-0 rounded-full"
-            style={{ background: `linear-gradient(90deg, ${PREMIUM_COLORS.accent.emeraldDark}, ${PREMIUM_COLORS.accent.emerald})` }}
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-700 to-emerald-400"
           />
         </div>
         
-        <p className="text-sm text-center" style={{ color: PREMIUM_COLORS.text.muted }}>
-          <span className="font-medium" style={{ color: PREMIUM_COLORS.accent.emerald }}>
+        <p className="text-sm text-center text-ultra-dark-muted">
+          <span className="font-medium text-emerald-400">
             {raffle.ticketsAvailable.toLocaleString()}
           </span>
           {' '}boletos disponibles
@@ -352,14 +287,12 @@ export function MobileHero({
       </div>
 
       {/* Primary CTA - White button (inverted) */}
-      <div 
-        className="px-5 py-5"
-        style={{ backgroundColor: PREMIUM_COLORS.bg.primary }}
-      >
+      <div className="px-5 py-5 bg-ultra-dark">
         <motion.div whileTap={{ scale: 0.98 }}>
           <Button
+            variant="inverted"
             size="lg"
-            className="w-full h-14 text-base font-semibold bg-white text-[#030712] hover:bg-white/90 rounded-xl shadow-lg"
+            className="w-full h-14 text-base font-semibold rounded-xl shadow-lg"
             onClick={onScrollToTickets}
           >
             Comprar Boletos
@@ -373,13 +306,10 @@ export function MobileHero({
           animate={{ y: [0, 4, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         >
-          <span 
-            className="text-[10px] uppercase tracking-widest"
-            style={{ color: PREMIUM_COLORS.text.dimmed }}
-          >
+          <span className="text-[10px] uppercase tracking-widest text-ultra-dark-dimmed">
             Desliza para ver boletos
           </span>
-          <ChevronDown className="w-4 h-4 mt-1" style={{ color: PREMIUM_COLORS.text.dimmed }} />
+          <ChevronDown className="w-4 h-4 mt-1 text-ultra-dark-dimmed" />
         </motion.div>
       </div>
     </div>
@@ -393,11 +323,8 @@ function VideoSlide({ videoUrl, title }: { videoUrl: string; title: string }) {
 
   if (!embedUrl) {
     return (
-      <div 
-        className="w-full h-full flex items-center justify-center"
-        style={{ backgroundColor: PREMIUM_COLORS.bg.primary }}
-      >
-        <p style={{ color: PREMIUM_COLORS.text.muted }}>Video no disponible</p>
+      <div className="w-full h-full flex items-center justify-center bg-ultra-dark">
+        <p className="text-ultra-dark-muted">Video no disponible</p>
       </div>
     );
   }
@@ -406,8 +333,7 @@ function VideoSlide({ videoUrl, title }: { videoUrl: string; title: string }) {
   if (!showVideo) {
     return (
       <div 
-        className="w-full h-full relative cursor-pointer"
-        style={{ backgroundColor: '#000' }}
+        className="w-full h-full relative cursor-pointer bg-black"
         onClick={() => setShowVideo(true)}
       >
         {/* Video thumbnail */}
@@ -424,19 +350,13 @@ function VideoSlide({ videoUrl, title }: { videoUrl: string; title: string }) {
         />
         {/* Play button overlay - minimal */}
         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-          <div 
-            className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-            style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(8px)' }}
-          >
+          <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl bg-white/15 backdrop-blur-lg">
             <Play className="w-7 h-7 text-white fill-white ml-1" />
           </div>
         </div>
         {/* Hint text */}
         <div className="absolute bottom-8 left-0 right-0 text-center">
-          <span 
-            className="text-white text-xs px-4 py-2 rounded-full"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
-          >
+          <span className="text-white text-xs px-4 py-2 rounded-full bg-black/60">
             Toca para ver el video
           </span>
         </div>
