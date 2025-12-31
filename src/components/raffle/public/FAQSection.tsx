@@ -255,49 +255,51 @@ export function FAQSection({ raffle, organization, customization, className }: F
   const categoriesWithFaqs = FAQ_CATEGORIES.filter(cat => groupedFaqs[cat.id]?.length > 0);
 
   return (
-    <div className={cn("max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16", className)}>
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] text-white/60 text-sm font-medium mb-4 border border-white/[0.06]">
+    <div className={cn("max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20", className)}>
+      <div className="text-center mb-14">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-semibold mb-5 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
           <HelpCircle className="w-4 h-4" />
           Resolvemos tus dudas
         </div>
-        <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight mb-3">
+        <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tight mb-4">
           Preguntas Frecuentes
         </h2>
-        <p className="text-white/50">
+        <p className="text-white/50 text-lg">
           Todo lo que necesitas saber sobre este sorteo
         </p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {categoriesWithFaqs.map((cat) => {
           const Icon = cat.icon;
           const faqs = groupedFaqs[cat.id] || [];
           
           return (
-            <div key={cat.id} className="space-y-3">
-              <div className="flex items-center gap-2 px-1">
-                <Icon className="w-5 h-5 text-emerald-400" />
-                <h3 className="font-semibold text-white">{cat.label}</h3>
+            <div key={cat.id} className="space-y-4">
+              <div className="flex items-center gap-3 px-1">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="font-semibold text-white text-lg">{cat.label}</h3>
                 <span className="text-sm text-white/40">({faqs.length})</span>
               </div>
               
-              <Accordion type="single" collapsible className="w-full space-y-2">
+              <Accordion type="single" collapsible className="w-full space-y-3">
                 {faqs.map((faq) => (
                   <AccordionItem 
                     key={faq.id} 
                     value={faq.id} 
-                    className="bg-white/[0.03] rounded-xl border border-white/[0.06] px-4 sm:px-5 overflow-hidden backdrop-blur-sm"
+                    className="bg-white/[0.03] rounded-xl border border-white/[0.08] px-5 sm:px-6 overflow-hidden backdrop-blur-sm hover:border-emerald-500/20 transition-colors"
                   >
-                    <AccordionTrigger className="text-left font-medium hover:no-underline text-sm sm:text-base py-4 text-white">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/[0.05] text-white/60 flex items-center justify-center">
+                    <AccordionTrigger className="text-left font-medium hover:no-underline text-sm sm:text-base py-5 text-white">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/[0.05] text-white/60 flex items-center justify-center">
                           {faq.icon}
                         </div>
                         <span>{faq.question}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-white/60 text-sm pb-4 pl-11">
+                    <AccordionContent className="text-white/60 text-sm pb-5 pl-14">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
