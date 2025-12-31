@@ -189,7 +189,10 @@ export default function PublicRaffle() {
   const showTicketGrid = sections.ticket_grid !== false;
   const showPackages = sections.packages !== false;
   const showGallery = sections.gallery !== false;
-  const showVideo = sections.video !== false;
+  // Video is now ALWAYS part of the gallery - if gallery is visible and video URL exists, show it
+  // This removes the dependency on sections.video toggle
+  const hasVideoUrl = !!raffle.prize_video_url;
+  const showVideoInGallery = showGallery && hasVideoUrl;
   const showHowItWorks = sections.how_it_works !== false;
   const showFAQ = sections.faq !== false;
   const showStats = sections.stats !== false;
@@ -267,7 +270,7 @@ export default function PublicRaffle() {
                 title: raffle.title,
                 prize_name: raffle.prize_name,
                 prize_images: showGallery ? raffle.prize_images : [],
-                prize_video_url: showVideo ? raffle.prize_video_url : null,
+                prize_video_url: showVideoInGallery ? raffle.prize_video_url : null,
                 prize_value: raffle.prize_value ? Number(raffle.prize_value) : null,
                 ticket_price: Number(raffle.ticket_price),
                 draw_date: showCountdown ? raffle.draw_date : null,
@@ -318,7 +321,7 @@ export default function PublicRaffle() {
                 description: raffle.description,
                 prize_name: raffle.prize_name,
                 prize_images: showGallery ? raffle.prize_images : [],
-                prize_video_url: showVideo ? raffle.prize_video_url : null,
+                prize_video_url: showVideoInGallery ? raffle.prize_video_url : null,
                 prize_value: raffle.prize_value ? Number(raffle.prize_value) : null,
                 ticket_price: Number(raffle.ticket_price),
                 draw_date: raffle.draw_date,
@@ -341,7 +344,7 @@ export default function PublicRaffle() {
               showViewersCount={showViewersCount}
               showUrgencyBadge={showUrgencyBadge}
               showGallery={showGallery}
-              showVideo={showVideo}
+              showVideo={showVideoInGallery}
               showStats={showStats}
               onScrollToTickets={scrollToTickets}
               onShare={shareRaffle}
