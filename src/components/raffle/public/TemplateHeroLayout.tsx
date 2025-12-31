@@ -805,13 +805,7 @@ export function TemplateHeroLayout({
                     </motion.div>
                   )}
                   
-                  {showVideo && raffle.prize_video_url && (
-                    <PrizeVideoPlayer 
-                      videoUrl={raffle.prize_video_url} 
-                      title={raffle.prize_name}
-                      className="mt-6"
-                    />
-                  )}
+                  {/* Video is now integrated in GalleryComponent */}
                 </div>
               </div>
             </div>
@@ -842,7 +836,7 @@ export function TemplateHeroLayout({
                   <TitleSection />
                 </div>
                 
-                {/* 2. PROMINENT GALLERY - Visual Hook */}
+                {/* 2. PROMINENT GALLERY - Visual Hook - Uses GalleryComponent for consistency */}
                 <div className="w-full max-w-4xl mx-auto">
                   <motion.div 
                     className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-gray-900/50"
@@ -850,46 +844,8 @@ export function TemplateHeroLayout({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
                   >
-                    {/* Main image - prominent 16:9 aspect ratio */}
-                    <div className="aspect-[16/9] relative overflow-hidden cursor-pointer group" onClick={() => setLightboxOpen(true)}>
-                      <img 
-                        src={mainImage} 
-                        alt={raffle.prize_name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <PriceDisplay />
-                      
-                      {/* Zoom hint */}
-                      <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white/80 text-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                        <Eye className="w-4 h-4" />
-                        Ver galería
-                      </div>
-                    </div>
-                    
-                    {/* Thumbnails below image */}
-                    {raffle.prize_images && raffle.prize_images.length > 1 && (
-                      <div className="p-4 bg-gray-900/80 border-t border-white/10">
-                        <div className="flex gap-3 justify-center">
-                          {raffle.prize_images.slice(0, 6).map((img, idx) => (
-                            <motion.div 
-                              key={idx}
-                              className={`w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden shadow-md cursor-pointer border-2 transition-all ${
-                                idx === 0 ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-white/10 hover:border-emerald-500/50'
-                              }`}
-                              whileHover={{ scale: 1.1 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setLightboxIndex(idx);
-                                setLightboxOpen(true);
-                              }}
-                            >
-                              <img src={img} alt="" className="w-full h-full object-cover" />
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <GalleryComponent />
+                    <PriceDisplay />
                   </motion.div>
                 </div>
                 
