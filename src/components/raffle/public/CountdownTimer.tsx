@@ -158,11 +158,11 @@ function TimeUnit({
 }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="text-2xl md:text-4xl font-bold rounded-lg px-3 py-2 md:px-4 md:py-3 min-w-[60px] md:min-w-[80px] text-center text-white bg-gradient-to-r from-emerald-600 to-teal-500">
+      <div className="relative text-3xl md:text-5xl font-black rounded-xl px-4 py-3 md:px-5 md:py-4 min-w-[70px] md:min-w-[100px] text-center text-white bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
         {value.toString().padStart(2, '0')}
       </div>
       {showLabel && (
-        <span className="text-xs md:text-sm mt-1 text-ultra-dark-muted">
+        <span className="text-xs md:text-sm mt-2 text-white/50 uppercase tracking-wider font-medium">
           {label}
         </span>
       )}
