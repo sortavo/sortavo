@@ -313,6 +313,56 @@ export type Database = {
           },
         ]
       }
+      custom_domains: {
+        Row: {
+          created_at: string | null
+          domain: string
+          id: string
+          is_primary: boolean | null
+          organization_id: string
+          ssl_status: string | null
+          updated_at: string | null
+          verification_method: string | null
+          verification_token: string | null
+          verified: boolean | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          domain: string
+          id?: string
+          is_primary?: boolean | null
+          organization_id: string
+          ssl_status?: string | null
+          updated_at?: string | null
+          verification_method?: string | null
+          verification_token?: string | null
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          domain?: string
+          id?: string
+          is_primary?: boolean | null
+          organization_id?: string
+          ssl_status?: string | null
+          updated_at?: string | null
+          verification_method?: string | null
+          verification_token?: string | null
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_domains_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           created_at: string | null
@@ -420,19 +470,24 @@ export type Database = {
           created_at: string | null
           currency_code: string | null
           current_period_end: string | null
+          custom_css: string | null
           description: string | null
           email: string
           emails: string[] | null
           facebook_url: string | null
+          favicon_url: string | null
           id: string
           instagram_url: string | null
           logo_url: string | null
           max_active_raffles: number | null
           max_tickets_per_raffle: number | null
+          meta_description: string | null
+          meta_title: string | null
           name: string
           onboarding_completed: boolean | null
           phone: string | null
           phones: string[] | null
+          powered_by_visible: boolean | null
           slug: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -456,6 +511,7 @@ export type Database = {
           website_url: string | null
           whatsapp_number: string | null
           whatsapp_numbers: string[] | null
+          white_label_enabled: boolean | null
           years_experience: number | null
         }
         Insert: {
@@ -469,19 +525,24 @@ export type Database = {
           created_at?: string | null
           currency_code?: string | null
           current_period_end?: string | null
+          custom_css?: string | null
           description?: string | null
           email: string
           emails?: string[] | null
           facebook_url?: string | null
+          favicon_url?: string | null
           id?: string
           instagram_url?: string | null
           logo_url?: string | null
           max_active_raffles?: number | null
           max_tickets_per_raffle?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
           name: string
           onboarding_completed?: boolean | null
           phone?: string | null
           phones?: string[] | null
+          powered_by_visible?: boolean | null
           slug?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -505,6 +566,7 @@ export type Database = {
           website_url?: string | null
           whatsapp_number?: string | null
           whatsapp_numbers?: string[] | null
+          white_label_enabled?: boolean | null
           years_experience?: number | null
         }
         Update: {
@@ -518,19 +580,24 @@ export type Database = {
           created_at?: string | null
           currency_code?: string | null
           current_period_end?: string | null
+          custom_css?: string | null
           description?: string | null
           email?: string
           emails?: string[] | null
           facebook_url?: string | null
+          favicon_url?: string | null
           id?: string
           instagram_url?: string | null
           logo_url?: string | null
           max_active_raffles?: number | null
           max_tickets_per_raffle?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
           name?: string
           onboarding_completed?: boolean | null
           phone?: string | null
           phones?: string[] | null
+          powered_by_visible?: boolean | null
           slug?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -554,6 +621,7 @@ export type Database = {
           website_url?: string | null
           whatsapp_number?: string | null
           whatsapp_numbers?: string[] | null
+          white_label_enabled?: boolean | null
           years_experience?: number | null
         }
         Relationships: []
@@ -1370,6 +1438,22 @@ export type Database = {
       get_order_by_reference: {
         Args: { p_reference_code: string }
         Returns: Json
+      }
+      get_organization_by_domain: {
+        Args: { p_domain: string }
+        Returns: {
+          brand_color: string
+          custom_css: string
+          favicon_url: string
+          id: string
+          logo_url: string
+          meta_description: string
+          meta_title: string
+          name: string
+          powered_by_visible: boolean
+          slug: string
+          white_label_enabled: boolean
+        }[]
       }
       get_public_ticket_counts: {
         Args: { p_raffle_id: string }

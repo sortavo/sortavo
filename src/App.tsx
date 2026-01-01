@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SimulationProvider } from "@/contexts/SimulationContext";
+import { TenantProvider } from "@/contexts/TenantContext";
 import { SimulationBanner } from "@/components/admin/SimulationBanner";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { SentryErrorBoundary } from "@/components/errors/SentryErrorBoundary";
@@ -106,11 +107,12 @@ const App = () => (
           <Toaster />
           <BrowserRouter>
             <AuthProvider>
-              <SimulationProvider>
-                <AdaptiveToaster />
-                <ScrollToTop />
-                <SimulationBanner />
-                <Routes>
+              <TenantProvider>
+                <SimulationProvider>
+                  <AdaptiveToaster />
+                  <ScrollToTop />
+                  <SimulationBanner />
+                  <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/dashboard" element={<Dashboard />} />
@@ -173,7 +175,8 @@ const App = () => (
                   <Route path="/:orgSlug/:slug/payment" element={<PaymentInstructions />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </SimulationProvider>
+                </SimulationProvider>
+              </TenantProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
