@@ -29,8 +29,19 @@ interface TenantProviderProps {
   children: ReactNode;
 }
 
-// Reserved subdomains that are NOT tenants
-const RESERVED_SUBDOMAINS = ['www', 'app', 'api', 'admin', 'staging', 'dev'];
+// Reserved subdomains that are NOT tenants - lista completa sincronizada
+const RESERVED_SUBDOMAINS = [
+  // Infraestructura
+  'www', 'app', 'api', 'admin', 'staging', 'dev', 'test',
+  // Autenticación
+  'login', 'register', 'auth', 'signin', 'signup',
+  // Rutas de app
+  'settings', 'account', 'billing', 'dashboard', 'pricing',
+  // Soporte
+  'help', 'support', 'status', 'docs', 'blog',
+  // Técnico
+  'mail', 'email', 'cdn', 'assets', 'static', 'media'
+];
 const ROOT_DOMAIN = 'sortavo.com';
 
 export function TenantProvider({ children }: TenantProviderProps) {
