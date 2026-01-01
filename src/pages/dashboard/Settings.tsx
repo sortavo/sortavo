@@ -3,13 +3,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, CreditCard, Users, Receipt, Loader2, Bell, ShieldAlert, Send } from "lucide-react";
+import { Building2, CreditCard, Users, Receipt, Loader2, Bell, ShieldAlert, Send, Globe } from "lucide-react";
 import { OrganizationSettings } from "@/components/settings/OrganizationSettings";
 import { PaymentMethodsSettings } from "@/components/settings/PaymentMethodsSettings";
 import { TeamSettings } from "@/components/settings/TeamSettings";
 import { SubscriptionSettings } from "@/components/settings/SubscriptionSettings";
 import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
 import { TelegramSettings } from "@/components/settings/TelegramSettings";
+import { CustomDomainsSettings } from "@/components/settings/CustomDomainsSettings";
 import { ProtectedAction } from "@/components/auth/ProtectedAction";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -78,6 +79,10 @@ export default function Settings() {
                 <Send className="h-4 w-4 shrink-0" />
                 <span className="hidden xs:inline">TG</span>
               </TabsTrigger>
+              <TabsTrigger value="domains" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap">
+                <Globe className="h-4 w-4 shrink-0" />
+                <span className="hidden xs:inline">Dominios</span>
+              </TabsTrigger>
               <TabsTrigger value="subscription" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap">
                 <Receipt className="h-4 w-4 shrink-0" />
                 <span className="hidden xs:inline">Plan</span>
@@ -116,6 +121,23 @@ export default function Settings() {
 
           <TabsContent value="telegram" className="animate-fade-in">
             <TelegramSettings />
+          </TabsContent>
+
+          <TabsContent value="domains" className="animate-fade-in">
+            <ProtectedAction
+              resource="subscription"
+              action="update"
+              fallback={
+                <Alert>
+                  <ShieldAlert className="h-4 w-4" />
+                  <AlertDescription>
+                    Solo el propietario puede gestionar los dominios.
+                  </AlertDescription>
+                </Alert>
+              }
+            >
+              <CustomDomainsSettings />
+            </ProtectedAction>
           </TabsContent>
 
           <TabsContent value="subscription" className="animate-fade-in">
