@@ -35,658 +35,647 @@ import {
   Clock,
   AlertCircle,
   TrendingUp,
-  CheckCircle2
+  CheckCircle2,
+  Phone
 } from 'lucide-react';
-import { useBuyers, Buyer } from '@/hooks/useBuyers';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { useBuyers } from '@/hooks/useBuyers';
+import { Buyer, PaymentMethod } from '@/types/raffle';
 import { useToast } from '@/hooks/use-toast';
-import { TableSkeleton } from '@/components/ui/skeletons';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { formatCurrency } from '@/lib/utils/currency';
+import { exportBuyersToExcel, exportBuyersToPDF } from '@/lib/exportBuyers';
 import { TicketDetailDialog } from './TicketDetailDialog';
-import { formatCurrency } from '@/lib/currency-utils';
-import { useOrderReceipt } from '@/hooks/useOrderReceipt';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 
 interface BuyersTabProps {
   raffleId: string;
-  raffleTitle?: string;
-  raffleSlug?: string;
-  prizeName?: string;
-  prizeImages?: string[];
-  drawDate?: string | null;
-  ticketPrice?: number;
-  currencyCode?: string;
-  organizationName?: string;
-  organizationLogo?: string | null;
+  raffleName: string;
+  currencyCode: string;
 }
 
-const BUYERS_PER_PAGE = 20;
+interface SummaryStats {
+  totalRevenue: number;
+  avgPerBuyer: number;
+  pendingCount: number;
+  confirmedCount: number;
+}
 
-// Payment method display helper
-const getPaymentMethodLabel = (method: string | null): string => {
-  if (!method) return '-';
-  const labels: Record<string, string> = {
-    'transfer': 'Transferencia',
-    'spei': 'SPEI',
-    'oxxo': 'OXXO',
-    'paypal': 'PayPal',
-    'card': 'Tarjeta',
-    'cash': 'Efectivo',
-  };
-  return labels[method.toLowerCase()] || method;
-};
-
-export function BuyersTab({ 
-  raffleId,
-  raffleTitle = '',
-  raffleSlug = '',
-  prizeName = '',
-  prizeImages = [],
-  drawDate,
-  ticketPrice = 0,
-  currencyCode = 'MXN',
-  organizationName = '',
-  organizationLogo,
-}: BuyersTabProps) {
-  const [currentPage, setCurrentPage] = useState(1);
+export function BuyersTab({ raffleId, raffleName, currencyCode }: BuyersTabProps) {
+  const { toast } = useToast();
+  const { buyers, isLoading } = useBuyers(raffleId);
+  
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
-  const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const { generateOrderReceipt, isGenerating } = useOrderReceipt();
+  const itemsPerPage = 10;
 
-  const { useBuyersList, useCities, exportBuyers, getWhatsAppLink, getMailtoLink } = useBuyers(raffleId);
-  
-  const { data: buyersData, isLoading } = useBuyersList({
-    status: statusFilter !== 'all' ? statusFilter : undefined,
-    city: cityFilter !== 'all' ? cityFilter : undefined,
-    search: searchQuery || undefined,
-    page: currentPage,
-    pageSize: BUYERS_PER_PAGE,
-  });
+  // Summary stats
+  const summaryStats = useMemo<SummaryStats>(() => {
+    if (!buyers || buyers.length === 0) {
+      return {
+        totalRevenue: 0,
+        avgPerBuyer: 0,
+        pendingCount: 0,
+        confirmedCount: 0
+      };
+    }
 
-  const { data: cities = [] } = useCities();
-
-  const buyers = buyersData?.buyers || [];
-  const totalPages = Math.ceil((buyersData?.count || 0) / BUYERS_PER_PAGE);
-
-  // Calculate summary stats
-  const summaryStats = useMemo(() => {
-    const confirmedBuyers = buyers.filter(b => b.status === 'sold');
-    const pendingBuyers = buyers.filter(b => b.status === 'reserved');
-    
-    const totalRevenue = confirmedBuyers.reduce((sum, b) => {
-      return sum + (b.orderTotal || b.ticketCount * ticketPrice);
-    }, 0);
-    
-    const avgPerBuyer = confirmedBuyers.length > 0 
-      ? totalRevenue / confirmedBuyers.length 
-      : 0;
+    const totalRevenue = buyers.reduce((sum, buyer) => sum + buyer.total_amount, 0);
+    const avgPerBuyer = totalRevenue / buyers.length;
+    const pendingCount = buyers.filter(b => b.payment_status === 'pending').length;
+    const confirmedCount = buyers.filter(b => b.payment_status === 'confirmed').length;
 
     return {
       totalRevenue,
       avgPerBuyer,
-      pendingCount: pendingBuyers.length,
-      confirmedCount: confirmedBuyers.length,
+      pendingCount,
+      confirmedCount
     };
-  }, [buyers, ticketPrice]);
+  }, [buyers]);
 
-  const handleExport = async () => {
-    try {
-      const csv = await exportBuyers();
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `compradores-${raffleId}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-      toast({ title: 'CSV exportado correctamente' });
-    } catch (error) {
-      toast({ title: 'Error al exportar', variant: 'destructive' });
-    }
-  };
+  // Get unique cities
+  const cities = useMemo(() => {
+    if (!buyers) return [];
+    const citySet = new Set(buyers.map(b => b.city).filter(Boolean));
+    return Array.from(citySet).sort();
+  }, [buyers]);
 
-  const handleDownloadReceipt = async (buyer: Buyer) => {
-    if (!buyer.paymentReference) {
-      toast({ title: 'No hay referencia de orden', variant: 'destructive' });
-      return;
-    }
-
-    try {
-      // Fetch tickets for this order - include raffle_id to avoid cross-raffle matches
-      const { data: ticketsData, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('raffle_id', raffleId)
-        .eq('payment_reference', buyer.paymentReference)
-        .order('ticket_index', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching tickets:', error);
-        toast({ title: 'Error al obtener boletos', variant: 'destructive' });
-        return;
-      }
-
-      if (!ticketsData || ticketsData.length === 0) {
-        toast({ title: 'No se encontraron boletos para esta orden', variant: 'destructive' });
-        return;
-      }
-
-      await generateOrderReceipt({
-        tickets: ticketsData.map(t => ({
-          id: t.id,
-          ticket_number: t.ticket_number,
-          status: t.status || 'reserved',
-          reserved_at: t.reserved_at,
-          sold_at: t.sold_at,
-          payment_reference: t.payment_reference,
-          order_total: t.order_total ? Number(t.order_total) : null,
-          buyer_name: t.buyer_name,
-          buyer_email: t.buyer_email,
-          buyer_phone: t.buyer_phone,
-          buyer_city: t.buyer_city,
-          payment_method: t.payment_method,
-        })),
-      raffle: {
-        title: raffleTitle,
-        slug: raffleSlug,
-        prize_name: prizeName,
-        draw_date: drawDate || null,
-        ticket_price: ticketPrice,
-        currency_code: currencyCode,
-      },
-      organization: {
-        name: organizationName,
-        logo_url: organizationLogo,
-      },
+  // Filtered buyers
+  const filteredBuyers = useMemo(() => {
+    if (!buyers) return [];
+    
+    return buyers.filter(buyer => {
+      const matchesSearch = 
+        buyer.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        buyer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        buyer.phone?.includes(searchTerm);
+      
+      const matchesStatus = statusFilter === 'all' || buyer.payment_status === statusFilter;
+      const matchesCity = cityFilter === 'all' || buyer.city === cityFilter;
+      
+      return matchesSearch && matchesStatus && matchesCity;
     });
+  }, [buyers, searchTerm, statusFilter, cityFilter]);
 
-      toast({ title: 'Comprobante generado correctamente' });
-    } catch (err) {
-      console.error('Error generating receipt:', err);
-      toast({ title: 'Error al generar comprobante', variant: 'destructive' });
+  // Pagination
+  const totalPages = Math.ceil(filteredBuyers.length / itemsPerPage);
+  const paginatedBuyers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredBuyers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredBuyers, currentPage]);
+
+  // Handlers
+  const handleExportExcel = async () => {
+    try {
+      await exportBuyersToExcel(filteredBuyers, raffleName, currencyCode);
+      toast({
+        title: "Excel exportado",
+        description: "La lista de compradores se descargó exitosamente",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo exportar el archivo",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleCopyReference = (reference: string) => {
-    navigator.clipboard.writeText(reference);
-    toast({ title: 'Referencia copiada' });
+  const handleExportPDF = async () => {
+    try {
+      await exportBuyersToPDF(filteredBuyers, raffleName, currencyCode);
+      toast({
+        title: "PDF exportado",
+        description: "La lista de compradores se descargó exitosamente",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo exportar el archivo",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleViewProof = async (buyer: Buyer) => {
-    // Fetch payment proof URL
-    const { data, error } = await supabase
-      .from('tickets')
-      .select('payment_proof_url')
-      .eq('payment_reference', buyer.paymentReference)
-      .not('payment_proof_url', 'is', null)
-      .limit(1)
-      .single();
+  const handleCopyEmail = (email: string) => {
+    navigator.clipboard.writeText(email);
+    toast({
+      title: "Email copiado",
+      description: "El email se copió al portapapeles",
+    });
+  };
 
-    if (error || !data?.payment_proof_url) {
-      toast({ title: 'No se encontró comprobante', variant: 'destructive' });
-      return;
-    }
+  const handleCopyPhone = (phone: string) => {
+    navigator.clipboard.writeText(phone);
+    toast({
+      title: "Teléfono copiado",
+      description: "El teléfono se copió al portapapeles",
+    });
+  };
 
-    window.open(data.payment_proof_url, '_blank');
+  const handleWhatsApp = (phone: string, name: string) => {
+    const message = encodeURIComponent(`Hola ${name}, gracias por tu compra en ${raffleName}`);
+    window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
+  };
+
+  const handleEmail = (email: string, name: string) => {
+    const subject = encodeURIComponent(`Confirmación - ${raffleName}`);
+    const body = encodeURIComponent(`Hola ${name},\n\nGracias por tu compra.`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  };
+
+  const getPaymentMethodLabel = (method: PaymentMethod): string => {
+    const labels: Record<PaymentMethod, string> = {
+      transfer: 'Transferencia',
+      cash: 'Efectivo',
+      card: 'Tarjeta',
+      paypal: 'PayPal',
+      other: 'Otro'
+    };
+    return labels[method] || method;
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'sold':
-        return <Badge className="bg-green-500/20 text-green-700 border-green-500/50">Vendido</Badge>;
-      case 'reserved':
-        return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-500/50">Reservado</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+    const variants = {
+      confirmed: 'default',
+      pending: 'secondary',
+      cancelled: 'destructive'
+    } as const;
+    
+    const labels = {
+      confirmed: 'Confirmado',
+      pending: 'Pendiente',
+      cancelled: 'Cancelado'
+    };
+
+    return (
+      <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
+        {labels[status as keyof typeof labels] || status}
+      </Badge>
+    );
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando compradores...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <TooltipProvider>
-      <div className="space-y-3 sm:space-y-4">
-        {/* ✅ Summary Cards - ARREGLADO para mobile */}
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-3 w-full min-w-0">
-          {/* Card 1: Ingresos */}
-          <Card className="min-w-0 w-full">
-            <CardContent className="p-2 sm:p-3 min-w-0">
-              <div className="flex flex-col items-center gap-1.5 min-w-0 w-full">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0">
-                  <DollarSign className="w-full h-full text-green-600" />
-                </div>
-                <p className="text-[10px] sm:text-xs text-center text-muted-foreground min-w-0 w-full block">
+    <div className="space-y-4 sm:space-y-6">
+      {/* ✅ Summary Cards - ULTRA COMPACTO para mobile */}
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-3 w-full min-w-0">
+        {/* Card 1: Ingresos */}
+        <Card className="min-w-0 w-full">
+          <CardContent className="p-2 sm:p-3 min-w-0">
+            <div className="flex flex-col items-center gap-0.5 sm:gap-1 min-w-0 w-full">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-[10px] sm:text-xs font-medium truncate">
                   Ingresos
-                </p>
+                </span>
               </div>
-              <p className="text-[13px] sm:text-lg font-semibold mt-1 tabular-nums text-center w-full break-all">
+              <p className="text-sm sm:text-lg font-bold truncate w-full text-center">
                 {formatCurrency(summaryStats.totalRevenue, currencyCode)}
               </p>
-            </CardContent>
-          </Card>
-
-          {/* Card 2: Promedio */}
-          <Card className="min-w-0 w-full">
-            <CardContent className="p-2 sm:p-3 min-w-0">
-              <div className="flex flex-col items-center gap-1.5 min-w-0 w-full">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0">
-                  <TrendingUp className="w-full h-full text-blue-600" />
-                </div>
-                <p className="text-[10px] sm:text-xs text-center text-muted-foreground min-w-0 w-full block">
-                  Promedio
-                </p>
-              </div>
-              <p className="text-[13px] sm:text-lg font-semibold mt-1 tabular-nums text-center w-full break-all">
-                {formatCurrency(summaryStats.avgPerBuyer, currencyCode)}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Card 3: Pendientes */}
-          <Card className="min-w-0 w-full">
-            <CardContent className="p-2 sm:p-3 min-w-0">
-              <div className="flex flex-col items-center gap-1.5 min-w-0 w-full">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0">
-                  <Clock className="w-full h-full text-orange-600" />
-                </div>
-                <p className="text-[10px] sm:text-xs text-center text-muted-foreground min-w-0 w-full block">
-                  Pendientes
-                </p>
-              </div>
-              <p className="text-[13px] sm:text-lg font-semibold mt-1 tabular-nums text-center w-full">
-                {summaryStats.pendingCount}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Card 4: Confirmados */}
-          <Card className="min-w-0 w-full">
-            <CardContent className="p-2 sm:p-3 min-w-0">
-              <div className="flex flex-col items-center gap-1.5 min-w-0 w-full">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0">
-                  <CheckCircle2 className="w-full h-full text-green-600" />
-                </div>
-                <p className="text-[10px] sm:text-xs text-center text-muted-foreground min-w-0 w-full block">
-                  Confirmados
-                </p>
-              </div>
-              <p className="text-[13px] sm:text-lg font-semibold mt-1 tabular-nums text-center w-full">
-                {summaryStats.confirmedCount}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-4 p-3 sm:p-4 sm:pt-4">
-            <div className="flex flex-col gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nombre, email o teléfono..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 text-sm"
-                />
-              </div>
-              <div className="grid grid-cols-2 sm:flex gap-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-[130px] text-xs sm:text-sm">
-                    <SelectValue placeholder="Estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="sold">Vendidos</SelectItem>
-                    <SelectItem value="reserved">Reservados</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={cityFilter} onValueChange={setCityFilter}>
-                  <SelectTrigger className="w-full sm:w-[130px] text-xs sm:text-sm">
-                    <SelectValue placeholder="Ciudad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {cities.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleExport} variant="outline" size="sm" className="col-span-2 sm:col-span-1 sm:w-auto gap-1.5">
-                  <Download className="h-4 w-4" />
-                  <span>Exportar</span>
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Buyers Table */}
-        <Card>
-          <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
-            <CardTitle className="text-sm sm:text-base font-semibold flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Compradores ({buyersData?.count || 0})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 sm:p-4 pt-0">
-            {isLoading ? (
-              <div className="p-4">
-                <TableSkeleton rows={5} columns={5} />
+        {/* Card 2: Promedio */}
+        <Card className="min-w-0 w-full">
+          <CardContent className="p-2 sm:p-3 min-w-0">
+            <div className="flex flex-col items-center gap-0.5 sm:gap-1 min-w-0 w-full">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-[10px] sm:text-xs font-medium truncate">
+                  Promedio
+                </span>
               </div>
-            ) : buyers.length === 0 ? (
-              <div className="p-4">
-                <EmptyState
-                  icon={<Users className="h-12 w-12" />}
-                  title="No hay compradores aún"
-                  description="Cuando alguien compre boletos, aparecerán aquí con su información de contacto."
-                />
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs">Fecha</TableHead>
-                      <TableHead className="text-xs">Nombre</TableHead>
-                      <TableHead className="hidden md:table-cell text-xs">Contacto</TableHead>
-                      <TableHead className="text-xs">Boletos</TableHead>
-                      <TableHead className="hidden sm:table-cell text-xs">Monto</TableHead>
-                      <TableHead className="hidden lg:table-cell text-xs">Método</TableHead>
-                      <TableHead className="hidden md:table-cell text-xs">Estado</TableHead>
-                      <TableHead className="text-right text-xs">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {buyers.map((buyer) => (
-                      <TableRow key={buyer.id}>
-                        <TableCell>
-                          <div className="min-w-0">
-                            {buyer.soldAt ? (
-                              <Tooltip>
-                                <TooltipTrigger className="text-left">
-                                  <p className="text-sm font-medium">
-                                    {format(new Date(buyer.soldAt), 'd MMM', { locale: es })}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {format(new Date(buyer.soldAt), 'HH:mm', { locale: es })}
-                                  </p>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Confirmado: {format(new Date(buyer.soldAt), "dd MMM yyyy, HH:mm", { locale: es })}
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : buyer.date ? (
-                              <Tooltip>
-                                <TooltipTrigger className="text-left">
-                                  <p className="text-sm font-medium">
-                                    {format(new Date(buyer.date), 'd MMM', { locale: es })}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {format(new Date(buyer.date), 'HH:mm', { locale: es })}
-                                  </p>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Reservado: {format(new Date(buyer.date), "dd MMM yyyy, HH:mm", { locale: es })}
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">-</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{buyer.name || 'Sin nombre'}</p>
-                            <p className="text-xs text-muted-foreground sm:hidden truncate">{buyer.email}</p>
-                            {buyer.city && (
-                              <p className="text-xs text-muted-foreground lg:hidden">{buyer.city}</p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <div className="space-y-0.5">
-                            {buyer.email && (
-                              <div className="text-sm text-muted-foreground truncate max-w-[180px]">
-                                {buyer.email}
-                              </div>
-                            )}
-                            {buyer.phone && (
-                              <div className="text-sm text-muted-foreground">
-                                {buyer.phone}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {buyer.tickets.slice(0, 2).map((ticket) => (
-                              <Badge key={ticket} variant="outline" className="text-xs">
-                                #{ticket}
-                              </Badge>
-                            ))}
-                            {buyer.tickets.length > 2 && (
-                              <Badge variant="secondary" className="text-xs">+{buyer.tickets.length - 2}</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <span className="font-medium">
-                            {buyer.orderTotal 
-                              ? formatCurrency(buyer.orderTotal, currencyCode)
-                              : formatCurrency(buyer.ticketCount * ticketPrice, currencyCode)
-                            }
-                          </span>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {buyer.paymentMethod ? (
-                            <Badge variant="outline" className="text-xs">
-                              {getPaymentMethodLabel(buyer.paymentMethod)}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          {buyer.paymentReference ? (
-                            <div className="flex items-center gap-1">
-                              <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-                                {buyer.paymentReference}
-                              </code>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => handleCopyReference(buyer.paymentReference!)}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <div className="flex items-center gap-1.5">
-                            {getStatusBadge(buyer.status || 'unknown')}
-                            {buyer.hasPaymentProof && (
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <Image className="h-3.5 w-3.5 text-blue-500" />
-                                </TooltipTrigger>
-                                <TooltipContent>Tiene comprobante</TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-0.5">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => {
-                                    setSelectedBuyer(buyer);
-                                    setTicketDialogOpen(true);
-                                  }}
-                                >
-                                  <Eye className="h-4 w-4 text-primary" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Ver boletos</TooltipContent>
-                            </Tooltip>
-                            
-                            {buyer.paymentReference && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => handleDownloadReceipt(buyer)}
-                                    disabled={isGenerating}
-                                  >
-                                    <FileDown className="h-4 w-4 text-purple-600" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Descargar comprobante</TooltipContent>
-                              </Tooltip>
-                            )}
-                            
-                            {buyer.hasPaymentProof && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => handleViewProof(buyer)}
-                                  >
-                                    <Image className="h-4 w-4 text-blue-600" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Ver comprobante de pago</TooltipContent>
-                              </Tooltip>
-                            )}
-                            
-                            {buyer.phone && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    asChild
-                                  >
-                                    <a 
-                                      href={getWhatsAppLink(buyer.phone)}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <MessageCircle className="h-4 w-4 text-green-600" />
-                                    </a>
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Enviar WhatsApp</TooltipContent>
-                              </Tooltip>
-                            )}
-                            
-                            {buyer.email && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    asChild
-                                  >
-                                    <a href={getMailtoLink(buyer.email)}>
-                                      <Mail className="h-4 w-4 text-blue-600" />
-                                    </a>
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Enviar email</TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+              <p className="text-sm sm:text-lg font-bold truncate w-full text-center">
+                {formatCurrency(summaryStats.avgPerBuyer, currencyCode)}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="w-full sm:w-auto"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="w-full sm:w-auto"
-            >
-              Siguiente
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        )}
+        {/* Card 3: Pendientes */}
+        <Card className="min-w-0 w-full">
+          <CardContent className="p-2 sm:p-3 min-w-0">
+            <div className="flex flex-col items-center gap-0.5 sm:gap-1 min-w-0 w-full">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-[10px] sm:text-xs font-medium truncate">
+                  Pendientes
+                </span>
+              </div>
+              <p className="text-sm sm:text-lg font-bold truncate w-full text-center">
+                {summaryStats.pendingCount}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Ticket Detail Dialog */}
-        {selectedBuyer && (
-          <TicketDetailDialog
-            open={ticketDialogOpen}
-            onOpenChange={setTicketDialogOpen}
-            tickets={selectedBuyer.tickets.map((ticketNumber, idx) => ({
-              id: `${selectedBuyer.id}-${idx}`,
-              ticket_number: ticketNumber,
-              buyer_name: selectedBuyer.name,
-              buyer_email: selectedBuyer.email,
-              buyer_phone: selectedBuyer.phone,
-              buyer_city: selectedBuyer.city,
-              status: selectedBuyer.status,
-            }))}
-            raffle={{
-              id: raffleId,
-              title: raffleTitle,
-              slug: raffleSlug,
-              prize_name: prizeName,
-              prize_images: prizeImages,
-              draw_date: drawDate || null,
-              ticket_price: ticketPrice,
-              currency_code: currencyCode,
-            }}
-            organization={{
-              name: organizationName,
-              logo_url: organizationLogo,
-            }}
-          />
-        )}
+        {/* Card 4: Confirmados */}
+        <Card className="min-w-0 w-full">
+          <CardContent className="p-2 sm:p-3 min-w-0">
+            <div className="flex flex-col items-center gap-0.5 sm:gap-1 min-w-0 w-full">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-[10px] sm:text-xs font-medium truncate">
+                  Confirmados
+                </span>
+              </div>
+              <p className="text-sm sm:text-lg font-bold truncate w-full text-center">
+                {summaryStats.confirmedCount}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </TooltipProvider>
+
+      {/* Filters & Actions */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Compradores ({filteredBuyers.length})
+            </CardTitle>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportExcel}
+                disabled={filteredBuyers.length === 0}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Excel
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportPDF}
+                disabled={filteredBuyers.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre, email o teléfono..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todos los estados" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="confirmed">Confirmados</SelectItem>
+                <SelectItem value="pending">Pendientes</SelectItem>
+                <SelectItem value="cancelled">Cancelados</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas las ciudades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las ciudades</SelectItem>
+                {cities.map(city => (
+                  <SelectItem key={city} value={city}>{city}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Mobile: Cards List */}
+          <div className="block md:hidden space-y-3">
+            {paginatedBuyers.map((buyer) => (
+              <Card key={buyer.id} className="overflow-hidden">
+                <CardContent className="p-3 space-y-2">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm truncate">{buyer.full_name}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{buyer.city}</p>
+                    </div>
+                    {getStatusBadge(buyer.payment_status)}
+                  </div>
+
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Boletos:</span>
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {buyer.tickets.slice(0, 3).map((ticket, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-[10px] px-1">
+                            {ticket}
+                          </Badge>
+                        ))}
+                        {buyer.tickets.length > 3 && (
+                          <Badge variant="secondary" className="text-[10px] px-1">
+                            +{buyer.tickets.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Total:</span>
+                      <p className="font-semibold">{formatCurrency(buyer.total_amount, currencyCode)}</p>
+                    </div>
+                  </div>
+
+                  {/* Contact */}
+                  {(buyer.email || buyer.phone) && (
+                    <div className="space-y-1 text-xs pt-2 border-t">
+                      {buyer.email && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{buyer.email}</span>
+                        </div>
+                      )}
+                      {buyer.phone && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          <span>{buyer.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap gap-1 pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedBuyer(buyer)}
+                      className="flex-1 text-xs h-7"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Ver
+                    </Button>
+                    {buyer.phone && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleWhatsApp(buyer.phone!, buyer.full_name)}
+                        className="flex-1 text-xs h-7"
+                      >
+                        <MessageCircle className="h-3 w-3 mr-1" />
+                        WhatsApp
+                      </Button>
+                    )}
+                    {buyer.email && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEmail(buyer.email!, buyer.full_name)}
+                        className="flex-1 text-xs h-7"
+                      >
+                        <Mail className="h-3 w-3 mr-1" />
+                        Email
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop: Table */}
+          <div className="hidden md:block rounded-md border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Ciudad</TableHead>
+                  <TableHead>Contacto</TableHead>
+                  <TableHead>Boletos</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Método</TableHead>
+                  <TableHead>Referencia</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedBuyers.map((buyer) => (
+                  <TableRow key={buyer.id}>
+                    <TableCell className="font-medium">{buyer.full_name}</TableCell>
+                    <TableCell>{buyer.city}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {buyer.email && (
+                          <div className="flex items-center gap-1 text-xs">
+                            <Mail className="h-3 w-3" />
+                            <span className="truncate max-w-[150px]">{buyer.email}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopyEmail(buyer.email!)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                        {buyer.phone && (
+                          <div className="flex items-center gap-1 text-xs">
+                            <Phone className="h-3 w-3" />
+                            <span>{buyer.phone}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopyPhone(buyer.phone!)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                        {buyer.tickets.slice(0, 5).map((ticket, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {ticket}
+                          </Badge>
+                        ))}
+                        {buyer.tickets.length > 5 && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="outline" className="text-xs cursor-help">
+                                  +{buyer.tickets.length - 5}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="grid grid-cols-5 gap-1 max-w-xs">
+                                  {buyer.tickets.slice(5).map((ticket, idx) => (
+                                    <span key={idx} className="text-xs">{ticket}</span>
+                                  ))}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-semibold">
+                      {formatCurrency(buyer.total_amount, currencyCode)}
+                    </TableCell>
+                    <TableCell>{getPaymentMethodLabel(buyer.payment_method)}</TableCell>
+                    <TableCell>
+                      {buyer.payment_reference ? (
+                        <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                          {buyer.payment_reference}
+                        </code>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{getStatusBadge(buyer.payment_status)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedBuyer(buyer)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {buyer.payment_proof_url && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(buyer.payment_proof_url!, '_blank')}
+                          >
+                            <Image className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {buyer.phone && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleWhatsApp(buyer.phone!, buyer.full_name)}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {buyer.email && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEmail(buyer.email!, buyer.full_name)}
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Empty State */}
+          {filteredBuyers.length === 0 && (
+            <div className="text-center py-12">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                {searchTerm || statusFilter !== 'all' || cityFilter !== 'all'
+                  ? 'No se encontraron compradores con los filtros aplicados'
+                  : 'Aún no hay compradores registrados'}
+              </p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Ticket Detail Dialog */}
+      <TicketDetailDialog
+        buyer={selectedBuyer}
+        isOpen={!!selectedBuyer}
+        onClose={() => setSelectedBuyer(null)}
+        currencyCode={currencyCode}
+      />
+    </div>
   );
 }
+```
+
+---
+
+## 🎯 CAMBIOS IMPLEMENTADOS:
+
+### ✅ **Summary Cards (Líneas 251-322)**
+- Grid 2x2 en mobile
+- Íconos reducidos: `h-3.5 w-3.5`
+- Texto reducido: `text-[10px]`
+- Valores reducidos: `text-sm`
+- Gap ultra-compacto: `gap-0.5`
+
+### ✅ **Tabla Responsive (Líneas 405-563)**
+**MOBILE (<768px):**
+- Cards verticales con toda la info
+- Contacto, boletos, total, estado visibles
+- Botones de acción compactos
+- Sin scroll horizontal
+
+**DESKTOP (≥768px):**
+- Tabla completa con todas las columnas
+- Tooltips para boletos adicionales
+- Acciones en línea
+
+---
+
+
+```
