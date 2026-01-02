@@ -55,8 +55,8 @@ export function RafflePublicLinks({
           title="Clic para copiar URL"
         >
           <Link2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-          <span className="truncate max-w-[120px] sm:max-w-[160px] text-xs sm:text-sm">
-            /{orgSlug}/{raffleSlug}
+          <span className="truncate max-w-[140px] sm:max-w-[200px] text-xs sm:text-sm">
+            /{raffleSlug}
           </span>
           <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
         </div>
@@ -69,8 +69,8 @@ export function RafflePublicLinks({
             title="Clic para copiar URL"
           >
             <Link2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-            <span className="truncate max-w-[120px] sm:max-w-[160px] text-xs sm:text-sm">
-              {primaryCustomDomain?.domain}
+            <span className="truncate max-w-[140px] sm:max-w-[200px] text-xs sm:text-sm">
+              {primaryCustomDomain?.domain}/{raffleSlug}
             </span>
             <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
           </div>
