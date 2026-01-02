@@ -495,7 +495,7 @@ export default function RaffleWizard() {
       }
 
       await publishRaffle.mutateAsync(raffleId!);
-      navigate(`/dashboard/raffles/${raffleId}`);
+      navigate(`/dashboard/raffles/${raffleId}`, { state: { justPublished: true } });
     } catch (error) {
       console.error('Error publishing:', error);
       toast({ title: 'Error al publicar', description: 'No se pudo publicar el sorteo', variant: 'destructive' });
