@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useCustomDomains, CustomDomain, DNSDiagnostic } from "@/hooks/useCustomDomains";
+import { useState, useEffect, useCallback } from "react";
+import { useCustomDomains, CustomDomain, DNSDiagnostic, VERCEL_IPS } from "@/hooks/useCustomDomains";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getSubscriptionLimits, SubscriptionTier } from "@/lib/subscription-limits";
@@ -56,7 +56,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { normalizeToSlug, isValidSlug, getOrganizationPublicUrl, isReservedSlug } from "@/lib/url-utils";
 
-const VERCEL_IPS = ['76.76.21.21', '76.76.21.164', '76.76.21.241'];
+// VERCEL_IPS is now imported from useCustomDomains hook
 
 interface DiagnosticModalState {
   domain: string;
@@ -428,7 +428,16 @@ export function CustomDomainsSettings() {
   const [showDnsDialog, setShowDnsDialog] = useState<CustomDomain | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<CustomDomain | null>(null);
   const [newDomain, setNewDomain] = useState("");
+  const [debouncedDomain, setDebouncedDomain] = useState("");
   const [vercelDiagnosisModal, setVercelDiagnosisModal] = useState(false);
+
+  // Debounce domain input for validation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedDomain(newDomain);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [newDomain]);
   const [vercelDiagnosisData, setVercelDiagnosisData] = useState<VercelDiagnosisResult | null>(null);
   const [diagnosticModal, setDiagnosticModal] = useState<DiagnosticModalState | null>(null);
 

@@ -4,6 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { getSubscriptionLimits, SubscriptionTier } from "@/lib/subscription-limits";
 
+// Centralized Vercel IPs for DNS verification display
+export const VERCEL_IPS = ['76.76.21.21', '76.76.21.164', '76.76.21.241'];
+export const VERCEL_CNAMES = ['cname.vercel-dns.com'];
+
 export interface CustomDomain {
   id: string;
   organization_id: string;
@@ -34,6 +38,31 @@ export interface DNSVerificationResult {
   diagnostic: DNSDiagnostic;
   error?: string;
 }
+
+// Helper function for fire-and-forget audit logging
+const logAuditEvent = async (params: {
+  p_action: string;
+  p_resource_type: string;
+  p_resource_id: string;
+  p_resource_name: string;
+  p_organization_id: string;
+  p_changes?: Record<string, unknown>;
+  p_metadata?: Record<string, unknown>;
+}) => {
+  try {
+    await supabase.rpc('log_audit_event', {
+      p_action: params.p_action,
+      p_resource_type: params.p_resource_type,
+      p_resource_id: params.p_resource_id,
+      p_resource_name: params.p_resource_name,
+      p_organization_id: params.p_organization_id,
+      p_changes: params.p_changes ?? null,
+      p_metadata: params.p_metadata ?? null,
+    } as any);
+  } catch (err) {
+    console.warn('[audit] Log failed:', err);
+  }
+};
 
 export function useCustomDomains() {
   const { organization } = useAuth();
@@ -145,6 +174,17 @@ export function useCustomDomains() {
         throw new Error("Error al guardar el dominio");
       }
 
+      // Log audit event for domain addition (fire and forget)
+      logAuditEvent({
+        p_action: 'create',
+        p_resource_type: 'custom_domain',
+        p_resource_id: data.id,
+        p_resource_name: normalizedDomain,
+        p_organization_id: organization.id,
+        p_changes: { domain: normalizedDomain },
+        p_metadata: { tier, is_reserved_subdomain: parts.length > 2 && RESERVED_SUBDOMAINS.includes(parts[0]) }
+      });
+
       return { data, isReservedSubdomain: parts.length > 2 && RESERVED_SUBDOMAINS.includes(parts[0]) };
     },
     onSuccess: (result) => {
@@ -178,6 +218,18 @@ export function useCustomDomains() {
         .eq("id", domainId);
 
       if (error) throw error;
+
+      // Log audit event for domain removal (fire and forget)
+      if (domainToDelete && organization?.id) {
+        logAuditEvent({
+          p_action: 'delete',
+          p_resource_type: 'custom_domain',
+          p_resource_id: domainId,
+          p_resource_name: domainToDelete.domain,
+          p_organization_id: organization.id,
+          p_changes: { domain: domainToDelete.domain, was_primary: domainToDelete.is_primary }
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["custom-domains"] });
@@ -191,6 +243,8 @@ export function useCustomDomains() {
   const setPrimaryDomain = useMutation({
     mutationFn: async (domainId: string) => {
       if (!organization?.id) throw new Error("No organization");
+      
+      const domainToSetPrimary = domains.find(d => d.id === domainId);
 
       // Use atomic RPC function to set primary domain
       const { error } = await supabase.rpc('set_primary_domain', {
@@ -199,6 +253,19 @@ export function useCustomDomains() {
       });
 
       if (error) throw error;
+
+      // Log audit event for setting primary domain (fire and forget)
+      if (domainToSetPrimary) {
+        logAuditEvent({
+          p_action: 'update',
+          p_resource_type: 'custom_domain',
+          p_resource_id: domainId,
+          p_resource_name: domainToSetPrimary.domain,
+          p_organization_id: organization.id,
+          p_changes: { is_primary: true },
+          p_metadata: { previous_primary: domains.find(d => d.is_primary)?.domain }
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["custom-domains"] });
@@ -249,6 +316,19 @@ export function useCustomDomains() {
         .eq("id", domainId);
 
       if (updateError) throw updateError;
+
+      // Log audit event for domain verification (fire and forget)
+      if (organization?.id) {
+        logAuditEvent({
+          p_action: 'update',
+          p_resource_type: 'custom_domain',
+          p_resource_id: domainId,
+          p_resource_name: domain.domain,
+          p_organization_id: organization.id,
+          p_changes: { verified: true, ssl_status: 'active' },
+          p_metadata: { verified_at: new Date().toISOString() }
+        });
+      }
 
       return result;
     },
