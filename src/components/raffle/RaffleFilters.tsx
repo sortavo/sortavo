@@ -1,58 +1,53 @@
-import { useState } from 'react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { useState, useEffect } from 'react';
 import {
-  FileEdit,
+  FileText,
   Play,
   Pause,
   CheckCircle2,
   XCircle,
-  Filter,
-  SlidersHorizontal,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  X,
-  Calendar,
-  Check,
-  Bookmark,
-  Trash2,
+  MoreHorizontal,
   Save,
+  FolderOpen,
+  Trash2,
+  SlidersHorizontal,
+  Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import type { DateRange } from 'react-day-picker';
 
 export interface FilterState {
@@ -75,45 +70,32 @@ interface RaffleFiltersProps {
 }
 
 const statusOptions = [
-  { value: 'draft', label: 'Borrador', icon: FileEdit },
+  { value: 'draft', label: 'Borrador', icon: FileText },
   { value: 'active', label: 'Activo', icon: Play },
   { value: 'paused', label: 'Pausado', icon: Pause },
   { value: 'completed', label: 'Completado', icon: CheckCircle2 },
   { value: 'canceled', label: 'Cancelado', icon: XCircle },
 ];
 
-const sortOptions = [
-  { value: 'created_at', label: 'Fecha de creación' },
-  { value: 'title', label: 'Nombre' },
-  { value: 'draw_date', label: 'Fecha de sorteo' },
-  { value: 'total_tickets', label: 'Total de boletos' },
-];
-
 export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) {
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [advancedDialogOpen, setAdvancedDialogOpen] = useState(false);
   const [presetName, setPresetName] = useState('');
   const [presets, setPresets] = useState<FilterPreset[]>(() => {
     const saved = localStorage.getItem('raffle-filter-presets');
     return saved ? JSON.parse(saved) : [];
   });
 
-  const activeFiltersCount = [
-    filters.status.length > 0,
-    filters.dateRange[0] !== null,
-  ].filter(Boolean).length;
+  const hasActiveFilters = filters.status.length > 0 || filters.dateRange[0] !== null;
 
-  const handleStatusToggle = (status: string) => {
-    const newStatus = filters.status.includes(status)
-      ? filters.status.filter(s => s !== status)
-      : [...filters.status, status];
-    onFiltersChange({ ...filters, status: newStatus });
+  const handleStatusToggle = (values: string[]) => {
+    onFiltersChange({ ...filters, status: values });
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     onFiltersChange({
       ...filters,
-      dateRange: [range?.from || null, range?.to || null]
+      dateRange: [range?.from || null, range?.to || null],
     });
   };
 
@@ -124,7 +106,7 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
       sortBy: 'created_at',
       sortOrder: 'desc',
     });
-    setIsAdvancedOpen(false);
+    setAdvancedDialogOpen(false);
   };
 
   const savePreset = () => {
@@ -134,20 +116,20 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
       id: Date.now().toString(),
       name: presetName.trim(),
       filters: { ...filters },
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     const updated = [...presets, newPreset];
     setPresets(updated);
     localStorage.setItem('raffle-filter-presets', JSON.stringify(updated));
-    
+
     setPresetName('');
-    setShowSaveDialog(false);
+    setSaveDialogOpen(false);
     toast.success('Filtro guardado');
   };
 
   const deletePreset = (id: string) => {
-    const updated = presets.filter(p => p.id !== id);
+    const updated = presets.filter((p) => p.id !== id);
     setPresets(updated);
     localStorage.setItem('raffle-filter-presets', JSON.stringify(updated));
     toast.success('Filtro eliminado');
@@ -156,263 +138,218 @@ export function RaffleFilters({ filters, onFiltersChange }: RaffleFiltersProps) 
   const applyPreset = (preset: FilterPreset) => {
     onFiltersChange({
       ...preset.filters,
-      // Convert date strings back to Date objects
       dateRange: [
         preset.filters.dateRange[0] ? new Date(preset.filters.dateRange[0]) : null,
         preset.filters.dateRange[1] ? new Date(preset.filters.dateRange[1]) : null,
-      ]
+      ],
     });
   };
 
   return (
-    <div className="space-y-3">
-      {/* Quick status filters - grid on mobile, flex on desktop */}
-      <div className="grid grid-cols-5 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-        {statusOptions.map((option) => {
-          const Icon = option.icon;
-          const isActive = filters.status.includes(option.value);
-          
-          return (
-            <Button
-              key={option.value}
-              variant={isActive ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusToggle(option.value)}
-              className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm"
-            >
-              <Icon className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
-              <span className="truncate w-full text-center sm:w-auto">{option.label}</span>
-            </Button>
-          );
-        })}
-      </div>
-
-      {/* Action buttons - grid on mobile */}
-      <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-        {/* Saved presets dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm w-full">
-              <Bookmark className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
-              <span className="truncate">Guardados</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            {presets.length === 0 ? (
-              <div className="px-2 py-4 text-sm text-center text-muted-foreground">
-                No hay filtros guardados
-              </div>
-            ) : (
-              presets.map(preset => (
-                <div key={preset.id} className="flex items-center justify-between px-2 py-1.5">
-                  <DropdownMenuItem 
-                    className="flex-1 cursor-pointer"
-                    onClick={() => applyPreset(preset)}
+    <div className="flex flex-wrap items-center gap-2">
+      {/* Status Toggle Group */}
+      <TooltipProvider delayDuration={300}>
+        <ToggleGroup
+          type="multiple"
+          value={filters.status}
+          onValueChange={handleStatusToggle}
+          className="flex flex-wrap gap-0.5 bg-muted/60 p-1 rounded-lg"
+        >
+          {statusOptions.map((option) => {
+            const Icon = option.icon;
+            return (
+              <Tooltip key={option.value}>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem
+                    value={option.value}
+                    aria-label={option.label}
+                    className="h-8 px-2 sm:px-3 gap-1.5 rounded-md text-xs sm:text-sm data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm transition-all"
                   >
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="hidden sm:inline">{option.label}</span>
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="sm:hidden">
+                  {option.label}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </ToggleGroup>
+      </TooltipProvider>
+
+      {/* More Options Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              'h-8 gap-1.5 text-xs sm:text-sm',
+              hasActiveFilters && 'border-primary/50 bg-primary/5'
+            )}
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+            <span className="hidden xs:inline">Más</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          {/* Saved Presets */}
+          {presets.length > 0 && (
+            <>
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                Filtros guardados
+              </DropdownMenuLabel>
+              {presets.map((preset) => (
+                <DropdownMenuItem key={preset.id} className="justify-between group">
+                  <button
+                    onClick={() => applyPreset(preset)}
+                    className="flex items-center gap-2 flex-1 text-left"
+                  >
+                    <FolderOpen className="h-4 w-4 text-muted-foreground" />
                     {preset.name}
-                  </DropdownMenuItem>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
+                  </button>
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       deletePreset(preset.id);
                     }}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive transition-opacity"
                   >
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </Button>
-                </div>
-              ))
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+            </>
+          )}
 
-        {/* Save current filters */}
-        <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm w-full">
-              <Save className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
-              <span className="truncate">Guardar</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Guardar filtros actuales</DialogTitle>
-              <DialogDescription>
-                Dale un nombre a esta configuración de filtros para usarla después
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
+          {/* Save Current Filters */}
+          <DropdownMenuItem onClick={() => setSaveDialogOpen(true)}>
+            <Save className="h-4 w-4 mr-2" />
+            Guardar filtros actuales
+          </DropdownMenuItem>
+
+          {/* Advanced Filters */}
+          <DropdownMenuItem onClick={() => setAdvancedDialogOpen(true)}>
+            <SlidersHorizontal className="h-4 w-4 mr-2" />
+            Filtros avanzados
+          </DropdownMenuItem>
+
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleClearFilters} className="text-destructive">
+                <XCircle className="h-4 w-4 mr-2" />
+                Limpiar filtros
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Active Filters Indicator */}
+      {hasActiveFilters && (
+        <span className="text-xs text-muted-foreground hidden sm:inline">
+          {filters.status.length > 0 &&
+            `${filters.status.length} estado${filters.status.length > 1 ? 's' : ''}`}
+          {filters.status.length > 0 && filters.dateRange[0] && ' · '}
+          {filters.dateRange[0] && 'Fechas'}
+        </span>
+      )}
+
+      {/* Save Preset Dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Guardar filtros</DialogTitle>
+            <DialogDescription>
+              Dale un nombre a esta configuración para usarla después
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="preset-name">Nombre del preset</Label>
               <Input
-                placeholder="Nombre del filtro..."
+                id="preset-name"
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
+                placeholder="Ej: Sorteos activos este mes"
               />
             </div>
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={() => setShowSaveDialog(false)} className="w-full sm:w-auto">
-                Cancelar
-              </Button>
-              <Button onClick={savePreset} disabled={!presetName.trim()} className="w-full sm:w-auto">
-                Guardar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Advanced filters dialog */}
-        <Dialog open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm w-full relative">
-              <SlidersHorizontal className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
-              <span className="truncate">Avanzados</span>
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 text-[10px] flex items-center justify-center sm:static sm:ml-1.5 sm:h-5 sm:w-auto sm:px-1.5">
-                  {activeFiltersCount}
-                </Badge>
-              )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+              Cancelar
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Filtros avanzados</DialogTitle>
-              <DialogDescription>
-                Refina tu búsqueda de sorteos
-              </DialogDescription>
-            </DialogHeader>
+            <Button onClick={savePreset} disabled={!presetName.trim()}>
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            <div className="space-y-6 py-4">
-              {/* Date range */}
-              <div className="space-y-2">
-                <Label>Rango de fechas de creación</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal text-sm",
-                        !filters.dateRange[0] && "text-muted-foreground"
-                      )}
-                    >
-                      <Calendar className="mr-2 h-4 w-4 shrink-0" />
-                      <span className="truncate">
-                        {filters.dateRange[0] ? (
-                          filters.dateRange[1] ? (
-                            <>
-                              {format(filters.dateRange[0], 'dd/MM/yy', { locale: es })} - {format(filters.dateRange[1], 'dd/MM/yy', { locale: es })}
-                            </>
-                          ) : (
-                            format(filters.dateRange[0], 'dd/MM/yyyy', { locale: es })
-                          )
+      {/* Advanced Filters Dialog */}
+      <Dialog open={advancedDialogOpen} onOpenChange={setAdvancedDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Filtros avanzados</DialogTitle>
+            <DialogDescription>Refina tu búsqueda de sorteos</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Date Range */}
+            <div className="space-y-2">
+              <Label>Rango de fechas de creación</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal text-sm',
+                      !filters.dateRange[0] && 'text-muted-foreground'
+                    )}
+                  >
+                    <Calendar className="mr-2 h-4 w-4 shrink-0" />
+                    <span className="truncate">
+                      {filters.dateRange[0] ? (
+                        filters.dateRange[1] ? (
+                          <>
+                            {format(filters.dateRange[0], 'dd/MM/yy', { locale: es })} -{' '}
+                            {format(filters.dateRange[1], 'dd/MM/yy', { locale: es })}
+                          </>
                         ) : (
-                          'Seleccionar fechas'
-                        )}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="center" side="bottom">
-                    <CalendarComponent
-                      mode="range"
-                      selected={{
-                        from: filters.dateRange[0] || undefined,
-                        to: filters.dateRange[1] || undefined
-                      }}
-                      onSelect={handleDateRangeChange}
-                      numberOfMonths={1}
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Sort by */}
-              <div className="space-y-2">
-                <Label>Ordenar por</Label>
-                <Select
-                  value={filters.sortBy}
-                  onValueChange={(value) => onFiltersChange({
-                    ...filters,
-                    sortBy: value as FilterState['sortBy']
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sortOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Sort order */}
-              <div className="space-y-2">
-                <Label>Orden</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={filters.sortOrder === 'asc' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onFiltersChange({ ...filters, sortOrder: 'asc' })}
-                    className="flex-1"
-                  >
-                    <ArrowUp className="h-4 w-4 mr-1.5" />
-                    Ascendente
+                          format(filters.dateRange[0], 'dd/MM/yyyy', { locale: es })
+                        )
+                      ) : (
+                        'Seleccionar fechas'
+                      )}
+                    </span>
                   </Button>
-                  <Button
-                    variant={filters.sortOrder === 'desc' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onFiltersChange({ ...filters, sortOrder: 'desc' })}
-                    className="flex-1"
-                  >
-                    <ArrowDown className="h-4 w-4 mr-1.5" />
-                    Descendente
-                  </Button>
-                </div>
-              </div>
-
-              {/* Clear filters */}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleClearFilters}
-              >
-                <X className="h-4 w-4 mr-1.5" />
-                Limpiar filtros
-              </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                  <CalendarComponent
+                    mode="range"
+                    selected={{
+                      from: filters.dateRange[0] || undefined,
+                      to: filters.dateRange[1] || undefined,
+                    }}
+                    onSelect={handleDateRangeChange}
+                    numberOfMonths={1}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Sort dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 text-[10px] sm:text-sm w-full">
-              <ArrowUpDown className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
-              <span className="truncate">Ordenar</span>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleClearFilters}>
+              Limpiar todo
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {sortOptions.map(option => (
-              <DropdownMenuItem
-                key={option.value}
-                onClick={() => onFiltersChange({
-                  ...filters,
-                  sortBy: option.value as FilterState['sortBy']
-                })}
-              >
-                {filters.sortBy === option.value && (
-                  <Check className="mr-2 h-4 w-4" />
-                )}
-                {option.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+            <Button onClick={() => setAdvancedDialogOpen(false)}>Aplicar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

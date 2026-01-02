@@ -243,18 +243,21 @@ export default function RafflesList() {
           </ProtectedAction>
         </div>
 
-        {/* Filters */}
-        <div className="space-y-4">
+        {/* Filters + Search Row */}
+        <div className="space-y-3">
+          {/* Status Filters */}
           <RaffleFilters filters={filters} onFiltersChange={handleFiltersChange} />
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="relative flex-1 sm:max-w-md">
+          {/* Search + Sort + Counter */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            {/* Search Input */}
+            <div className="relative flex-1 sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por título..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-9"
               />
               {searchQuery && (
                 <Button
@@ -267,21 +270,25 @@ export default function RafflesList() {
                 </Button>
               )}
             </div>
-            {raffles.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleSelectAll}
-                className="hidden sm:flex"
-              >
-                {selectedIds.size === raffles.length ? 'Deseleccionar' : 'Seleccionar todo'}
-              </Button>
-            )}
-            {totalCount > 0 && (
-              <span className="text-sm text-muted-foreground hidden sm:inline">
-                {totalCount} {totalCount === 1 ? 'sorteo' : 'sorteos'}
-              </span>
-            )}
+
+            {/* Right side controls */}
+            <div className="flex items-center gap-2 justify-between sm:justify-end">
+              {raffles.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleSelectAll}
+                  className="h-9 text-xs"
+                >
+                  {selectedIds.size === raffles.length ? 'Deseleccionar' : 'Seleccionar todo'}
+                </Button>
+              )}
+              {totalCount > 0 && (
+                <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                  {totalCount} {totalCount === 1 ? 'sorteo' : 'sorteos'}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
