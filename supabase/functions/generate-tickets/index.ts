@@ -142,37 +142,60 @@ serve(async (req) => {
       );
     }
 
-    // Check if any tickets are sold/reserved before rebuild
+    // SCENARIO: Need to modify existing tickets
     if (existingCount && existingCount > 0 && existingCount !== totalTickets) {
-      const { count: nonAvailableCount, error: nonAvailableError } = await supabaseClient
-        .from("tickets")
-        .select("*", { count: "exact", head: true })
-        .eq("raffle_id", raffle_id)
-        .neq("status", "available");
+      
+      // CASE 1: User wants MORE tickets (INCREMENT MODE)
+      if (totalTickets > existingCount) {
+        logStep("INCREMENT MODE - Adding new tickets", { 
+          existingCount, 
+          totalTickets, 
+          ticketsToAdd: totalTickets - existingCount 
+        });
+        
+        // Use append_ticket_batch RPC to add new tickets without touching existing ones
+        const { data: appendCount, error: appendError } = await supabaseClient.rpc(
+          'append_ticket_batch',
+          {
+            p_raffle_id: raffle_id,
+            p_existing_count: existingCount,
+            p_new_total: totalTickets,
+            p_numbering_config: numberingConfig
+          }
+        );
 
-      if (nonAvailableError) throw nonAvailableError;
+        if (appendError) {
+          logStep("Append tickets error", { error: appendError.message });
+          throw appendError;
+        }
 
-      if (nonAvailableCount && nonAvailableCount > 0 && !force_rebuild) {
-        logStep("Cannot rebuild - tickets already sold/reserved", { nonAvailableCount });
+        logStep("Append tickets complete", { newTicketsAdded: appendCount, total: totalTickets });
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            count: appendCount, 
+            mode: 'append',
+            existingCount,
+            totalTickets,
+            message: `Se agregaron ${appendCount} boletos nuevos` 
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+      
+      // CASE 2: User wants FEWER tickets (NOT ALLOWED when tickets exist)
+      if (totalTickets < existingCount) {
+        logStep("Cannot reduce tickets - already generated", { existingCount, requestedTotal: totalTickets });
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: `No se pueden regenerar los boletos porque ${nonAvailableCount} ya están vendidos o reservados`,
-            nonAvailableCount 
+            error: `No se puede reducir la cantidad de boletos. Actualmente hay ${existingCount} boletos generados.`,
+            existingCount,
+            requestedTotal: totalTickets
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
         );
       }
-
-      // Delete existing tickets for rebuild
-      logStep("Deleting existing tickets for rebuild");
-      const { error: deleteError } = await supabaseClient
-        .from("tickets")
-        .delete()
-        .eq("raffle_id", raffle_id);
-
-      if (deleteError) throw deleteError;
-      logStep("Deleted existing tickets");
     }
 
     // Calculate batches

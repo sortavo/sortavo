@@ -1582,6 +1582,15 @@ export type Database = {
       }
     }
     Functions: {
+      append_ticket_batch: {
+        Args: {
+          p_existing_count: number
+          p_new_total: number
+          p_numbering_config?: Json
+          p_raffle_id: string
+        }
+        Returns: number
+      }
       apply_custom_numbers: { Args: { p_raffle_id: string }; Returns: number }
       apply_random_permutation: {
         Args: { p_numbering_config?: Json; p_raffle_id: string }

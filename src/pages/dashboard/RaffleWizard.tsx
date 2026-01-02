@@ -513,7 +513,13 @@ export default function RaffleWizard() {
       case 2:
         return <Step2Prize form={form} />;
       case 3:
-        return <Step3Tickets form={form} />;
+        return (
+          <Step3Tickets 
+            form={form} 
+            existingTicketCount={isEditing && existingRaffle ? (existingRaffle.tickets_sold + existingRaffle.tickets_available + existingRaffle.tickets_reserved) : 0}
+            raffleStatus={existingRaffle?.status || undefined}
+          />
+        );
       case 4:
         return <Step4Draw form={form} />;
       case 5:
