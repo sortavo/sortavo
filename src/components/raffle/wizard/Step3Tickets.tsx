@@ -26,6 +26,8 @@ import { CustomNumbersUpload } from './CustomNumbersUpload';
 
 interface Step3Props {
   form: UseFormReturn<any>;
+  existingTicketCount?: number;
+  raffleStatus?: string;
 }
 
 interface Package {
@@ -86,9 +88,14 @@ const PACKAGE_TEMPLATES = [
 ];
 
 
-export const Step3Tickets = ({ form }: Step3Props) => {
+export const Step3Tickets = ({ form, existingTicketCount = 0, raffleStatus }: Step3Props) => {
   const { organization } = useAuth();
   const ticketLimit = getTicketLimitByTier(organization?.subscription_tier || null);
+  
+  // Determine if this is a published raffle with existing tickets
+  const isPublished = raffleStatus && raffleStatus !== 'draft';
+  const hasExistingTickets = existingTicketCount > 0;
+  const canOnlyIncrement = isPublished && hasExistingTickets;
   const [packages, setPackages] = useState<Package[]>([
     { quantity: 3, price: 0, discount_percent: 0, label: '', display_order: 0, bonus_tickets: 0 },
     { quantity: 5, price: 0, discount_percent: 0, label: '', display_order: 1, bonus_tickets: 0 },
@@ -347,31 +354,50 @@ export const Step3Tickets = ({ form }: Step3Props) => {
             <FormField
               control={form.control}
               name="total_tickets"
-              render={({ field }) => (
+              render={({ field }) => {
+                const ticketsToAdd = canOnlyIncrement && field.value > existingTicketCount 
+                  ? field.value - existingTicketCount 
+                  : 0;
+                
+                return (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1.5">
                     Total de Boletos
                     <span className="text-destructive">*</span>
                     <HelpTooltip content="Este es el número total de boletos disponibles para venta. Una vez publicado el sorteo, no podrás reducir esta cantidad." />
                   </FormLabel>
+                  
+                  {/* Banner informativo para rifas publicadas */}
+                  {canOnlyIncrement && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-sm">
+                      <span className="text-base">🔒</span>
+                      <span>
+                        Rifa publicada con <strong>{existingTicketCount.toLocaleString()}</strong> boletos generados. 
+                        Solo puedes agregar más.
+                      </span>
+                    </div>
+                  )}
+                  
                   {/* Botones de atajos rápidos + Input siempre visible */}
                   <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      {quickTicketOptions.map(opt => (
-                        <Button
-                          key={opt}
-                          type="button"
-                          variant={field.value === opt ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => {
-                            field.onChange(opt);
-                            handleBlur('total_tickets');
-                          }}
-                        >
-                          {opt.toLocaleString()}
-                        </Button>
-                      ))}
-                    </div>
+                    {!canOnlyIncrement && (
+                      <div className="flex flex-wrap gap-2">
+                        {quickTicketOptions.map(opt => (
+                          <Button
+                            key={opt}
+                            type="button"
+                            variant={field.value === opt ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              field.onChange(opt);
+                              handleBlur('total_tickets');
+                            }}
+                          >
+                            {opt.toLocaleString()}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
                     
                     {/* Input siempre visible */}
                     <FormControl>
@@ -380,12 +406,15 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                           type="number"
                           value={field.value || ''}
                           onChange={(e) => {
-                            const value = Math.min(parseInt(e.target.value) || 0, ticketLimit);
+                            const rawValue = parseInt(e.target.value) || 0;
+                            // Enforce minimum based on existing tickets for published raffles
+                            const minValue = canOnlyIncrement ? existingTicketCount : 1;
+                            const value = Math.max(minValue, Math.min(rawValue, ticketLimit));
                             field.onChange(value);
                           }}
                           onBlur={() => handleBlur('total_tickets')}
                           max={ticketLimit}
-                          min={1}
+                          min={canOnlyIncrement ? existingTicketCount : 1}
                           placeholder="Cantidad exacta"
                           className={cn("pr-16", totalTicketsError && "border-destructive")}
                         />
@@ -396,15 +425,26 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                     </FormControl>
                   </div>
                   
+                  {/* Mostrar cuántos boletos nuevos se generarán */}
+                  {canOnlyIncrement && ticketsToAdd > 0 && (
+                    <div className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                      ✓ Se generarán {ticketsToAdd.toLocaleString()} boletos adicionales 
+                      (del {(existingTicketCount + 1).toLocaleString()} al {field.value.toLocaleString()})
+                    </div>
+                  )}
+                  
                   <FormDescription>
-                    Tu plan permite hasta {ticketLimit.toLocaleString()} boletos
+                    {canOnlyIncrement 
+                      ? `Mínimo: ${existingTicketCount.toLocaleString()} • Máximo: ${ticketLimit.toLocaleString()}`
+                      : `Tu plan permite hasta ${ticketLimit.toLocaleString()} boletos`
+                    }
                   </FormDescription>
                   {totalTicketsError && (
                     <p className="text-sm font-medium text-destructive">{totalTicketsError}</p>
                   )}
                   <FormMessage />
                 </FormItem>
-              )}
+              )}}
             />
 
             <FormField

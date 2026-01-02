@@ -242,6 +242,22 @@ export const useRaffles = () => {
         .single();
 
       if (error) throw error;
+      
+      // If total_tickets changed on a published raffle, trigger ticket generation
+      // The edge function will handle append mode if needed
+      if (data.total_tickets && raffle.status !== 'draft') {
+        const { data: genResult, error: genError } = await supabase.functions.invoke('generate-tickets', {
+          body: { raffle_id: id },
+        });
+        
+        if (genError) {
+          console.error('Error generating additional tickets:', genError);
+          // Don't throw - the raffle was updated successfully
+        } else if (genResult?.mode === 'append') {
+          console.log(`Added ${genResult.count} new tickets to raffle`);
+        }
+      }
+      
       return raffle;
     },
     onSuccess: (data, variables) => {
