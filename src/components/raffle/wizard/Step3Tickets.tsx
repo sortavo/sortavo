@@ -97,8 +97,7 @@ export const Step3Tickets = ({ form }: Step3Props) => {
   const [packagesInitialized, setPackagesInitialized] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   
-  // Estado para cantidad personalizada de boletos
-  const [isCustomTicketCount, setIsCustomTicketCount] = useState(false);
+  // Ya no necesitamos estado para cantidad personalizada - el input siempre está visible
 
   const currency = form.watch('currency_code') || 'MXN';
   const currencyData = CURRENCIES.find(c => c.code === currency);
@@ -319,13 +318,6 @@ export const Step3Tickets = ({ form }: Step3Props) => {
   const currentTotalTickets = form.watch('total_tickets');
   const isQuickOption = quickTicketOptions.includes(currentTotalTickets);
   
-  // Inicializar modo personalizado si el valor no es una opción rápida
-  useEffect(() => {
-    if (currentTotalTickets > 0 && !quickTicketOptions.includes(currentTotalTickets)) {
-      setIsCustomTicketCount(true);
-    }
-  }, []);
-  
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -346,56 +338,46 @@ export const Step3Tickets = ({ form }: Step3Props) => {
                     <span className="text-destructive">*</span>
                     <HelpTooltip content="Este es el número total de boletos disponibles para venta. Una vez publicado el sorteo, no podrás reducir esta cantidad." />
                   </FormLabel>
-                  {/* Botones de selección rápida */}
+                  {/* Botones de atajos rápidos + Input siempre visible */}
                   <div className="space-y-3">
                     <div className="flex flex-wrap gap-2">
                       {quickTicketOptions.map(opt => (
                         <Button
                           key={opt}
                           type="button"
-                          variant={field.value === opt && !isCustomTicketCount ? "default" : "outline"}
+                          variant={field.value === opt ? "default" : "outline"}
                           size="sm"
                           onClick={() => {
                             field.onChange(opt);
-                            setIsCustomTicketCount(false);
                             handleBlur('total_tickets');
                           }}
                         >
                           {opt.toLocaleString()}
                         </Button>
                       ))}
-                      <Button
-                        type="button"
-                        variant={isCustomTicketCount ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsCustomTicketCount(true)}
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Personalizado
-                      </Button>
                     </div>
                     
-                    {/* Input para cantidad personalizada */}
-                    {isCustomTicketCount && (
-                      <FormControl>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            value={field.value || ''}
-                            onChange={(e) => {
-                              const value = Math.min(parseInt(e.target.value) || 0, ticketLimit);
-                              field.onChange(value);
-                            }}
-                            onBlur={() => handleBlur('total_tickets')}
-                            max={ticketLimit}
-                            min={1}
-                            placeholder="Ej: 1750"
-                            className={cn("max-w-[200px]", totalTicketsError && "border-destructive")}
-                          />
-                          <span className="text-sm text-muted-foreground">boletos</span>
-                        </div>
-                      </FormControl>
-                    )}
+                    {/* Input siempre visible */}
+                    <FormControl>
+                      <div className="relative max-w-[200px]">
+                        <Input
+                          type="number"
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            const value = Math.min(parseInt(e.target.value) || 0, ticketLimit);
+                            field.onChange(value);
+                          }}
+                          onBlur={() => handleBlur('total_tickets')}
+                          max={ticketLimit}
+                          min={1}
+                          placeholder="Cantidad exacta"
+                          className={cn("pr-16", totalTicketsError && "border-destructive")}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                          boletos
+                        </span>
+                      </div>
+                    </FormControl>
                   </div>
                   
                   <FormDescription>
