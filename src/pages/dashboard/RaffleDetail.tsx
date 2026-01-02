@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,8 +11,14 @@ import {
   BarChart3,
   Trophy,
   Pencil,
-  MoreHorizontal
+  MoreHorizontal,
+  Link2,
+  ExternalLink,
+  Copy
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +36,103 @@ import { ExportMenu } from '@/components/raffle/detail/ExportMenu';
 import { RaffleDetailSkeleton } from '@/components/ui/skeletons';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PageTransition } from '@/components/layout/PageTransition';
+
+function RafflePublicLinks({ 
+  orgSlug, 
+  raffleSlug, 
+  organizationId 
+}: { 
+  orgSlug?: string; 
+  raffleSlug?: string; 
+  organizationId?: string;
+}) {
+  const { data: customDomains } = useQuery({
+    queryKey: ['custom-domains-for-raffle', organizationId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('custom_domains')
+        .select('domain, is_primary')
+        .eq('organization_id', organizationId!)
+        .eq('verified', true)
+        .order('is_primary', { ascending: false });
+      return data;
+    },
+    enabled: !!organizationId
+  });
+
+  if (!orgSlug || !raffleSlug) return null;
+
+  const sortavoUrl = `https://sortavo.com/${orgSlug}/${raffleSlug}`;
+  const primaryCustomDomain = customDomains?.find(d => d.is_primary) || customDomains?.[0];
+  const customDomainUrl = primaryCustomDomain 
+    ? `https://${primaryCustomDomain.domain}/${raffleSlug}` 
+    : null;
+
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast.success('Link copiado');
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      {/* Sortavo link */}
+      <div className="inline-flex items-center gap-1 group">
+        <Link2 className="h-3 w-3 text-muted-foreground" />
+        <a 
+          href={sortavoUrl} 
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-primary hover:underline truncate max-w-[180px] sm:max-w-[250px]"
+        >
+          sortavo.com/{orgSlug}/{raffleSlug}
+        </a>
+        <button
+          onClick={() => copyToClipboard(sortavoUrl)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
+        >
+          <Copy className="h-3 w-3 text-muted-foreground" />
+        </button>
+        <a 
+          href={sortavoUrl} 
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-muted-foreground hover:text-primary"
+        >
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
+
+      {/* Custom domain link */}
+      {customDomainUrl && (
+        <div className="inline-flex items-center gap-1 group">
+          <Link2 className="h-3 w-3 text-emerald-600" />
+          <a 
+            href={customDomainUrl} 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-emerald-600 hover:underline truncate max-w-[180px] sm:max-w-[250px]"
+          >
+            {primaryCustomDomain?.domain}/{raffleSlug}
+          </a>
+          <button
+            onClick={() => copyToClipboard(customDomainUrl)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
+          >
+            <Copy className="h-3 w-3 text-muted-foreground" />
+          </button>
+          <a 
+            href={customDomainUrl} 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-600 hover:text-emerald-700"
+          >
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function RaffleDetail() {
   const { id } = useParams();
@@ -98,7 +200,14 @@ export default function RaffleDetail() {
             </Button>
             <div className="min-w-0 flex-1">
               <h1 className="text-base sm:text-2xl font-bold truncate">{raffle.title}</h1>
-              <p className="text-xs text-muted-foreground truncate">{raffle.prize_name}</p>
+              <div className="flex flex-col gap-0.5 mt-0.5">
+                <p className="text-xs text-muted-foreground truncate">{raffle.prize_name}</p>
+                <RafflePublicLinks 
+                  orgSlug={raffle.organization?.slug} 
+                  raffleSlug={raffle.slug} 
+                  organizationId={raffle.organization_id}
+                />
+              </div>
             </div>
             
             {/* Desktop actions */}
