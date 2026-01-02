@@ -302,18 +302,18 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
       {/* Prizes Section */}
       {prizes.length > 0 && (
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
-              Premios del Sorteo
+          <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 shrink-0" />
+              <span>Premios del Sorteo</span>
               {prizes.length > 1 && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ml-auto text-[10px] sm:text-xs">
                   {prizes.length} premios
                 </Badge>
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="p-3 sm:p-4 pt-0 space-y-2 sm:space-y-3">
             {prizes.map((prize, index) => {
               const { emoji, label } = getPrizeLabel(index);
               const currency = getCurrency(prize.currency || raffle.currency_code || 'MXN');
@@ -321,27 +321,27 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
               return (
                 <div 
                   key={prize.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                  className={`flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between p-2.5 sm:p-3 rounded-lg border ${
                     index === 0 
                       ? 'bg-amber-500/10 border-amber-500/30' 
                       : 'bg-muted/50 border-border'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xl flex-shrink-0">{emoji}</span>
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <span className="text-lg sm:text-xl flex-shrink-0">{emoji}</span>
                     <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{label}</p>
-                      <p className={`font-medium truncate ${index === 0 ? 'text-base' : 'text-sm'}`}>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">{label}</p>
+                      <p className={`font-medium break-words ${index === 0 ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'}`}>
                         {prize.name}
                       </p>
                     </div>
                   </div>
                   {prize.value && prize.value > 0 && (
-                    <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
-                      <span className={`font-semibold ${index === 0 ? 'text-base' : 'text-sm'}`}>
+                    <div className="flex items-center gap-1.5 flex-shrink-0 sm:ml-3 pl-7 sm:pl-0">
+                      <span className={`font-semibold ${index === 0 ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'}`}>
                         {formatCurrency(prize.value, prize.currency || raffle.currency_code || 'MXN')}
                       </span>
-                      {currency && <span className="text-sm">{currency.flag}</span>}
+                      {currency && <span className="text-xs sm:text-sm">{currency.flag}</span>}
                     </div>
                   )}
                 </div>
@@ -445,15 +445,15 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
 
       {/* Progress Section */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Progreso de Ventas</CardTitle>
+        <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg">Progreso de Ventas</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between text-sm">
+        <CardContent className="p-3 sm:p-4 pt-0 space-y-3 sm:space-y-4">
+          <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Vendidos</span>
             <span className="font-medium">{soldPercentage.toFixed(1)}%</span>
           </div>
-          <Progress value={soldPercentage} className="h-3" />
+          <Progress value={soldPercentage} className="h-2.5 sm:h-3" />
           <div className="grid grid-cols-3 gap-1 text-muted-foreground">
             <div className="text-center">
               <div className="font-semibold text-foreground text-sm sm:text-base">{raffle.tickets_sold.toLocaleString()}</div>
@@ -474,15 +474,15 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
       {/* Countdown Section */}
       {raffle.draw_date && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Cuenta Regresiva</CardTitle>
+          <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+            <CardTitle className="text-base sm:text-lg">Cuenta Regresiva</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-center py-4">
-              <div className="text-4xl font-bold text-primary mb-2">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-center py-2 sm:py-4">
+              <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">
                 {timeRemaining}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Sorteo: {new Date(raffle.draw_date).toLocaleDateString('es-MX', {
                   day: '2-digit',
                   month: '2-digit',
@@ -498,29 +498,29 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
 
       {/* Recent Activity */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Actividad Reciente
+        <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+            <span>Actividad Reciente</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-4 pt-0">
           {activities && activities.length > 0 ? (
-            <ScrollArea className="h-[300px] pr-4">
-              <div className="space-y-4">
+            <ScrollArea className="h-[250px] sm:h-[300px] pr-2 sm:pr-4">
+              <div className="space-y-3 sm:space-y-4">
                 {activities.map((activity) => (
                   <div 
                     key={activity.id} 
-                    className="flex items-start gap-3 pb-4 border-b last:border-0"
+                    className="flex items-start gap-2 sm:gap-3 pb-3 sm:pb-4 border-b last:border-0"
                   >
-                    <div className="mt-1">
+                    <div className="mt-0.5 sm:mt-1">
                       {getActivityIcon(activity.event_type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm">
+                      <div className="text-xs sm:text-sm">
                         {getActivityText(activity)}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                         {formatDistanceToNow(new Date(activity.created_at || ''), { 
                           addSuffix: true, 
                           locale: es 
@@ -532,9 +532,9 @@ export function OverviewTab({ raffle, onEdit, onToggleStatus, isTogglingStatus }
               </div>
             </ScrollArea>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>No hay actividad reciente</p>
+            <div className="text-center py-6 sm:py-8 text-muted-foreground">
+              <Clock className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 opacity-50" />
+              <p className="text-xs sm:text-sm">No hay actividad reciente</p>
             </div>
           )}
         </CardContent>
