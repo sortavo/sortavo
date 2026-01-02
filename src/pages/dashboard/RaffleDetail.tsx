@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,11 +31,15 @@ import { RaffleDetailSkeleton } from '@/components/ui/skeletons';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { RafflePublicLinks } from '@/components/raffle/RafflePublicLinks';
+import { TicketGenerationBanner } from '@/components/raffle/detail/TicketGenerationBanner';
 
 export default function RaffleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { role } = useAuth();
+  
+  const justPublished = location.state?.justPublished === true;
   
   const { useRaffleById, toggleRaffleStatus } = useRaffles();
   const { data: raffle, isLoading, error } = useRaffleById(id);
@@ -156,6 +160,16 @@ export default function RaffleDetail() {
             </div>
           </div>
         </div>
+
+        {/* Ticket Generation Status Banner */}
+        {raffle.status === 'active' && (
+          <TicketGenerationBanner
+            raffleId={raffle.id}
+            raffleSlug={raffle.slug}
+            orgSlug={raffle.organization?.slug}
+            justPublished={justPublished}
+          />
+        )}
 
         {/* Tabs - grid on mobile, inline on desktop */}
         <Tabs defaultValue="overview" className="space-y-4 w-full max-w-full min-w-0 overflow-hidden">
