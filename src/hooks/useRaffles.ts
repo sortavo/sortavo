@@ -18,6 +18,7 @@ export interface RaffleWithStats extends Raffle {
   organization?: {
     name: string;
     logo_url: string | null;
+    slug: string | null;
   };
 }
 
@@ -110,7 +111,7 @@ export const useRaffles = () => {
 
         const { data: raffle, error: raffleError } = await supabase
           .from('raffles')
-          .select('*, organizations:organization_id(name, logo_url)')
+          .select('*, organizations:organization_id(name, logo_url, slug)')
           .eq('id', raffleId)
           .maybeSingle();
 
@@ -118,7 +119,7 @@ export const useRaffles = () => {
         if (!raffle) return null;
 
         // Extract organization data
-        const organizationData = raffle.organizations as { name: string; logo_url: string | null } | null;
+        const organizationData = raffle.organizations as { name: string; logo_url: string | null; slug: string | null } | null;
 
         // Try to get ticket stats using RPC (bypasses RLS) first, fallback to direct query
         let stats = {
