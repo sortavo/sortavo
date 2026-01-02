@@ -57,6 +57,9 @@ export function useCustomDomains() {
     enabled: !!organization?.id,
   });
 
+  // Lista de subdominios reservados para mostrar advertencia
+  const RESERVED_SUBDOMAINS = ['www', 'api', 'app', 'admin', 'mail', 'ftp', 'cdn', 'static', 'assets', 'media'];
+
   const addDomain = useMutation({
     mutationFn: async (domain: string) => {
       if (!organization?.id) throw new Error("No organization");
@@ -86,27 +89,39 @@ export function useCustomDomains() {
       if (normalizedDomain.length > 253) {
         throw new Error("El dominio es demasiado largo (máximo 253 caracteres)");
       }
+
+      // Detectar si es un subdominio reservado y advertir
+      const parts = normalizedDomain.split('.');
+      if (parts.length > 2) {
+        const subdomain = parts[0];
+        if (RESERVED_SUBDOMAINS.includes(subdomain)) {
+          // No bloqueamos, solo es info para el toast
+          console.info(`[addDomain] Adding reserved subdomain: ${subdomain}`);
+        }
+      }
       
       // Step 1: Register domain in Vercel FIRST
-      console.log('[addDomain] Registering domain in Vercel:', normalizedDomain);
       const { data: vercelResult, error: vercelError } = await supabase.functions.invoke(
         'add-vercel-domain',
         { body: { domain: normalizedDomain } }
       );
 
       if (vercelError) {
-        console.error('[addDomain] Vercel function error:', vercelError);
-        throw new Error(`Error de conexión: ${vercelError.message || 'Error al conectar con Vercel'}`);
+        throw new Error("Error de conexión con el servidor");
       }
 
       if (!vercelResult?.success) {
-        const errorDetail = vercelResult?.error || 'Error desconocido';
-        const statusCode = vercelResult?.statusCode || '';
-        console.error('[addDomain] Vercel API error:', { error: errorDetail, status: statusCode });
-        throw new Error(`Vercel API: ${errorDetail}${statusCode ? ` (HTTP ${statusCode})` : ''}`);
+        // Mapear errores de Vercel a mensajes user-friendly
+        const errorDetail = vercelResult?.error || '';
+        if (errorDetail.includes('already') || errorDetail.includes('exists')) {
+          throw new Error("Este dominio ya está registrado en otro proyecto");
+        } else if (errorDetail.includes('invalid') || errorDetail.includes('format')) {
+          throw new Error("El formato del dominio no es válido");
+        } else if (errorDetail.includes('rate') || errorDetail.includes('limit')) {
+          throw new Error("Demasiadas solicitudes. Intenta en unos minutos.");
+        }
+        throw new Error("Error al registrar el dominio. Intenta de nuevo.");
       }
-
-      console.log('[addDomain] Vercel registration successful:', vercelResult.vercelDomain);
 
       // Step 2: Save to Supabase
       const { data, error: dbError } = await supabase
@@ -120,7 +135,6 @@ export function useCustomDomains() {
 
       if (dbError) {
         // Rollback: Remove from Vercel if DB save fails
-        console.error('[addDomain] DB error, rolling back Vercel:', dbError);
         await supabase.functions.invoke('remove-vercel-domain', {
           body: { domain: normalizedDomain }
         });
@@ -128,14 +142,18 @@ export function useCustomDomains() {
         if (dbError.code === "23505") {
           throw new Error("Este dominio ya está registrado");
         }
-        throw dbError;
+        throw new Error("Error al guardar el dominio");
       }
 
-      return data;
+      return { data, isReservedSubdomain: parts.length > 2 && RESERVED_SUBDOMAINS.includes(parts[0]) };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["custom-domains"] });
-      toast.success("Dominio agregado a Vercel. Configura los registros DNS para verificarlo.");
+      if (result.isReservedSubdomain) {
+        toast.success("Subdominio agregado. Considera también configurar el dominio raíz.", { duration: 5000 });
+      } else {
+        toast.success("Dominio agregado. Configura los registros DNS para verificarlo.");
+      }
     },
     onError: (error: Error) => {
       toast.error(error.message || "Error al agregar dominio");
@@ -144,27 +162,16 @@ export function useCustomDomains() {
 
   const removeDomain = useMutation({
     mutationFn: async (domainId: string) => {
-      // Step 1: Get domain name from DB
       const domainToDelete = domains.find(d => d.id === domainId);
       
       if (domainToDelete) {
-        // Step 2: Remove from Vercel first
-        console.log('[removeDomain] Removing from Vercel:', domainToDelete.domain);
-        const { data: vercelResult, error: vercelError } = await supabase.functions.invoke(
-          'remove-vercel-domain',
-          { body: { domain: domainToDelete.domain } }
-        );
-
-        if (vercelError) {
-          console.error('[removeDomain] Vercel function error:', vercelError);
-          // Continue anyway - domain might not exist in Vercel
-        } else if (!vercelResult?.success) {
-          console.warn('[removeDomain] Vercel removal warning:', vercelResult?.error);
-          // Continue anyway - we still want to delete from DB
-        }
+        // Remove from Vercel first (continue even if fails)
+        await supabase.functions.invoke('remove-vercel-domain', {
+          body: { domain: domainToDelete.domain }
+        }).catch(() => { /* Domain might not exist in Vercel */ });
       }
 
-      // Step 3: Delete from Supabase
+      // Delete from Supabase
       const { error } = await supabase
         .from("custom_domains")
         .delete()
@@ -174,7 +181,7 @@ export function useCustomDomains() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["custom-domains"] });
-      toast.success("Dominio eliminado de Vercel y base de datos");
+      toast.success("Dominio eliminado");
     },
     onError: () => {
       toast.error("Error al eliminar dominio");
@@ -185,17 +192,11 @@ export function useCustomDomains() {
     mutationFn: async (domainId: string) => {
       if (!organization?.id) throw new Error("No organization");
 
-      // First, unset all primary domains for this org
-      await supabase
-        .from("custom_domains")
-        .update({ is_primary: false })
-        .eq("organization_id", organization.id);
-
-      // Then set the new primary
-      const { error } = await supabase
-        .from("custom_domains")
-        .update({ is_primary: true })
-        .eq("id", domainId);
+      // Use atomic RPC function to set primary domain
+      const { error } = await supabase.rpc('set_primary_domain', {
+        p_domain_id: domainId,
+        p_organization_id: organization.id
+      });
 
       if (error) throw error;
     },
@@ -263,23 +264,17 @@ export function useCustomDomains() {
 
   const diagnoseVercel = useMutation({
     mutationFn: async () => {
-      console.log('[diagnoseVercel] Starting Vercel access diagnosis...');
       const { data, error } = await supabase.functions.invoke('diagnose-vercel-access');
       
       if (error) {
-        console.error('[diagnoseVercel] Function error:', error);
         throw new Error('Error al ejecutar diagnóstico');
       }
       
-      console.log('[diagnoseVercel] Full diagnosis result:', data);
       return data;
     },
     onSuccess: (result) => {
       if (result?.diagnosis?.recommendation) {
-        toast.success("Diagnóstico completado", {
-          description: "Revisa el resultado en el modal",
-          duration: 3000
-        });
+        toast.success("Diagnóstico completado");
       }
     },
     onError: (error: Error) => {

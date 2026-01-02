@@ -1529,6 +1529,10 @@ export type Database = {
           ticket_number: string
         }[]
       }
+      set_primary_domain: {
+        Args: { p_domain_id: string; p_organization_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "member"
