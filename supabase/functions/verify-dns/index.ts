@@ -1,37 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { VERCEL_IPS, VERCEL_CNAMES, validateDomain } from "../_shared/vercel-config.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Updated Vercel IPs (as of 2024) - https://vercel.com/docs/projects/domains
-const VERCEL_IPS = [
-  '76.76.21.21',
-  '76.76.21.164',
-  '76.76.21.241',
-  '76.76.21.98',
-  '76.76.21.142',
-  '76.76.21.9',
-  '76.76.21.61',
-  '76.76.21.123'
-];
-
-const VERCEL_CNAMES = [
-  'cname.vercel-dns.com',
-  'cname-china.vercel-dns.com',
-  'alias.vercel.com'
-];
-
-// Domain validation regex
-const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
-
-function isValidDomain(domain: string): boolean {
-  if (!domain || typeof domain !== 'string') return false;
-  const normalized = domain.toLowerCase().trim();
-  return normalized.length > 0 && normalized.length <= 253 && DOMAIN_REGEX.test(normalized);
-}
 
 interface DNSVerificationResult {
   verified: boolean;
@@ -77,22 +51,16 @@ serve(async (req) => {
 
     const { domain } = await req.json();
 
-    if (!domain) {
-      return new Response(
-        JSON.stringify({ error: 'Domain is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Validate domain format
-    if (!isValidDomain(domain)) {
+    const validation = validateDomain(domain);
+    if (!validation.valid) {
       return new Response(
-        JSON.stringify({ error: 'Invalid domain format' }),
+        JSON.stringify({ error: validation.error }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const normalizedDomain = domain.toLowerCase().trim();
+    const normalizedDomain = validation.normalizedDomain!;
     console.log(`[verify-dns] Checking domain: ${normalizedDomain}`);
 
     // Query Google DNS API for A records with timeout

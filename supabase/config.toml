@@ -103,10 +103,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.add-vercel-domain]
-verify_jwt = false
+verify_jwt = true
 
 [functions.remove-vercel-domain]
-verify_jwt = false
+verify_jwt = true
 
 [functions.diagnose-vercel-access]
 verify_jwt = false
