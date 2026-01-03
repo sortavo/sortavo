@@ -18,6 +18,7 @@ interface PackageCardsProps {
   selectedQuantity: number;
   onSelect: (quantity: number) => void;
   bestPackageId?: string;
+  isLightTemplate?: boolean;
 }
 
 export function PackageCards({
@@ -27,8 +28,32 @@ export function PackageCards({
   selectedQuantity,
   onSelect,
   bestPackageId,
+  isLightTemplate = false,
 }: PackageCardsProps) {
   if (packages.length === 0) return null;
+
+  // Theme-aware colors
+  const colors = isLightTemplate ? {
+    text: 'text-gray-900',
+    textMuted: 'text-gray-500',
+    textSubtle: 'text-gray-400',
+    cardBg: 'bg-white',
+    border: 'border-gray-200',
+    hoverBorder: 'hover:border-gray-300',
+    hoverBg: 'hover:bg-gray-50',
+    hoverShadow: 'hover:shadow-xl hover:shadow-emerald-500/10',
+    orbBg: 'bg-emerald-300/20',
+  } : {
+    text: 'text-white',
+    textMuted: 'text-white/50',
+    textSubtle: 'text-white/40',
+    cardBg: 'bg-white/[0.03]',
+    border: 'border-white/[0.08]',
+    hoverBorder: 'hover:border-white/[0.15]',
+    hoverBg: 'hover:bg-white/[0.05]',
+    hoverShadow: 'hover:shadow-xl hover:shadow-emerald-500/10',
+    orbBg: 'bg-emerald-500/5',
+  };
 
   // Sort packages by quantity
   const sortedPackages = [...packages].sort((a, b) => a.quantity - b.quantity);
@@ -43,16 +68,16 @@ export function PackageCards({
 
   return (
     <div className="w-full relative">
-      {/* TIER S: Noise texture overlay */}
+      {/* Noise texture overlay */}
       <div className="absolute inset-0 opacity-[0.015] pointer-events-none [background-image:url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E')]" />
       
       {/* Subtle background orb */}
       <motion.div 
-        className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2"
-        animate={{ 
-          scale: [1, 1.15, 1],
-          opacity: [0.3, 0.5, 0.3]
-        }}
+        className={cn(
+          "absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2",
+          colors.orbBg
+        )}
+        animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
       
@@ -61,8 +86,8 @@ export function PackageCards({
           <Sparkles className="w-6 h-6 text-emerald-400" />
         </div>
         <div>
-          <h3 className="font-bold text-white text-lg tracking-tight">Paquetes con Descuento</h3>
-          <p className="text-sm text-white/50">Ahorra más comprando en paquete</p>
+          <h3 className={cn("font-bold text-lg tracking-tight", colors.text)}>Paquetes con Descuento</h3>
+          <p className={cn("text-sm", colors.textMuted)}>Ahorra más comprando en paquete</p>
         </div>
       </div>
       
@@ -88,15 +113,15 @@ export function PackageCards({
                 "relative flex-shrink-0 w-[180px] md:w-full snap-center",
                 "rounded-2xl p-8 lg:p-10 text-left transition-all duration-300",
                 "border backdrop-blur-xl touch-active",
-                // Default state - TIER S glassmorphism with hover glow
-                !isSelected && !isBest && "border-white/[0.08] bg-white/[0.03] hover:border-white/[0.15] hover:bg-white/[0.05] hover:shadow-xl hover:shadow-emerald-500/10",
-                // Best value (not selected) - TIER S animated border glow
+                // Default state
+                !isSelected && !isBest && cn(colors.cardBg, colors.border, colors.hoverBorder, colors.hoverBg, colors.hoverShadow),
+                // Best value (not selected)
                 !isSelected && isBest && "border-emerald-500/40 bg-emerald-500/5 gradient-border-animated hover:shadow-xl hover:shadow-emerald-500/25",
-                // Selected state - TIER S emerald solid with glow
+                // Selected state
                 isSelected && "bg-emerald-500/10 border-emerald-500 shadow-xl shadow-emerald-500/30"
               )}
             >
-              {/* Best value badge with shimmer - TIER S */}
+              {/* Best value badge */}
               {isBest && (
                 <motion.div
                   initial={{ scale: 0 }}
@@ -110,7 +135,7 @@ export function PackageCards({
                 </motion.div>
               )}
               
-              {/* Selected checkmark - TIER S */}
+              {/* Selected checkmark */}
               {isSelected && (
                 <motion.div
                   initial={{ scale: 0 }}
@@ -121,41 +146,41 @@ export function PackageCards({
                 </motion.div>
               )}
               
-              {/* Content - TIER S typography */}
+              {/* Content */}
               <div className="space-y-5">
-                {/* Quantity - Dramatic TIER S */}
+                {/* Quantity */}
                 <div className="text-center">
                   <motion.span
                     key={pkg.quantity}
                     className={cn(
                       "text-5xl lg:text-6xl font-black tracking-[-0.05em]",
-                      isSelected ? "text-emerald-400" : "text-white"
+                      isSelected ? "text-emerald-400" : colors.text
                     )}
                   >
                     {pkg.quantity}
                   </motion.span>
-                  <p className="text-sm text-white/50 mt-1.5">
+                  <p className={cn("text-sm mt-1.5", colors.textMuted)}>
                     boletos
                   </p>
                 </div>
                 
-                {/* Price - TIER S enhanced */}
+                {/* Price */}
                 <div className="text-center space-y-2">
                   <p className={cn(
                     "text-2xl lg:text-3xl font-bold tracking-tight",
-                    isSelected ? "text-emerald-400" : "text-white"
+                    isSelected ? "text-emerald-400" : colors.text
                   )}>
                     {formatCurrency(pkg.price, currency)}
                   </p>
                   
                   {hasDiscount && (
-                    <p className="text-sm line-through text-white/30">
+                    <p className={cn("text-sm line-through", colors.textSubtle)}>
                       {formatCurrency(originalPrice, currency)}
                     </p>
                   )}
                 </div>
                 
-                {/* Discount badge - TIER S with glow */}
+                {/* Discount badge */}
                 {hasDiscount && (
                   <div className="flex justify-center">
                     <span 
@@ -169,7 +194,7 @@ export function PackageCards({
                   </div>
                 )}
                 
-                {/* Savings - TIER S */}
+                {/* Savings */}
                 {savings > 0 && (
                   <motion.p
                     key={savings}
@@ -183,7 +208,7 @@ export function PackageCards({
                 
                 {/* Label */}
                 {pkg.label && (
-                  <p className="text-center text-xs truncate text-white/40">
+                  <p className={cn("text-center text-xs truncate", colors.textSubtle)}>
                     {pkg.label}
                   </p>
                 )}
