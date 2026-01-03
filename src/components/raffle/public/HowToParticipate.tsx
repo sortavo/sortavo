@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Ticket, CreditCard, Trophy } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const steps = [
   {
@@ -24,11 +25,35 @@ const steps = [
 
 interface HowToParticipateProps {
   className?: string;
+  isLightTemplate?: boolean;
 }
 
-export function HowToParticipate({ className = "" }: HowToParticipateProps) {
+export function HowToParticipate({ className = "", isLightTemplate = false }: HowToParticipateProps) {
+  // Theme-aware colors
+  const colors = isLightTemplate ? {
+    sectionBg: 'bg-gray-50/80',
+    text: 'text-gray-900',
+    textMuted: 'text-gray-500',
+    cardBg: 'bg-white',
+    cardBorder: 'border-gray-200',
+    hoverBorder: 'hover:border-emerald-500/40',
+    iconBg: 'bg-gray-100',
+    iconBorder: 'border-gray-200',
+    connectorLine: 'from-emerald-400/30',
+  } : {
+    sectionBg: 'bg-gray-950/50',
+    text: 'text-gray-200',
+    textMuted: 'text-gray-400',
+    cardBg: 'bg-gray-900/80',
+    cardBorder: 'border-white/10',
+    hoverBorder: 'hover:border-emerald-500/30',
+    iconBg: 'bg-gray-900/80',
+    iconBorder: 'border-white/10',
+    connectorLine: 'from-emerald-500/30',
+  };
+
   return (
-    <section className={`py-12 bg-gray-950/50 ${className}`}>
+    <section className={cn("py-12", colors.sectionBg, className)}>
       <div className="max-w-5xl mx-auto px-5">
         <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
           {steps.map((step, index) => (
@@ -42,13 +67,19 @@ export function HowToParticipate({ className = "" }: HowToParticipateProps) {
             >
               {/* Connector line for desktop */}
               {index < steps.length - 1 && (
-                <div className="hidden sm:block absolute top-8 left-[60%] w-full h-px bg-gradient-to-r from-emerald-500/30 to-transparent" />
+                <div className={cn(
+                  "hidden sm:block absolute top-8 left-[60%] w-full h-px bg-gradient-to-r to-transparent",
+                  colors.connectorLine
+                )} />
               )}
               
               <div className="flex sm:flex-col items-start sm:items-center gap-4 sm:gap-3 text-left sm:text-center">
-                {/* Icon with number - /pricing style */}
+                {/* Icon with number */}
                 <div className="relative flex-shrink-0">
-                  <div className="w-16 h-16 rounded-2xl bg-gray-900/80 border border-white/10 flex items-center justify-center shadow-lg hover:border-emerald-500/30 transition-all">
+                  <div className={cn(
+                    "w-16 h-16 rounded-2xl border flex items-center justify-center shadow-lg transition-all",
+                    colors.iconBg, colors.iconBorder, colors.hoverBorder
+                  )}>
                     <step.icon className="w-8 h-8 text-emerald-400" />
                   </div>
                   <div className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center shadow-lg">
@@ -58,10 +89,10 @@ export function HowToParticipate({ className = "" }: HowToParticipateProps) {
                 
                 {/* Text */}
                 <div className="flex-1 sm:flex-initial">
-                  <h3 className="font-semibold text-gray-200 mb-1">
+                  <h3 className={cn("font-semibold mb-1", colors.text)}>
                     {step.title}
                   </h3>
-                  <p className="text-sm text-gray-400">
+                  <p className={cn("text-sm", colors.textMuted)}>
                     {step.description}
                   </p>
                 </div>

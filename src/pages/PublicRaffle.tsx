@@ -12,6 +12,7 @@ import {
   Trophy, 
 } from "lucide-react";
 import { formatCurrency } from "@/lib/currency-utils";
+import { cn } from "@/lib/utils";
 import { getSubscriptionLimits, SubscriptionTier } from "@/lib/subscription-limits";
 import { getTemplateById } from "@/lib/raffle-utils";
 import { usePublicRaffle, usePreviewRaffle } from "@/hooks/usePublicRaffle";
@@ -188,6 +189,23 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
     return selectedTickets.length * Number(raffle.ticket_price);
   };
 
+  // Fetch announced draws for this raffle (must be before early returns - React hooks rule)
+  const { data: announcedDrawsData } = useQuery({
+    queryKey: ['announced-draws', raffle?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('raffle_draws')
+        .select('id, prize_id, prize_name, prize_value, ticket_number, winner_name, winner_city, draw_type, drawn_at')
+        .eq('raffle_id', raffle!.id)
+        .eq('announced', true)
+        .order('drawn_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!raffle?.id,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-ultra-dark">
@@ -217,6 +235,17 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
     );
   }
 
+  // Parse prizes and separate main prize from pre-draws (after early returns)
+  const allPrizes = parsePrizes((raffle as any).prizes, raffle.prize_name, raffle.prize_value ? Number(raffle.prize_value) : null);
+  
+  // Main prize = prize without scheduled_draw_date, or the last prize if all have dates
+  const mainPrize = allPrizes.find(p => !p.scheduled_draw_date) || allPrizes[allPrizes.length - 1];
+  
+  // Pre-draw prizes = prizes with scheduled_draw_date (excluding main prize)
+  const preDrawPrizes = allPrizes.filter(p => p.scheduled_draw_date && p.id !== mainPrize?.id);
+
+  const announcedDraws = announcedDrawsData || [];
+
   const url = typeof window !== 'undefined' ? window.location.href : '';
   const progress = (raffle.ticketsSold / raffle.total_tickets) * 100;
   const currency = raffle.currency_code || 'MXN';
@@ -226,34 +255,6 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
   const limits = getSubscriptionLimits(orgTier);
 
   const mainImage = raffle.prize_images?.[0] || '/placeholder.svg';
-
-  // Parse prizes and separate main prize from pre-draws
-  const allPrizes = parsePrizes((raffle as any).prizes, raffle.prize_name, raffle.prize_value ? Number(raffle.prize_value) : null);
-  
-  // Main prize = prize without scheduled_draw_date, or the last prize if all have dates
-  const mainPrize = allPrizes.find(p => !p.scheduled_draw_date) || allPrizes[allPrizes.length - 1];
-  
-  // Pre-draw prizes = prizes with scheduled_draw_date (excluding main prize)
-  const preDrawPrizes = allPrizes.filter(p => p.scheduled_draw_date && p.id !== mainPrize?.id);
-
-  // Fetch announced draws for this raffle
-  const { data: announcedDrawsData } = useQuery({
-    queryKey: ['announced-draws', raffle.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('raffle_draws')
-        .select('id, prize_id, prize_name, prize_value, ticket_number, winner_name, winner_city, draw_type, drawn_at')
-        .eq('raffle_id', raffle.id)
-        .eq('announced', true)
-        .order('drawn_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!raffle.id,
-  });
-
-  const announcedDraws = announcedDrawsData || [];
   
   // Filter out pre-draw prizes that have already been drawn
   const drawnPrizeIds = new Set(announcedDraws.map(d => d.prize_id));
@@ -482,7 +483,7 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
         {showPurchaseToasts && <PurchaseToast raffleId={raffle.id} />}
 
         {/* How To Participate - Mobile only shows this compact version */}
-        {isMobile && showHowItWorks && <HowToParticipate />}
+        {isMobile && showHowItWorks && <HowToParticipate isLightTemplate={isLightTemplate} />}
 
         {/* Ticket Selection Section - /pricing style */}
         {showTicketGrid && (
@@ -522,6 +523,7 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
                 showProbabilityStats={showStats && showProbabilityStats}
                 ticketsSold={showStats ? raffle.ticketsSold : 0}
                 ticketsAvailable={raffle.ticketsAvailable}
+                isLightTemplate={isLightTemplate}
               />
 
               {showSocialProof && (
@@ -557,18 +559,33 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
         <TransparencySection 
           drawMethod={(raffle as any).draw_method}
           livestreamUrl={(raffle as any).livestream_url}
+          isLightTemplate={isLightTemplate}
         />
 
         {/* How It Works - Desktop only (mobile uses compact version above) */}
         {!isMobile && showHowItWorks && (
-          <div className="bg-white/[0.03] border-y border-white/[0.06] py-16 backdrop-blur-sm">
+          <div className={cn(
+            "border-y py-16 backdrop-blur-sm",
+            isLightTemplate 
+              ? "bg-gray-50/80 border-gray-200" 
+              : "bg-white/[0.03] border-white/[0.06]"
+          )}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-12">
-                <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-3">Proceso</p>
-                <h2 className="text-3xl font-bold text-white tracking-tight mb-3">¿Cómo Participar?</h2>
-                <p className="text-lg text-white/50">Es muy fácil, solo sigue estos pasos</p>
+                <p className={cn(
+                  "text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] mb-3",
+                  isLightTemplate ? "text-gray-400" : "text-white/40"
+                )}>Proceso</p>
+                <h2 className={cn(
+                  "text-3xl font-bold tracking-tight mb-3",
+                  isLightTemplate ? "text-gray-900" : "text-white"
+                )}>¿Cómo Participar?</h2>
+                <p className={cn(
+                  "text-lg",
+                  isLightTemplate ? "text-gray-500" : "text-white/50"
+                )}>Es muy fácil, solo sigue estos pasos</p>
               </div>
-              <HowToParticipate />
+              <HowToParticipate isLightTemplate={isLightTemplate} />
             </div>
           </div>
         )}
@@ -600,6 +617,7 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
             }}
             raffleTitle={raffle.title}
             brandColor={primaryColor}
+            isLightTemplate={isLightTemplate}
           />
         )}
 
@@ -628,17 +646,37 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
               email: org.email
             } : null}
             customization={customization}
+            isLightTemplate={isLightTemplate}
           />
         )}
 
         {/* Terms Section */}
         {raffle.prize_terms && (
-          <div className="bg-white/[0.02] border-y border-white/[0.06] py-12 lg:py-16">
+          <div className={cn(
+            "border-y py-12 lg:py-16",
+            isLightTemplate 
+              ? "bg-gray-50/50 border-gray-200" 
+              : "bg-white/[0.02] border-white/[0.06]"
+          )}>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-4">Legal</p>
-              <h2 className="text-xl lg:text-2xl font-bold text-white tracking-tight mb-6">Términos y Condiciones</h2>
-              <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
-                <p className="whitespace-pre-wrap text-white/70 text-sm leading-relaxed">{raffle.prize_terms}</p>
+              <p className={cn(
+                "text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] mb-4",
+                isLightTemplate ? "text-gray-400" : "text-white/40"
+              )}>Legal</p>
+              <h2 className={cn(
+                "text-xl lg:text-2xl font-bold tracking-tight mb-6",
+                isLightTemplate ? "text-gray-900" : "text-white"
+              )}>Términos y Condiciones</h2>
+              <div className={cn(
+                "rounded-2xl p-6 border",
+                isLightTemplate 
+                  ? "bg-white border-gray-200" 
+                  : "bg-white/[0.03] border-white/[0.06]"
+              )}>
+                <p className={cn(
+                  "whitespace-pre-wrap text-sm leading-relaxed",
+                  isLightTemplate ? "text-gray-600" : "text-white/70"
+                )}>{raffle.prize_terms}</p>
               </div>
             </div>
           </div>
@@ -661,14 +699,26 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
               website_url: org.website_url,
             }}
             raffleTitle={raffle.title}
+            isLightTemplate={isLightTemplate}
           />
         )}
 
         {/* Footer */}
         {!limits.canRemoveBranding && (
-          <footer className="border-t border-white/[0.06] py-8 bg-[#030712]">
-            <div className="max-w-7xl mx-auto px-4 text-center text-sm text-white/30">
-              <p>Powered by <span className="font-medium text-white/50">Sortavo</span></p>
+          <footer className={cn(
+            "border-t py-8",
+            isLightTemplate 
+              ? "bg-white border-gray-200" 
+              : "bg-[#030712] border-white/[0.06]"
+          )}>
+            <div className={cn(
+              "max-w-7xl mx-auto px-4 text-center text-sm",
+              isLightTemplate ? "text-gray-400" : "text-white/30"
+            )}>
+              <p>Powered by <span className={cn(
+                "font-medium",
+                isLightTemplate ? "text-gray-600" : "text-white/50"
+              )}>Sortavo</span></p>
             </div>
           </footer>
         )}

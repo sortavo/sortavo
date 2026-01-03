@@ -44,6 +44,7 @@ interface FAQSectionProps {
     };
   };
   className?: string;
+  isLightTemplate?: boolean;
 }
 
 interface SmartFAQ {
@@ -69,7 +70,7 @@ const DRAW_METHOD_LABELS: Record<string, string> = {
   random_org: 'Random.org (generador aleatorio certificado)',
 };
 
-export function FAQSection({ raffle, organization, customization, className }: FAQSectionProps) {
+export function FAQSection({ raffle, organization, customization, className, isLightTemplate = false }: FAQSectionProps) {
   const sections = customization?.sections || {};
   const faqConfig = customization?.faq_config || { show_default_faqs: true, custom_faqs: [] };
   const showFaqSection = sections.faq !== false;
@@ -80,6 +81,33 @@ export function FAQSection({ raffle, organization, customization, className }: F
 
   const currency = raffle.currency_code || 'MXN';
   const packages = raffle.packages || [];
+
+  // Theme-aware colors
+  const colors = isLightTemplate ? {
+    text: 'text-gray-900',
+    textMuted: 'text-gray-500',
+    textSubtle: 'text-gray-400',
+    cardBg: 'bg-gray-50',
+    border: 'border-gray-200',
+    hoverBorder: 'hover:border-emerald-500/40',
+    iconBg: 'bg-gray-100',
+    iconText: 'text-gray-600',
+    badgeBg: 'bg-emerald-100',
+    badgeText: 'text-emerald-700',
+    badgeBorder: 'border-emerald-200',
+  } : {
+    text: 'text-white',
+    textMuted: 'text-white/60',
+    textSubtle: 'text-white/40',
+    cardBg: 'bg-white/[0.03]',
+    border: 'border-white/[0.08]',
+    hoverBorder: 'hover:border-emerald-500/20',
+    iconBg: 'bg-white/[0.05]',
+    iconText: 'text-white/60',
+    badgeBg: 'bg-emerald-500/10',
+    badgeText: 'text-emerald-400',
+    badgeBorder: 'border-emerald-500/20',
+  };
 
   const generateSmartFAQs = (): SmartFAQ[] => {
     const faqs: SmartFAQ[] = [];
@@ -257,14 +285,18 @@ export function FAQSection({ raffle, organization, customization, className }: F
   return (
     <div className={cn("max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20", className)}>
       <div className="text-center mb-14">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-semibold mb-5 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
+        <div className={cn(
+          "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-5 border shadow-lg",
+          colors.badgeBg, colors.badgeText, colors.badgeBorder,
+          isLightTemplate ? "shadow-emerald-500/10" : "shadow-emerald-500/5"
+        )}>
           <HelpCircle className="w-4 h-4" />
           Resolvemos tus dudas
         </div>
-        <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tight mb-4">
+        <h2 className={cn("text-3xl lg:text-4xl font-black tracking-tight mb-4", colors.text)}>
           Preguntas Frecuentes
         </h2>
-        <p className="text-white/50 text-lg">
+        <p className={cn("text-lg", colors.textMuted)}>
           Todo lo que necesitas saber sobre este sorteo
         </p>
       </div>
@@ -277,11 +309,11 @@ export function FAQSection({ raffle, organization, customization, className }: F
           return (
             <div key={cat.id} className="space-y-4">
               <div className="flex items-center gap-3 px-1">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-emerald-400" />
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", colors.badgeBg)}>
+                  <Icon className={cn("w-5 h-5", colors.badgeText)} />
                 </div>
-                <h3 className="font-semibold text-white text-lg">{cat.label}</h3>
-                <span className="text-sm text-white/40">({faqs.length})</span>
+                <h3 className={cn("font-semibold text-lg", colors.text)}>{cat.label}</h3>
+                <span className={cn("text-sm", colors.textSubtle)}>({faqs.length})</span>
               </div>
               
               <Accordion type="single" collapsible className="w-full space-y-3">
@@ -289,17 +321,26 @@ export function FAQSection({ raffle, organization, customization, className }: F
                   <AccordionItem 
                     key={faq.id} 
                     value={faq.id} 
-                    className="bg-white/[0.03] rounded-xl border border-white/[0.08] px-5 sm:px-6 overflow-hidden backdrop-blur-sm hover:border-emerald-500/20 transition-colors"
+                    className={cn(
+                      "rounded-xl px-5 sm:px-6 overflow-hidden backdrop-blur-sm transition-colors",
+                      colors.cardBg, colors.border, colors.hoverBorder
+                    )}
                   >
-                    <AccordionTrigger className="text-left font-medium hover:no-underline text-sm sm:text-base py-5 text-white">
+                    <AccordionTrigger className={cn(
+                      "text-left font-medium hover:no-underline text-sm sm:text-base py-5",
+                      colors.text
+                    )}>
                       <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/[0.05] text-white/60 flex items-center justify-center">
+                        <div className={cn(
+                          "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center",
+                          colors.iconBg, colors.iconText
+                        )}>
                           {faq.icon}
                         </div>
                         <span>{faq.question}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-white/60 text-sm pb-5 pl-14">
+                    <AccordionContent className={cn("text-sm pb-5 pl-14", colors.textMuted)}>
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>

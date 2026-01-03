@@ -64,6 +64,7 @@ interface TicketSelectorProps {
   showProbabilityStats?: boolean;
   ticketsSold?: number;
   ticketsAvailable?: number;
+  isLightTemplate?: boolean;
 }
 
 export function TicketSelector({
@@ -81,8 +82,50 @@ export function TicketSelector({
   showProbabilityStats = true,
   ticketsSold = 0,
   ticketsAvailable = 0,
+  isLightTemplate = false,
 }: TicketSelectorProps) {
   const isMobile = useIsMobile();
+
+  // Theme-aware colors
+  const colors = isLightTemplate ? {
+    text: 'text-gray-900',
+    textMuted: 'text-gray-500',
+    textSubtle: 'text-gray-400',
+    cardBg: 'bg-white',
+    cardBgSubtle: 'bg-gray-50',
+    border: 'border-gray-200',
+    borderSubtle: 'border-gray-100',
+    inputBg: 'bg-white',
+    inputBorder: 'border-gray-300',
+    inputText: 'text-gray-900',
+    inputPlaceholder: 'placeholder:text-gray-400',
+    selectBg: 'bg-white',
+    tabsBg: 'bg-gray-100',
+    tabsActive: 'data-[state=active]:bg-white',
+    tabsText: 'text-gray-600',
+    tabsActiveText: 'data-[state=active]:text-gray-900',
+    buttonOutline: 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+    buttonDisabled: 'disabled:opacity-40',
+  } : {
+    text: 'text-white',
+    textMuted: 'text-white/50',
+    textSubtle: 'text-white/40',
+    cardBg: 'bg-white/[0.03]',
+    cardBgSubtle: 'bg-white/[0.02]',
+    border: 'border-white/[0.06]',
+    borderSubtle: 'border-white/[0.08]',
+    inputBg: 'bg-white/[0.03]',
+    inputBorder: 'border-white/[0.08]',
+    inputText: 'text-white',
+    inputPlaceholder: 'placeholder:text-white/30',
+    selectBg: 'bg-white/[0.03]',
+    tabsBg: 'bg-white/[0.03]',
+    tabsActive: 'data-[state=active]:bg-white/[0.06]',
+    tabsText: 'text-white/40',
+    tabsActiveText: 'data-[state=active]:text-white',
+    buttonOutline: 'border-white/[0.08] text-white/70 hover:bg-white/[0.06] hover:text-white hover:border-white/[0.12]',
+    buttonDisabled: 'disabled:opacity-30',
+  };
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
   const [mode, setMode] = useState<'manual' | 'random' | 'search' | 'lucky'>('manual');
   const [page, setPage] = useState(1);
@@ -540,18 +583,25 @@ export function TicketSelector({
         />
       )}
 
-      {/* Premium dark container */}
-      <div className="bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.06] p-5 sm:p-6 lg:p-8">
+      {/* Main container - theme aware */}
+      <div className={cn(
+        "backdrop-blur-xl rounded-2xl border p-5 sm:p-6 lg:p-8",
+        colors.cardBg, colors.border
+      )}>
         <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
           <TabsList className={cn(
-            "grid w-full mb-8 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]",
+            "grid w-full mb-8 p-1 rounded-xl border",
+            colors.tabsBg, colors.border,
             visibleTabs.length === 2 && "grid-cols-2",
             visibleTabs.length === 3 && "grid-cols-3",
             visibleTabs.length === 4 && "grid-cols-4"
           )}>
             <TabsTrigger 
               value="manual" 
-              className="rounded-lg text-white/40 data-[state=active]:bg-white/[0.06] data-[state=active]:text-white data-[state=active]:shadow-none text-xs sm:text-sm transition-all duration-200"
+              className={cn(
+                "rounded-lg text-xs sm:text-sm transition-all duration-200 data-[state=active]:shadow-none",
+                colors.tabsText, colors.tabsActive, colors.tabsActiveText
+              )}
             >
               Manual
             </TabsTrigger>

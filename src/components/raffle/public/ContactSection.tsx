@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { 
   MapPin, 
   Phone, 
@@ -27,9 +28,29 @@ interface ContactSectionProps {
     website_url: string | null;
   };
   raffleTitle: string;
+  isLightTemplate?: boolean;
 }
 
-export function ContactSection({ organization, raffleTitle }: ContactSectionProps) {
+export function ContactSection({ organization, raffleTitle, isLightTemplate = false }: ContactSectionProps) {
+  // Theme-aware colors
+  const colors = isLightTemplate ? {
+    text: 'text-gray-900',
+    textMuted: 'text-gray-500',
+    textSubtle: 'text-gray-400',
+    cardBg: 'bg-white',
+    cardBgSubtle: 'bg-gray-50',
+    border: 'border-gray-200',
+    borderSubtle: 'border-gray-100',
+  } : {
+    text: 'text-white',
+    textMuted: 'text-white/50',
+    textSubtle: 'text-white/40',
+    cardBg: 'bg-white/[0.03]',
+    cardBgSubtle: 'bg-white/[0.02]',
+    border: 'border-white/[0.06]',
+    borderSubtle: 'border-white/[0.04]',
+  };
+
   // Combine all WhatsApp numbers
   const allWhatsApps = [
     ...organization.whatsapp_numbers,
@@ -77,29 +98,29 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
       className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20"
     >
       <div className="text-center mb-10">
-        <p className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white/40 mb-3">
+        <p className={cn("text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] mb-3", colors.textSubtle)}>
           Contacto
         </p>
-        <h2 className="text-xl lg:text-2xl font-bold text-white tracking-tight">
+        <h2 className={cn("text-xl lg:text-2xl font-bold tracking-tight", colors.text)}>
           ¿Tienes preguntas?
         </h2>
-        <p className="text-white/50 mt-2">Contacta a {organization.name}</p>
+        <p className={cn("mt-2", colors.textMuted)}>Contacta a {organization.name}</p>
       </div>
 
-      <div className="bg-white/[0.03] rounded-2xl border border-white/[0.06] backdrop-blur-sm p-6 sm:p-8 space-y-6">
+      <div className={cn("rounded-2xl border backdrop-blur-sm p-6 sm:p-8 space-y-6", colors.cardBg, colors.border)}>
         {/* Location */}
         {hasLocation && (
-          <div className="flex items-start gap-4 p-4 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+          <div className={cn("flex items-start gap-4 p-4 rounded-xl border", colors.cardBgSubtle, colors.borderSubtle)}>
             <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center shrink-0">
               <MapPin className="w-5 h-5 text-rose-400" />
             </div>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Ubicación</p>
+              <p className={cn("text-xs uppercase tracking-wider mb-1", colors.textSubtle)}>Ubicación</p>
               {organization.city && (
-                <p className="text-sm text-white font-medium">{organization.city}</p>
+                <p className={cn("text-sm font-medium", colors.text)}>{organization.city}</p>
               )}
               {organization.address && (
-                <p className="text-xs text-white/50 mt-0.5">{organization.address}</p>
+                <p className={cn("text-xs mt-0.5", colors.textMuted)}>{organization.address}</p>
               )}
             </div>
           </div>
@@ -108,7 +129,7 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
         {/* WhatsApp Numbers */}
         {allWhatsApps.length > 0 && (
           <div>
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <p className={cn("text-xs uppercase tracking-wider mb-3 flex items-center gap-2", colors.textSubtle)}>
               <FaWhatsapp className="w-3.5 h-3.5 text-emerald-500" />
               WhatsApp
             </p>
@@ -122,7 +143,7 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
                   className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/30 rounded-lg px-4 py-2.5 transition-all group"
                 >
                   <FaWhatsapp className="w-4 h-4 text-emerald-500" />
-                  <span className="text-sm text-white/80 group-hover:text-white">
+                  <span className={cn("text-sm group-hover:text-emerald-500", isLightTemplate ? "text-gray-700" : "text-white/80")}>
                     {number}
                   </span>
                 </a>
@@ -134,7 +155,7 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
         {/* Phone Numbers */}
         {allPhones.length > 0 && (
           <div>
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <p className={cn("text-xs uppercase tracking-wider mb-3 flex items-center gap-2", colors.textSubtle)}>
               <Phone className="w-3.5 h-3.5 text-blue-500" />
               Teléfonos
             </p>
@@ -146,7 +167,7 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
                   className="flex items-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/30 rounded-lg px-4 py-2.5 transition-all group"
                 >
                   <Phone className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm text-white/80 group-hover:text-white">
+                  <span className={cn("text-sm group-hover:text-blue-500", isLightTemplate ? "text-gray-700" : "text-white/80")}>
                     {number}
                   </span>
                 </a>
@@ -158,7 +179,7 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
         {/* Email Addresses */}
         {allEmails.length > 0 && (
           <div>
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <p className={cn("text-xs uppercase tracking-wider mb-3 flex items-center gap-2", colors.textSubtle)}>
               <Mail className="w-3.5 h-3.5 text-purple-500" />
               Correos electrónicos
             </p>
@@ -170,7 +191,7 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
                   className="flex items-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/30 rounded-lg px-4 py-2.5 transition-all group"
                 >
                   <Mail className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm text-white/80 group-hover:text-white truncate max-w-[220px]">
+                  <span className={cn("text-sm truncate max-w-[220px] group-hover:text-purple-500", isLightTemplate ? "text-gray-700" : "text-white/80")}>
                     {email}
                   </span>
                 </a>
@@ -182,7 +203,7 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
         {/* Social Links */}
         {hasSocials && (
           <div>
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-3">Redes Sociales</p>
+            <p className={cn("text-xs uppercase tracking-wider mb-3", colors.textSubtle)}>Redes Sociales</p>
             <div className="flex flex-wrap items-center gap-3">
               {socialLinks.map((social, idx) => (
                 <a
@@ -190,7 +211,12 @@ export function ContactSection({ organization, raffleTitle }: ContactSectionProp
                   href={social.url!}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 rounded-full flex items-center justify-center bg-white/[0.05] border border-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all"
+                  className={cn(
+                    "w-11 h-11 rounded-full flex items-center justify-center border transition-all",
+                    isLightTemplate 
+                      ? "bg-gray-100 border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-200"
+                      : "bg-white/[0.05] border-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.1]"
+                  )}
                   title={social.label}
                 >
                   <social.icon className="w-5 h-5" />
