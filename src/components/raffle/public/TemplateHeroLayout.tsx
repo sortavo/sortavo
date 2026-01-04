@@ -175,22 +175,25 @@ export function TemplateHeroLayout({
             }`}
           >
             <div className="relative">
-              {/* Emerald glow behind avatar */}
+              {/* Custom color glow behind avatar */}
               <div 
-                className={`absolute inset-0 blur-xl bg-emerald-500 transition-all duration-500 ${
+                className={`absolute inset-0 blur-xl transition-all duration-500 ${
                   isScrolled ? 'opacity-20' : 'opacity-40 group-hover:opacity-60'
                 }`}
+                style={{ backgroundColor: customColors?.primary || '#10b981' }}
               />
               <Avatar 
-                className={`relative border-2 border-emerald-500/30 shadow-xl transition-all duration-500 group-hover:scale-105 ${
+                className={`relative border-2 shadow-xl transition-all duration-500 group-hover:scale-105 ${
                   isScrolled ? 'h-10 w-10' : 'h-16 w-16'
                 }`}
+                style={{ borderColor: `${customColors?.primary || '#10b981'}50` }}
               >
                 <AvatarImage src={organization.logo_url || undefined} alt={organization.name} className="object-cover" />
                 <AvatarFallback 
-                  className={`font-bold text-white bg-emerald-700 transition-all duration-500 ${
+                  className={`font-bold text-white transition-all duration-500 ${
                     isScrolled ? 'text-sm' : 'text-xl'
                   }`}
+                  style={{ backgroundColor: customColors?.primary || '#10b981' }}
                 >
                   {organization.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
