@@ -55,6 +55,7 @@ export function RafflePreview({ form, className, activeSection, scrollProgress }
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isAutoScrollingRef = useRef(false);
+  const lastAutoScrollAtRef = useRef(0);
   const lastActiveSectionRef = useRef<PreviewSection | undefined>(undefined);
   
   // Listen for manual scroll on preview container
@@ -63,8 +64,9 @@ export function RafflePreview({ form, className, activeSection, scrollProgress }
     if (!container) return;
     
     const handleScroll = () => {
-      // Ignore scroll events triggered by auto-scroll
+      // Ignore scroll events triggered by auto-scroll (within 200ms)
       if (isAutoScrollingRef.current) return;
+      if (performance.now() - lastAutoScrollAtRef.current < 200) return;
       
       isUserScrollingRef.current = true;
       
@@ -104,7 +106,8 @@ export function RafflePreview({ form, className, activeSection, scrollProgress }
     // Skip if already at the target (avoid jitter)
     if (Math.abs(container.scrollTop - targetTop) < 2) return;
     
-    // Mark as auto-scrolling
+    // Mark timestamp and flag for anti-bounce
+    lastAutoScrollAtRef.current = performance.now();
     isAutoScrollingRef.current = true;
     container.scrollTop = targetTop;
     
