@@ -40,6 +40,9 @@ interface RafflePreviewProps {
 }
 
 export function RafflePreview({ form, className, activeSection, scrollProgress }: RafflePreviewProps) {
+  // Debug: Log every render with scrollProgress value
+  console.log('🔵 RafflePreview RENDER, scrollProgress prop:', scrollProgress);
+  
   const [viewMode, setViewMode] = useState<ViewMode>('mobile');
   const { organization } = useAuth();
   const values = form.watch();
