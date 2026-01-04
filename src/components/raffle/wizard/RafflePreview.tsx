@@ -113,6 +113,18 @@ export function RafflePreview({ form, className, activeSection, scrollProgress }
       return;
     }
     
+    // Debug: Check container layout state
+    const rect = container.getBoundingClientRect();
+    const computed = getComputedStyle(container);
+    console.log('🔍 Container layout:', {
+      display: computed.display,
+      visibility: computed.visibility,
+      width: rect.width,
+      height: rect.height,
+      scrollHeight: container.scrollHeight,
+      childElementCount: container.childElementCount
+    });
+    
     // Use requestAnimationFrame to ensure layout is calculated
     const rafId = requestAnimationFrame(() => {
       const maxScroll = container.scrollHeight - container.clientHeight;
