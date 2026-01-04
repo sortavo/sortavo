@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
@@ -92,14 +92,56 @@ export default function RaffleWizard() {
   const [showPreview, setShowPreview] = useState(true);
   const [hasManualSave, setHasManualSave] = useState(false);
   const [activePreviewSection, setActivePreviewSection] = useState<PreviewSection>('template');
-  const [previewScrollProgress, setPreviewScrollProgress] = useState<number | undefined>(undefined);
+  const [previewScrollProgress, setPreviewScrollProgress] = useState<number>(0);
   
-  // Reset scroll progress when leaving step 5
+  // Ref for the form content area to track scroll progress
+  const formContentRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  
+  // Calculate scroll progress from the form content area
   useEffect(() => {
-    if (currentStep !== 5) {
-      setPreviewScrollProgress(undefined);
-    }
-  }, [currentStep]);
+    if (!showPreview) return;
+    
+    const calculateProgress = () => {
+      const formContent = formContentRef.current;
+      if (!formContent) return;
+      
+      const rect = formContent.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const usable = rect.height - viewportHeight;
+      
+      if (usable <= 0) {
+        setPreviewScrollProgress(0);
+        return;
+      }
+      
+      const scrolled = -rect.top;
+      const progress = Math.max(0, Math.min(1, scrolled / usable));
+      setPreviewScrollProgress(progress);
+    };
+    
+    const handleScroll = () => {
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        calculateProgress();
+      });
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+    
+    // Initial calculation
+    calculateProgress();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [showPreview]);
 
   // Check if there are enabled payment methods
   const enabledPaymentMethods = paymentMethods?.filter(m => m.enabled) || [];
@@ -556,7 +598,6 @@ export default function RaffleWizard() {
             hasPaymentMethods={hasEnabledPaymentMethods}
             onNavigateToStep={handleNavigateToStep}
             onSectionChange={setActivePreviewSection}
-            onScrollProgress={setPreviewScrollProgress}
           />
         );
       default:
@@ -750,7 +791,7 @@ export default function RaffleWizard() {
         {/* Main Content with Preview */}
         <div className={`grid gap-5 md:gap-6 ${showPreview ? 'lg:grid-cols-[1fr,380px] xl:grid-cols-[1fr,420px]' : ''}`}>
           {/* Left: Form */}
-          <div className="space-y-4">
+          <div ref={formContentRef} className="space-y-4">
             <Form {...form}>
               <form onSubmit={(e) => e.preventDefault()}>
                 <Card className="overflow-hidden border-border/50 shadow-sm bg-card rounded-xl">
@@ -816,7 +857,7 @@ export default function RaffleWizard() {
               <RafflePreview 
                 form={form} 
                 activeSection={currentStep === 5 ? activePreviewSection : undefined}
-                scrollProgress={currentStep === 5 ? previewScrollProgress : undefined}
+                scrollProgress={previewScrollProgress}
               />
             </div>
           )}

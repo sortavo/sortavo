@@ -39,7 +39,6 @@ interface Step5Props {
   hasPaymentMethods?: boolean;
   onNavigateToStep?: (step: number) => void;
   onSectionChange?: (section: 'template' | 'colors' | 'logo' | 'features' | 'faq') => void;
-  onScrollProgress?: (progress: number) => void;
 }
 
 // Feature configuration definitions
@@ -113,8 +112,7 @@ export const Step5Design = ({
   canPublish, 
   hasPaymentMethods,
   onNavigateToStep,
-  onSectionChange,
-  onScrollProgress
+  onSectionChange
 }: Step5Props) => {
   const { toast } = useToast();
   const selectedTemplate = form.watch('template_id') || 'modern';
@@ -129,50 +127,6 @@ export const Step5Design = ({
   // Refs for section observation
   const sectionsRef = useRef<Map<WizardSection, HTMLElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number | null>(null);
-  
-  // Proportional scroll progress tracking
-  useEffect(() => {
-    if (!onScrollProgress) return;
-    
-    const handleScroll = () => {
-      if (rafRef.current) return; // Throttle with rAF
-      
-      rafRef.current = requestAnimationFrame(() => {
-        rafRef.current = null;
-        const root = rootRef.current;
-        if (!root) return;
-        
-        const rect = root.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const usable = rect.height - viewportHeight;
-        
-        if (usable <= 0) {
-          onScrollProgress(0);
-          return;
-        }
-        
-        const scrolled = -rect.top;
-        const progress = Math.max(0, Math.min(1, scrolled / usable));
-        onScrollProgress(progress);
-      });
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
-    
-    // Initial calculation
-    handleScroll();
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, [onScrollProgress]);
 
   // Set up intersection observer for section tracking
   useEffect(() => {
@@ -228,7 +182,7 @@ export const Step5Design = ({
   };
 
   return (
-    <div ref={rootRef} className="space-y-4 md:space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Validation Summary */}
       {stepValidations && onNavigateToStep && (
         <ValidationSummary 
