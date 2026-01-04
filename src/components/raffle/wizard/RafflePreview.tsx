@@ -26,7 +26,12 @@ import {
   HelpCircle,
   Gift,
   CreditCard,
-  PartyPopper
+  PartyPopper,
+  Shield,
+  Building2,
+  PlayCircle,
+  FileText,
+  MessageCircle,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency-utils';
 import { format } from 'date-fns';
@@ -643,25 +648,34 @@ export function RafflePreview({ form, className, activeSection, scrollProgress }
             </div>
           )}
 
-          {/* Countdown Preview */}
+          {/* Countdown Preview - Lottery Style */}
           {showSection('countdown') && drawDate && (
             <div className="px-3 pb-3">
               <Card 
-                className="border p-2"
+                className="border-0 p-3 text-center"
                 style={{ 
-                  background: isDarkTemplate 
-                    ? `linear-gradient(to right, ${colors.cardBg}, ${colors.cardBg})`
-                    : 'linear-gradient(to right, #f9fafb, #f3f4f6)',
-                  borderColor: `${primaryColor}15`,
+                  background: effects.gradient,
                 }}
               >
-                <div className="flex items-center justify-center gap-1.5 text-[10px]" style={{ color: colors.textMuted }}>
-                  <Clock className="w-3 h-3" />
-                  <span>Termina: </span>
-                  <span className="font-mono font-bold" style={{ color: colors.text }}>
-                    {format(new Date(drawDate), 'dd/MM/yyyy HH:mm', { locale: es })}
-                  </span>
+                <p className="text-[8px] text-white/70 uppercase tracking-wider mb-2">El sorteo se realizará en</p>
+                <div className="flex items-center justify-center gap-1.5">
+                  {[
+                    { value: '15', label: 'Días' },
+                    { value: '08', label: 'Hrs' },
+                    { value: '42', label: 'Min' },
+                    { value: '30', label: 'Seg' },
+                  ].map((unit, idx) => (
+                    <div key={idx} className="flex flex-col items-center">
+                      <div className="bg-white/20 backdrop-blur rounded px-2 py-1.5">
+                        <span className="text-base font-bold font-mono text-white">{unit.value}</span>
+                      </div>
+                      <span className="text-[7px] text-white/60 mt-0.5">{unit.label}</span>
+                    </div>
+                  ))}
                 </div>
+                <p className="text-[7px] text-white/50 mt-2">
+                  {format(new Date(drawDate), "d 'de' MMMM, yyyy 'a las' HH:mm", { locale: es })}
+                </p>
               </Card>
             </div>
           )}
@@ -876,6 +890,136 @@ export function RafflePreview({ form, className, activeSection, scrollProgress }
               )}
             </div>
           )}
+
+          {/* Transparency Section Preview */}
+          {(drawMethod || values.livestream_url) && (
+            <div className="px-3 pb-3 space-y-1.5">
+              <h3 
+                className="font-semibold text-xs flex items-center gap-1.5"
+                style={{ color: colors.text, fontFamily: `"${fonts.title}", sans-serif` }}
+              >
+                <Shield className="w-3.5 h-3.5" style={{ color: primaryColor }} />
+                Transparencia
+              </h3>
+              <div 
+                className="p-2 rounded-lg space-y-1"
+                style={{ backgroundColor: colors.cardBg }}
+              >
+                {drawMethodInfo && (
+                  <div className="flex items-center gap-2 text-[10px]" style={{ color: colors.text }}>
+                    <span>{drawMethodInfo.icon}</span>
+                    <span>Método: {drawMethodInfo.label}</span>
+                  </div>
+                )}
+                {values.livestream_url && (
+                  <div className="flex items-center gap-2 text-[10px]" style={{ color: colors.textMuted }}>
+                    <PlayCircle className="w-3 h-3" style={{ color: primaryColor }} />
+                    <span>Transmisión en vivo disponible</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Terms Preview */}
+          {values.prize_terms && (
+            <div className="px-3 pb-3 space-y-1.5">
+              <h3 
+                className="font-semibold text-xs flex items-center gap-1.5"
+                style={{ color: colors.text, fontFamily: `"${fonts.title}", sans-serif` }}
+              >
+                <FileText className="w-3.5 h-3.5" style={{ color: primaryColor }} />
+                Términos y Condiciones
+              </h3>
+              <div 
+                className="p-2 rounded-lg text-[9px] line-clamp-3"
+                style={{ backgroundColor: colors.cardBg, color: colors.textMuted }}
+              >
+                {values.prize_terms}
+              </div>
+            </div>
+          )}
+
+          {/* Organizer Preview */}
+          {organization && (
+            <div className="px-3 pb-3 space-y-1.5">
+              <h3 
+                className="font-semibold text-xs flex items-center gap-1.5"
+                style={{ color: colors.text, fontFamily: `"${fonts.title}", sans-serif` }}
+              >
+                <Building2 className="w-3.5 h-3.5" style={{ color: primaryColor }} />
+                Organizador
+              </h3>
+              <div 
+                className="p-2 rounded-lg flex items-center gap-2"
+                style={{ backgroundColor: colors.cardBg }}
+              >
+                <Avatar className="h-8 w-8 border-2" style={{ borderColor: primaryColor }}>
+                  <AvatarImage src={orgLogo || undefined} />
+                  <AvatarFallback 
+                    className="text-[10px] font-semibold text-white"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {orgName.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-[10px] font-medium flex items-center gap-1" style={{ color: colors.text }}>
+                    {orgName}
+                    <CheckCircle2 className="w-3 h-3" style={{ color: primaryColor }} />
+                  </p>
+                  <p className="text-[8px]" style={{ color: colors.textMuted }}>Organizador verificado</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Feature Indicators */}
+          <div className="px-3 pb-3 space-y-1">
+            <p className="text-[8px] font-medium" style={{ color: colors.textMuted }}>
+              Funciones activas:
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {customization.show_random_picker !== false && (
+                <Badge variant="outline" className="text-[7px] px-1.5 py-0.5" style={{ borderColor: `${primaryColor}30`, color: colors.textMuted }}>
+                  🎰 Lucky Machine
+                </Badge>
+              )}
+              {customization.show_probability_stats !== false && (
+                <Badge variant="outline" className="text-[7px] px-1.5 py-0.5" style={{ borderColor: `${primaryColor}30`, color: colors.textMuted }}>
+                  📊 Probabilidades
+                </Badge>
+              )}
+              {customization.show_viewers_count !== false && (
+                <Badge variant="outline" className="text-[7px] px-1.5 py-0.5" style={{ borderColor: `${primaryColor}30`, color: colors.textMuted }}>
+                  👀 Visitantes
+                </Badge>
+              )}
+              {customization.show_purchase_toasts !== false && (
+                <Badge variant="outline" className="text-[7px] px-1.5 py-0.5" style={{ borderColor: `${primaryColor}30`, color: colors.textMuted }}>
+                  🔔 Notificaciones
+                </Badge>
+              )}
+              {customization.show_social_proof !== false && (
+                <Badge variant="outline" className="text-[7px] px-1.5 py-0.5" style={{ borderColor: `${primaryColor}30`, color: colors.textMuted }}>
+                  ✨ Social Proof
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Footer Preview */}
+          <div 
+            className="px-3 py-2 text-center border-t"
+            style={{ 
+              backgroundColor: colors.background,
+              borderColor: `${primaryColor}15`,
+            }}
+          >
+            <p className="text-[8px]" style={{ color: colors.textMuted }}>
+              Powered by <span className="font-medium" style={{ color: colors.text }}>Sortavo</span>
+            </p>
+          </div>
           
           {/* Mobile bottom bar */}
           {isMobile && (
