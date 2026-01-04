@@ -175,11 +175,8 @@ export const MAX_RESERVATION_MINUTES = 10080; // 7 days
 
 export type TemplateLayoutType = 
   | 'modern'      // Side-by-side hero, horizontal carousel
-  | 'classic'     // Centered content, grid gallery
-  | 'minimal'     // Single focus, asymmetric whitespace
-  | 'festive'     // Full-width hero, confetti, large carousel
-  | 'elegant'     // Dark asymmetric, luxury feel
-  | 'sports';     // Bold full-width, action-oriented
+  | 'ultra-white' // Premium luminous with emerald shadows
+  | 'elegant';    // Dark asymmetric, luxury feel
 
 export interface TemplateLayout {
   heroStyle: 'side-by-side' | 'centered' | 'full-width' | 'asymmetric';
@@ -302,120 +299,6 @@ export const RAFFLE_TEMPLATES: RaffleTemplate[] = [
     },
   },
   {
-    id: 'classic',
-    name: 'Clásico',
-    description: 'Elegancia tradicional con acentos premium',
-    icon: '🏛️',
-    colors: {
-      primary: '#8B5CF6',      // Violet-500
-      secondary: '#A78BFA',    // Violet-400
-      accent: '#D97706',       // Amber-600
-      background: '#FFFBF5',
-      cardBg: 'rgba(254, 247, 237, 0.9)',
-      text: '#1C1917',
-      textMuted: '#78716C',
-    },
-    fonts: {
-      title: 'Playfair Display',
-      body: 'Lora',
-    },
-    effects: {
-      borderRadius: '0.5rem',
-      shadow: '0 4px 20px rgba(139, 92, 246, 0.15)',
-      gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
-      glassmorphism: {
-        enabled: true,
-        blur: 'backdrop-blur-md',
-        opacity: 0.9,
-        border: '1px solid rgba(139, 92, 246, 0.1)',
-      },
-    },
-    layout: {
-      heroStyle: 'centered',
-      galleryStyle: 'grid',
-      pricePosition: 'below',
-      contentAlignment: 'center',
-      sectionSpacing: 'generous',
-      decorations: ['borders'],
-    },
-  },
-  {
-    id: 'minimal',
-    name: 'Minimalista',
-    description: 'Simple con toques sutiles de color',
-    icon: '⬜',
-    colors: {
-      primary: '#4F46E5',      // Indigo-600
-      secondary: '#6366F1',    // Indigo-500
-      accent: '#10B981',       // Emerald-500 (Success)
-      background: '#FFFFFF',
-      cardBg: 'rgba(250, 250, 250, 0.95)',
-      text: '#09090B',
-      textMuted: '#71717A',
-    },
-    fonts: {
-      title: 'Inter',
-      body: 'Inter',
-    },
-    effects: {
-      borderRadius: '0.75rem',
-      shadow: '0 2px 8px rgba(79, 70, 229, 0.08)',
-      gradient: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
-      glassmorphism: {
-        enabled: false,
-        blur: 'backdrop-blur-sm',
-        opacity: 0.95,
-      },
-    },
-    layout: {
-      heroStyle: 'asymmetric',
-      galleryStyle: 'single-focus',
-      pricePosition: 'side',
-      contentAlignment: 'left',
-      sectionSpacing: 'generous',
-      decorations: ['none'],
-    },
-  },
-  {
-    id: 'festive',
-    name: 'Festivo',
-    description: 'Vibrante y celebratorio con gradientes premium',
-    icon: '🎉',
-    colors: {
-      primary: '#EC4899',      // Pink-500
-      secondary: '#F472B6',    // Pink-400
-      accent: '#F59E0B',       // Amber-500
-      background: '#FFF7ED',
-      cardBg: 'rgba(255, 251, 235, 0.85)',
-      text: '#1F2937',
-      textMuted: '#6B7280',
-    },
-    fonts: {
-      title: 'Poppins',
-      body: 'Nunito',
-    },
-    effects: {
-      borderRadius: '1.5rem',
-      shadow: '0 20px 50px -15px rgba(236, 72, 153, 0.3)',
-      gradient: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 50%, #F59E0B 100%)',
-      pattern: 'radial-gradient(circle at 2px 2px, rgba(251,191,36,0.3) 1px, transparent 0)',
-      glassmorphism: {
-        enabled: true,
-        blur: 'backdrop-blur-xl',
-        opacity: 0.85,
-        border: '1px solid rgba(236, 72, 153, 0.2)',
-      },
-    },
-    layout: {
-      heroStyle: 'full-width',
-      galleryStyle: 'carousel',
-      pricePosition: 'badge',
-      contentAlignment: 'center',
-      sectionSpacing: 'compact',
-      decorations: ['confetti', 'patterns'],
-    },
-  },
-  {
     id: 'elegant',
     name: 'Elegante',
     description: 'Ultra premium oscuro con glassmorphism',
@@ -451,44 +334,6 @@ export const RAFFLE_TEMPLATES: RaffleTemplate[] = [
       contentAlignment: 'left',
       sectionSpacing: 'generous',
       decorations: ['glow', 'borders'],
-    },
-  },
-  {
-    id: 'sports',
-    name: 'Deportivo',
-    description: 'Dinámico con acentos emerald y amber',
-    icon: '⚡',
-    colors: {
-      primary: '#10B981',      // Emerald-500
-      secondary: '#34D399',    // Emerald-400
-      accent: '#F59E0B',       // Amber-500 (CTA)
-      background: '#ECFDF5',
-      cardBg: 'rgba(240, 253, 244, 0.9)',
-      text: '#14532D',
-      textMuted: '#4D7C0F',
-    },
-    fonts: {
-      title: 'Bebas Neue',
-      body: 'Roboto',
-    },
-    effects: {
-      borderRadius: '0.75rem',
-      shadow: '0 10px 30px -5px rgba(16, 185, 129, 0.3)',
-      gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 50%, #F59E0B 100%)',
-      glassmorphism: {
-        enabled: true,
-        blur: 'backdrop-blur-lg',
-        opacity: 0.9,
-        border: '1px solid rgba(16, 185, 129, 0.2)',
-      },
-    },
-    layout: {
-      heroStyle: 'full-width',
-      galleryStyle: 'carousel',
-      pricePosition: 'overlay',
-      contentAlignment: 'center',
-      sectionSpacing: 'compact',
-      decorations: ['patterns'],
     },
   },
 ];

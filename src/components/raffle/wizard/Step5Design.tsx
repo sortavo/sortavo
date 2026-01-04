@@ -167,7 +167,7 @@ export const Step5Design = ({
                       field.onChange(value);
                     }}
                     defaultValue={field.value || 'modern'}
-                    className="grid grid-cols-3 sm:grid-cols-6 gap-2"
+                    className="grid grid-cols-3 gap-4"
                   >
                     {RAFFLE_TEMPLATES.map((template, index) => {
                       const isLocked = index >= templatesAvailable;
