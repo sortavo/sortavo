@@ -3,6 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useEffect } from "react";
 
+interface RaffleStats {
+  id: string;
+  title: string;
+  totalTickets: number;
+  ticketsSold: number;
+  ticketsReserved: number;
+  revenue: number;
+  conversionRate: number;
+  drawDate: string | null;
+}
+
 interface DashboardStats {
   activeRaffles: number;
   totalRevenue: number;
@@ -10,6 +21,7 @@ interface DashboardStats {
   totalTickets: number;
   conversionRate: number;
   pendingApprovals: number;
+  activeRafflesList: RaffleStats[];
   recentActivity: {
     title: string;
     description: string;
@@ -69,6 +81,7 @@ export function useDashboardStats() {
           totalTickets: 0,
           conversionRate: 0,
           pendingApprovals: 0,
+          activeRafflesList: [],
           recentActivity: []
         };
       }
@@ -76,16 +89,17 @@ export function useDashboardStats() {
       // Fetch raffles for this organization
       const { data: raffles, error: rafflesError } = await supabase
         .from("raffles")
-        .select("id, status, total_tickets, ticket_price, title, created_at")
+        .select("id, status, total_tickets, ticket_price, title, created_at, draw_date")
         .eq("organization_id", organization.id);
 
       if (rafflesError) throw rafflesError;
 
-      const activeRaffles = raffles?.filter(r => r.status === "active").length || 0;
-      const raffleIds = raffles?.map(r => r.id) || [];
+      const activeRafflesData = raffles?.filter(r => r.status === "active") || [];
+      const activeRaffles = activeRafflesData.length;
+      const activeRaffleIds = activeRafflesData.map(r => r.id);
 
       // If no raffles, return empty stats
-      if (raffleIds.length === 0) {
+      if (activeRaffleIds.length === 0) {
         return {
           activeRaffles: 0,
           totalRevenue: 0,
@@ -93,27 +107,28 @@ export function useDashboardStats() {
           totalTickets: 0,
           conversionRate: 0,
           pendingApprovals: 0,
+          activeRafflesList: [],
           recentActivity: []
         };
       }
 
-      // Fetch tickets for these raffles
+      // Fetch tickets for active raffles only
       const { data: tickets, error: ticketsError } = await supabase
         .from("tickets")
         .select("id, status, raffle_id, buyer_name, ticket_number, sold_at, reserved_at, approved_at")
-        .in("raffle_id", raffleIds);
+        .in("raffle_id", activeRaffleIds);
 
       if (ticketsError) throw ticketsError;
 
-      // Calculate stats
+      // Calculate stats for active raffles only
       const soldTickets = tickets?.filter(t => t.status === "sold") || [];
       const reservedTickets = tickets?.filter(t => t.status === "reserved") || [];
-      const totalTickets = raffles?.reduce((sum, r) => sum + r.total_tickets, 0) || 0;
+      const totalTickets = activeRafflesData.reduce((sum, r) => sum + r.total_tickets, 0);
       
       // Calculate revenue based on sold tickets and their raffle prices
       let totalRevenue = 0;
       for (const ticket of soldTickets) {
-        const raffle = raffles?.find(r => r.id === ticket.raffle_id);
+        const raffle = activeRafflesData.find(r => r.id === ticket.raffle_id);
         if (raffle) {
           totalRevenue += Number(raffle.ticket_price);
         }
@@ -126,6 +141,28 @@ export function useDashboardStats() {
 
       // Count pending approvals (reserved tickets)
       const pendingApprovals = reservedTickets.length;
+
+      // Build individual raffle stats
+      const activeRafflesList: RaffleStats[] = activeRafflesData.map(raffle => {
+        const raffleTickets = tickets?.filter(t => t.raffle_id === raffle.id) || [];
+        const raffleSold = raffleTickets.filter(t => t.status === "sold").length;
+        const raffleReserved = raffleTickets.filter(t => t.status === "reserved").length;
+        const raffleRevenue = raffleSold * Number(raffle.ticket_price);
+        const raffleConversion = raffle.total_tickets > 0 
+          ? Math.round((raffleSold / raffle.total_tickets) * 100) 
+          : 0;
+
+        return {
+          id: raffle.id,
+          title: raffle.title,
+          totalTickets: raffle.total_tickets,
+          ticketsSold: raffleSold,
+          ticketsReserved: raffleReserved,
+          revenue: raffleRevenue,
+          conversionRate: raffleConversion,
+          drawDate: raffle.draw_date
+        };
+      });
 
       // Get recent activity from analytics events
       const { data: analyticsEvents, error: analyticsError } = await supabase
@@ -183,6 +220,7 @@ export function useDashboardStats() {
         totalTickets,
         conversionRate,
         pendingApprovals,
+        activeRafflesList,
         recentActivity: recentActivity.slice(0, 5)
       };
     },
