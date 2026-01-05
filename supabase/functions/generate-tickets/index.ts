@@ -130,18 +130,41 @@ serve(async (req) => {
     if (repair_prefix && existingCount && existingCount > 0) {
       logStep("REPAIR PREFIX MODE: Checking for missing tickets at start");
       
-      // Find the minimum ticket_index
-      const { data: minTicket, error: minError } = await supabaseClient
+      let minIndex = 1;
+      
+      // First try to find minimum via ticket_index (for new tickets with proper index)
+      const { data: minByIndex, error: minIndexError } = await supabaseClient
         .from("tickets")
         .select("ticket_index")
         .eq("raffle_id", raffle_id)
+        .not("ticket_index", "is", null)
         .order("ticket_index", { ascending: true })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (minError && minError.code !== 'PGRST116') throw minError;
+      if (minIndexError) throw minIndexError;
 
-      const minIndex = minTicket?.ticket_index || 1;
+      if (minByIndex?.ticket_index) {
+        minIndex = minByIndex.ticket_index;
+        logStep("Found minIndex via ticket_index", { minIndex });
+      } else {
+        // Fallback: Use SQL function that parses ticket_number (for legacy tickets with NULL ticket_index)
+        logStep("ticket_index is NULL, using get_min_ticket_number RPC fallback");
+        const { data: minByNumber, error: rpcError } = await supabaseClient.rpc(
+          'get_min_ticket_number',
+          { p_raffle_id: raffle_id }
+        );
+        
+        if (rpcError) {
+          logStep("RPC fallback error", { error: rpcError.message });
+          throw rpcError;
+        }
+        
+        if (minByNumber) {
+          minIndex = minByNumber;
+          logStep("Found minIndex via ticket_number parsing", { minIndex });
+        }
+      }
       
       if (minIndex > 1) {
         // There are missing tickets at the start (1 to minIndex-1)
