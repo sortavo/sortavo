@@ -11,7 +11,7 @@ import { SimulationProvider } from "@/contexts/SimulationContext";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { SimulationBanner } from "@/components/admin/SimulationBanner";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
-import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
+
 import { SentryErrorBoundary } from "@/components/errors/SentryErrorBoundary";
 import { SortavoTrackingProvider } from "@/components/tracking/SortavoTrackingProvider";
 import Index from "./pages/Index";
@@ -190,7 +190,6 @@ const App = () => (
                   <Route path="/:orgSlug/:slug/payment" element={<PaymentInstructions />} />
                 <Route path="*" element={<NotFound />} />
                 </Routes>
-                  <CookieConsentBanner />
                 </SimulationProvider>
               </TenantProvider>
             </AuthProvider>
