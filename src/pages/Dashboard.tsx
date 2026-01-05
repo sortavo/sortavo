@@ -327,26 +327,34 @@ export default function Dashboard() {
                 </Button>
               </div>
               
-              {stats?.activeRaffles && stats.activeRaffles > 0 ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                        <Ticket className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{stats.activeRaffles} sorteo{stats.activeRaffles > 1 ? 's' : ''} activo{stats.activeRaffles > 1 ? 's' : ''}</p>
-                        <p className="text-sm text-muted-foreground">{stats.ticketsSold} de {stats.totalTickets} boletos vendidos</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => navigate('/dashboard/raffles')}
+              {stats?.activeRafflesList && stats.activeRafflesList.length > 0 ? (
+                <div className="space-y-3 max-h-[320px] overflow-y-auto">
+                  {stats.activeRafflesList.map((raffle) => (
+                    <div 
+                      key={raffle.id}
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl hover:from-primary/10 hover:to-accent/10 cursor-pointer transition-colors group"
+                      onClick={() => navigate(`/dashboard/raffles/${raffle.id}`)}
                     >
-                      Gestionar
-                    </Button>
-                  </div>
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Ticket className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-foreground truncate">{raffle.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {raffle.ticketsSold.toLocaleString()} de {raffle.totalTickets.toLocaleString()} vendidos ({raffle.conversionRate}%)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-4">
+                        <p className="font-semibold text-foreground">{formatCurrency(raffle.revenue)}</p>
+                        {raffle.ticketsReserved > 0 && (
+                          <p className="text-xs text-warning">{raffle.ticketsReserved} pendiente{raffle.ticketsReserved > 1 ? 's' : ''}</p>
+                        )}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12">
