@@ -1782,6 +1782,7 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
+      get_min_ticket_number: { Args: { p_raffle_id: string }; Returns: number }
       get_order_by_reference: {
         Args: { p_reference_code: string }
         Returns: Json
