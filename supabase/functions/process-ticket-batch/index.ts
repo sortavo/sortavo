@@ -11,9 +11,9 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[PROCESS-TICKET-BATCH] ${step}${detailsStr}`);
 };
 
-// Constants for batch processing - OPTIMIZED FOR 10M TICKETS (ULTRA-FAST)
+// Constants for batch processing - OPTIMIZED FOR PARALLEL WORKERS
 const DEFAULT_BATCH_SIZE = 5000; // Default for raffles < 1M tickets
-const MAX_BATCHES_PER_RUN = 2000; // ✅ INCREASED: Process up to 2000 batches per cron run (~5M tickets)
+const MAX_BATCHES_PER_RUN = 100; // ✅ REDUCED: 100 batches per worker (~500K tickets) to reduce DB pressure
 const STALE_THRESHOLD_MINUTES = 10; // Reset jobs stuck for more than 10 minutes
 const MAX_RETRIES = 3; // Maximum retries for a batch
 const BASE_RETRY_DELAY_MS = 1000; // 1 second base delay for exponential backoff
@@ -129,7 +129,9 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Worker started - v3 optimized");
+    // Generate unique worker ID for SKIP LOCKED claim
+    const workerId = crypto.randomUUID();
+    logStep("Worker started - v4 parallel safe", { workerId });
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -142,7 +144,7 @@ serve(async (req) => {
 
     // Auto-recovery: Reset stale jobs (running for too long without progress)
     const staleThreshold = new Date(Date.now() - STALE_THRESHOLD_MINUTES * 60 * 1000).toISOString();
-    const { data: staleJobs, error: staleError } = await supabaseClient
+    const { data: staleJobs } = await supabaseClient
       .from("ticket_generation_jobs")
       .update({ status: 'pending', started_at: null })
       .eq("status", "running")
@@ -153,25 +155,63 @@ serve(async (req) => {
       logStep("Reset stale jobs", { count: staleJobs.length, jobIds: staleJobs.map(j => j.id) });
     }
 
-    // Find pending or running jobs that need processing
-    const { data: jobs, error: jobsError } = await supabaseClient
-      .from("ticket_generation_jobs")
-      .select("*")
-      .in("status", ["pending", "running"])
-      .order("created_at", { ascending: true })
-      .limit(5);
+    // ✅ Use SKIP LOCKED to claim exactly 1 job atomically (no race conditions)
+    let jobs: Array<{
+      id: string;
+      raffle_id: string;
+      total_tickets: number;
+      generated_count: number;
+      current_batch: number;
+      batch_size: number;
+      numbering_config: unknown;
+      status?: string;
+      ticket_format?: string;
+      ticket_prefix?: string;
+      total_batches?: number;
+    }> = [];
 
-    if (jobsError) throw jobsError;
+    const { data: claimedJobs, error: claimError } = await supabaseClient
+      .rpc('claim_next_job', { p_worker_id: workerId, p_limit: 1 });
 
-    if (!jobs || jobs.length === 0) {
-      logStep("No pending jobs found");
+    if (claimError) {
+      logStep("Claim error, falling back to select", { error: claimError.message });
+      // Fallback to old method if RPC not available
+      const { data: fallbackJobs, error: fbError } = await supabaseClient
+        .from("ticket_generation_jobs")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: true })
+        .limit(1);
+      
+      if (fbError) throw fbError;
+      if (!fallbackJobs || fallbackJobs.length === 0) {
+        logStep("No pending jobs found");
+        return new Response(
+          JSON.stringify({ success: true, message: "No pending jobs", workerId }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+      
+      // Mark as running
+      await supabaseClient
+        .from("ticket_generation_jobs")
+        .update({ status: 'running', started_at: new Date().toISOString() })
+        .eq("id", fallbackJobs[0].id);
+      
+      jobs = fallbackJobs as typeof jobs;
+    } else {
+      jobs = (claimedJobs || []) as typeof jobs;
+    }
+
+    if (jobs.length === 0) {
+      logStep("No jobs claimed (all busy)", { workerId });
       return new Response(
-        JSON.stringify({ success: true, message: "No pending jobs" }),
+        JSON.stringify({ success: true, message: "No jobs available", workerId }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
-    logStep("Found jobs to process", { count: jobs.length });
+    logStep("Claimed job", { count: jobs.length, jobId: jobs[0]?.id, workerId });
 
     const results = [];
     const workerStartTime = Date.now();
