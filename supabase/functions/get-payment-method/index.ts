@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -93,16 +93,19 @@ serve(async (req) => {
         logStep("Found payment method", { brand: pm.card.brand, last4: pm.card.last4 });
       }
     } else {
-      // Try to get from subscriptions
+      // Try to get from subscriptions (active or trialing)
       const subscriptions = await stripe.subscriptions.list({
         customer: org.stripe_customer_id,
-        status: "active",
-        limit: 1,
+        limit: 5,
       });
 
-      if (subscriptions.data.length > 0) {
-        const sub = subscriptions.data[0];
-        const pmId = sub.default_payment_method;
+      // Find active or trialing subscription
+      const validSub = subscriptions.data.find((s: Stripe.Subscription) => 
+        s.status === "active" || s.status === "trialing"
+      );
+
+      if (validSub) {
+        const pmId = validSub.default_payment_method;
         
         if (pmId) {
           const pm = await stripe.paymentMethods.retrieve(pmId as string);

@@ -76,7 +76,7 @@ serve(async (req) => {
       throw new Error("No active subscription found. Please create a new subscription.");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Retrieve current subscription
     const subscription = await stripe.subscriptions.retrieve(org.stripe_subscription_id);
@@ -148,6 +148,14 @@ serve(async (req) => {
     const nextBillingDate = updatedSubscription.current_period_end 
       ? new Date(updatedSubscription.current_period_end * 1000).toISOString()
       : null;
+
+    // Sync current_period_end to organization
+    await supabaseClient
+      .from("organizations")
+      .update({
+        current_period_end: nextBillingDate,
+      })
+      .eq("id", profile.organization_id);
 
     logStep("Upgrade completed", { isDowngrade, amountCharged, nextBillingDate });
 

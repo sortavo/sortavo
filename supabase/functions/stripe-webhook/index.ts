@@ -67,12 +67,12 @@ const PRODUCT_TO_TIER: Record<string, "basic" | "pro" | "premium" | "enterprise"
   "prod_ThK1X1RtiwN326": "enterprise", // Annual
 };
 
-// Subscription limits by tier
+// Subscription limits by tier - SYNCED with _shared/stripe-config.ts
 const TIER_LIMITS = {
-  basic: { maxActiveRaffles: 2, maxTicketsPerRaffle: 2000, templatesAvailable: 1 },
+  basic: { maxActiveRaffles: 2, maxTicketsPerRaffle: 2000, templatesAvailable: 3 },
   pro: { maxActiveRaffles: 7, maxTicketsPerRaffle: 30000, templatesAvailable: 6 },
-  premium: { maxActiveRaffles: 15, maxTicketsPerRaffle: 100000, templatesAvailable: 6 },
-  enterprise: { maxActiveRaffles: 999, maxTicketsPerRaffle: 10000000, templatesAvailable: 6 },
+  premium: { maxActiveRaffles: 15, maxTicketsPerRaffle: 100000, templatesAvailable: 9 },
+  enterprise: { maxActiveRaffles: 999, maxTicketsPerRaffle: 10000000, templatesAvailable: 9 },
 };
 
 serve(async (req) => {
@@ -125,7 +125,7 @@ serve(async (req) => {
       });
     }
     
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const signature = req.headers.get("stripe-signature");
     const body = await req.text();
 
