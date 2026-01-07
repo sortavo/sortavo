@@ -222,8 +222,8 @@ export function TicketSelector({
   const maxGridPages = isLargeRaffle ? Math.ceil(100000 / pageSize) : totalPages; // Limit grid to 100K tickets max
   const effectiveTotalPages = Math.min(totalPages, maxGridPages);
 
-  // Always use virtual tickets
-  const { data, isLoading } = useVirtualTickets(raffleId, page, pageSize);
+  // Always use virtual tickets - with error handling
+  const { data, isLoading, error: ticketsError, refetch } = useVirtualTickets(raffleId, page, pageSize);
   const randomMutation = useRandomAvailableTickets();
   const checkAvailabilityMutation = useCheckTicketsAvailability();
   const [isSearching, setIsSearching] = useState(false);
@@ -983,7 +983,21 @@ export function TicketSelector({
             </AnimatePresence>
 
             {/* Premium ticket grid with swipe gestures */}
-            {isLoading ? (
+            {ticketsError ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-4">
+                <div className={cn("text-center", colors.textMuted)}>
+                  No pudimos cargar los boletos
+                </div>
+                <Button
+                  onClick={() => refetch()}
+                  variant="outline"
+                  size="sm"
+                  className={cn(colors.buttonOutline)}
+                >
+                  Reintentar
+                </Button>
+              </div>
+            ) : isLoading ? (
               <div className="flex justify-center py-16">
                 <div className={cn("w-10 h-10 border-2 rounded-full animate-spin", colors.loadingBorder)} />
               </div>
