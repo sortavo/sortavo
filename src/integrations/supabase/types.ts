@@ -1995,6 +1995,7 @@ export type Database = {
       }
       refresh_raffle_stats: { Args: never; Returns: undefined }
       refresh_raffle_stats_mv: { Args: never; Returns: undefined }
+      refresh_raffle_stats_now: { Args: never; Returns: undefined }
       register_buyer: {
         Args: {
           p_city?: string
