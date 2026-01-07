@@ -111,6 +111,13 @@ export type Database = {
             foreignKeyName: "analytics_events_raffle_id_fkey"
             columns: ["raffle_id"]
             isOneToOne: false
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
+          },
+          {
+            foreignKeyName: "analytics_events_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
             referencedRelation: "raffles"
             referencedColumns: ["id"]
           },
@@ -169,6 +176,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "public_raffles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "archived_raffle_summary_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: true
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
           },
           {
             foreignKeyName: "archived_raffle_summary_raffle_id_fkey"
@@ -373,6 +387,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_raffles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
           },
           {
             foreignKeyName: "coupons_raffle_id_fkey"
@@ -902,6 +923,13 @@ export type Database = {
             foreignKeyName: "raffle_custom_numbers_raffle_id_fkey"
             columns: ["raffle_id"]
             isOneToOne: false
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
+          },
+          {
+            foreignKeyName: "raffle_custom_numbers_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
             referencedRelation: "raffles"
             referencedColumns: ["id"]
           },
@@ -992,6 +1020,13 @@ export type Database = {
             foreignKeyName: "raffle_draws_raffle_id_fkey"
             columns: ["raffle_id"]
             isOneToOne: false
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
+          },
+          {
+            foreignKeyName: "raffle_draws_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
             referencedRelation: "raffles"
             referencedColumns: ["id"]
           },
@@ -1035,6 +1070,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_raffles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "raffle_packages_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
           },
           {
             foreignKeyName: "raffle_packages_raffle_id_fkey"
@@ -1287,6 +1329,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_raffles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sold_tickets_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
           },
           {
             foreignKeyName: "sold_tickets_raffle_id_fkey"
@@ -1726,6 +1775,34 @@ export type Database = {
           updated_at?: string | null
           winner_announced?: boolean | null
           winner_ticket_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffle_stats_mv: {
+        Row: {
+          available_count: number | null
+          created_at: string | null
+          draw_date: string | null
+          last_sale_at: string | null
+          organization_id: string | null
+          raffle_id: string | null
+          reserved_count: number | null
+          revenue_from_orders: number | null
+          sold_count: number | null
+          status: Database["public"]["Enums"]["raffle_status"] | null
+          ticket_price: number | null
+          title: string | null
+          total_tickets: number | null
+          total_tickets_in_db: number | null
+          unique_buyers: number | null
         }
         Relationships: [
           {
