@@ -1538,84 +1538,6 @@ export type Database = {
           },
         ]
       }
-      ticket_generation_jobs: {
-        Row: {
-          batch_size: number
-          completed_at: string | null
-          created_at: string
-          created_by: string | null
-          current_batch: number
-          error_message: string | null
-          generated_count: number
-          id: string
-          priority: number | null
-          raffle_id: string
-          sla_deadline: string | null
-          started_at: string | null
-          status: string
-          ticket_format: string
-          ticket_prefix: string | null
-          total_batches: number
-          total_tickets: number
-          worker_id: number | null
-        }
-        Insert: {
-          batch_size?: number
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          current_batch?: number
-          error_message?: string | null
-          generated_count?: number
-          id?: string
-          priority?: number | null
-          raffle_id: string
-          sla_deadline?: string | null
-          started_at?: string | null
-          status?: string
-          ticket_format?: string
-          ticket_prefix?: string | null
-          total_batches: number
-          total_tickets: number
-          worker_id?: number | null
-        }
-        Update: {
-          batch_size?: number
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          current_batch?: number
-          error_message?: string | null
-          generated_count?: number
-          id?: string
-          priority?: number | null
-          raffle_id?: string
-          sla_deadline?: string | null
-          started_at?: string | null
-          status?: string
-          ticket_format?: string
-          ticket_prefix?: string | null
-          total_batches?: number
-          total_tickets?: number
-          worker_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ticket_generation_jobs_raffle_id_fkey"
-            columns: ["raffle_id"]
-            isOneToOne: false
-            referencedRelation: "public_raffles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_generation_jobs_raffle_id_fkey"
-            columns: ["raffle_id"]
-            isOneToOne: false
-            referencedRelation: "raffles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1650,136 +1572,11 @@ export type Database = {
       }
     }
     Views: {
-      active_generation_jobs: {
+      legacy_tickets_archived: {
         Row: {
-          batch_size: number | null
-          completed_at: string | null
-          created_at: string | null
-          current_batch: number | null
-          current_tps: number | null
-          error_message: string | null
-          generated_count: number | null
-          id: string | null
-          priority: number | null
-          progress_percentage: number | null
-          raffle_id: string | null
-          sla_deadline: string | null
-          started_at: string | null
-          status: string | null
-          total_batches: number | null
-          total_tickets: number | null
-          worker_id: number | null
-        }
-        Insert: {
-          batch_size?: number | null
-          completed_at?: string | null
-          created_at?: string | null
-          current_batch?: number | null
-          current_tps?: never
-          error_message?: string | null
-          generated_count?: number | null
-          id?: string | null
-          priority?: number | null
-          progress_percentage?: never
-          raffle_id?: string | null
-          sla_deadline?: string | null
-          started_at?: string | null
-          status?: string | null
-          total_batches?: number | null
-          total_tickets?: number | null
-          worker_id?: number | null
-        }
-        Update: {
-          batch_size?: number | null
-          completed_at?: string | null
-          created_at?: string | null
-          current_batch?: number | null
-          current_tps?: never
-          error_message?: string | null
-          generated_count?: number | null
-          id?: string | null
-          priority?: number | null
-          progress_percentage?: never
-          raffle_id?: string | null
-          sla_deadline?: string | null
-          started_at?: string | null
-          status?: string | null
-          total_batches?: number | null
-          total_tickets?: number | null
-          worker_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ticket_generation_jobs_raffle_id_fkey"
-            columns: ["raffle_id"]
-            isOneToOne: false
-            referencedRelation: "public_raffles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_generation_jobs_raffle_id_fkey"
-            columns: ["raffle_id"]
-            isOneToOne: false
-            referencedRelation: "raffles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      job_health_dashboard: {
-        Row: {
-          completed: number | null
-          failed: number | null
-          pending: number | null
-          running: number | null
-          sla_violations: number | null
-          total_jobs: number | null
-          total_tickets_generated: number | null
-          total_tickets_target: number | null
-        }
-        Relationships: []
-      }
-      problematic_jobs: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          generated_count: number | null
-          id: string | null
-          issue_type: string | null
-          priority: number | null
-          progress_pct: number | null
-          sla_breach_time: unknown
-          sla_deadline: string | null
-          status: string | null
-          total_tickets: number | null
-          worker_id: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          generated_count?: number | null
-          id?: string | null
-          issue_type?: never
-          priority?: number | null
-          progress_pct?: never
-          sla_breach_time?: never
-          sla_deadline?: string | null
-          status?: string | null
-          total_tickets?: number | null
-          worker_id?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          generated_count?: number | null
-          id?: string | null
-          issue_type?: never
-          priority?: number | null
-          progress_pct?: never
-          sla_breach_time?: never
-          sla_deadline?: string | null
-          status?: string | null
-          total_tickets?: number | null
-          worker_id?: number | null
+          detalle: string | null
+          fecha_limpieza: string | null
+          nota: string | null
         }
         Relationships: []
       }
@@ -1966,20 +1763,6 @@ export type Database = {
           message: string
           metadata: Json
           severity: string
-        }[]
-      }
-      claim_next_job: {
-        Args: { p_limit?: number; p_worker_id: string }
-        Returns: {
-          batch_size: number
-          current_batch: number
-          generated_count: number
-          id: string
-          raffle_id: string
-          ticket_format: string
-          ticket_prefix: string
-          total_batches: number
-          total_tickets: number
         }[]
       }
       disable_non_critical_ticket_indexes: { Args: never; Returns: undefined }
