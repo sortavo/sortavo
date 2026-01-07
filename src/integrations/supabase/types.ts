@@ -1868,7 +1868,7 @@ export type Database = {
           buyer_city: string
           buyer_name: string
           id: string
-          status: Database["public"]["Enums"]["ticket_status"]
+          status: string
           ticket_index: number
           ticket_number: string
         }[]
@@ -1984,7 +1984,7 @@ export type Database = {
           buyer_city: string
           buyer_name: string
           id: string
-          status: Database["public"]["Enums"]["ticket_status"]
+          status: string
           ticket_index: number
           ticket_number: string
         }[]
