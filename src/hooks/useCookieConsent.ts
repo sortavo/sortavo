@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface CookieConsent {
   essential: boolean; // Always true
@@ -10,6 +10,7 @@ export interface CookieConsent {
 
 const CONSENT_STORAGE_KEY = 'cookie-consent';
 const CONSENT_VERSION = '1.0';
+const AUTO_CONSENT_DELAY_MS = 3000;
 
 const DEFAULT_CONSENT: CookieConsent = {
   essential: true,
@@ -22,6 +23,7 @@ const DEFAULT_CONSENT: CookieConsent = {
 export function useCookieConsent() {
   const [consent, setConsentState] = useState<CookieConsent | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const autoConsentTriggered = useRef(false);
 
   // Load consent from localStorage on mount
   useEffect(() => {
@@ -60,6 +62,34 @@ export function useCookieConsent() {
   const rejectAll = useCallback(() => {
     setConsent({ analytics: false, marketing: false });
   }, [setConsent]);
+
+  // Auto-consent after 3 seconds or first user interaction
+  useEffect(() => {
+    if (!isLoaded || consent !== null || autoConsentTriggered.current) return;
+
+    const triggerAutoConsent = () => {
+      if (autoConsentTriggered.current) return;
+      autoConsentTriggered.current = true;
+      acceptAll();
+      cleanup();
+    };
+
+    // Timer de 3 segundos
+    const timer = setTimeout(triggerAutoConsent, AUTO_CONSENT_DELAY_MS);
+
+    // O al hacer scroll/click
+    const handleInteraction = () => triggerAutoConsent();
+    window.addEventListener('scroll', handleInteraction, { once: true, passive: true });
+    window.addEventListener('click', handleInteraction, { once: true });
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleInteraction);
+      window.removeEventListener('click', handleInteraction);
+    };
+
+    return cleanup;
+  }, [isLoaded, consent, acceptAll]);
 
   const hasConsented = consent !== null;
   const canLoadAnalytics = consent?.analytics ?? false;

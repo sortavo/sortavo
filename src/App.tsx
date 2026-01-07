@@ -14,6 +14,7 @@ import { ScrollToTop } from "@/components/layout/ScrollToTop";
 
 import { SentryErrorBoundary } from "@/components/errors/SentryErrorBoundary";
 import { SortavoTrackingProvider } from "@/components/tracking/SortavoTrackingProvider";
+import { CookieNotice } from "@/components/CookieNotice";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -117,6 +118,7 @@ const App = () => (
               <TenantProvider>
                 <SimulationProvider>
                   <SortavoTrackingProvider />
+                  <CookieNotice />
                   <AdaptiveToaster />
                   <ScrollToTop />
                   <SimulationBanner />
