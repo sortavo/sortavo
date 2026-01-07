@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { PRODUCT_TO_TIER, TIER_LIMITS } from "../_shared/stripe-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,25 +11,6 @@ const corsHeaders = {
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
-};
-
-// Map Stripe product IDs to plan tiers
-const PRODUCT_TO_TIER: Record<string, string> = {
-  "prod_Tf5pTKxFYtPfd4": "basic",
-  "prod_Tf5pa9W3qgWVFB": "basic",
-  "prod_Tf5tsw8mmJQneA": "pro",
-  "prod_Tf5tT8tG04qFOn": "pro",
-  "prod_Tf5uiAAHV2WZNF": "premium",
-  "prod_Tf5uRIGm04Ihh3": "premium",
-  "prod_ThHMyhLAztHnsu": "enterprise",
-  "prod_ThHMbFCP3wSrq8": "enterprise",
-};
-
-const TIER_LIMITS: Record<string, { maxActiveRaffles: number; maxTicketsPerRaffle: number; templatesAvailable: number }> = {
-  basic: { maxActiveRaffles: 2, maxTicketsPerRaffle: 2000, templatesAvailable: 1 },
-  pro: { maxActiveRaffles: 7, maxTicketsPerRaffle: 30000, templatesAvailable: 6 },
-  premium: { maxActiveRaffles: 15, maxTicketsPerRaffle: 100000, templatesAvailable: 6 },
-  enterprise: { maxActiveRaffles: 999, maxTicketsPerRaffle: 10000000, templatesAvailable: 6 },
 };
 
 serve(async (req) => {
@@ -76,25 +58,34 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Check for active, trialing, AND past_due subscriptions (not just active)
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
-      limit: 1,
+      limit: 10,
     });
 
-    const hasActiveSub = subscriptions.data.length > 0;
-    let tier = null;
-    let subscriptionEnd = null;
-    let stripeSubscriptionId = null;
+    // Find the most relevant subscription (active > trialing > past_due)
+    const validStatuses = ["active", "trialing", "past_due"];
+    const validSubscription = subscriptions.data.find((sub: Stripe.Subscription) => 
+      validStatuses.includes(sub.status)
+    );
 
-    if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      stripeSubscriptionId = subscription.id;
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      const productId = subscription.items.data[0].price.product as string;
+    const hasActiveSub = !!validSubscription;
+    let tier: string | null = null;
+    let subscriptionEnd: string | null = null;
+    let stripeSubscriptionId: string | null = null;
+    let subscriptionStatus: string | null = null;
+
+    if (hasActiveSub && validSubscription) {
+      stripeSubscriptionId = validSubscription.id;
+      subscriptionStatus = validSubscription.status;
+      subscriptionEnd = new Date(validSubscription.current_period_end * 1000).toISOString();
+      const productId = validSubscription.items.data[0].price.product as string;
       tier = PRODUCT_TO_TIER[productId] || "basic";
-      logStep("Active subscription found", { 
-        subscriptionId: subscription.id, 
+      
+      logStep("Valid subscription found", { 
+        subscriptionId: validSubscription.id, 
+        status: subscriptionStatus,
         tier, 
         endDate: subscriptionEnd 
       });
@@ -107,28 +98,39 @@ serve(async (req) => {
         .single();
 
       if (profile?.organization_id) {
-        const limits = TIER_LIMITS[tier];
+        const limits = TIER_LIMITS[tier as keyof typeof TIER_LIMITS] || TIER_LIMITS.basic;
+        
+        // Map Stripe status to our status
+        let mappedStatus: "active" | "trial" | "past_due" = "active";
+        if (validSubscription.status === "trialing") {
+          mappedStatus = "trial";
+        } else if (validSubscription.status === "past_due") {
+          mappedStatus = "past_due";
+        }
+        
         await supabaseClient
           .from("organizations")
           .update({
             subscription_tier: tier,
-            subscription_status: "active",
+            subscription_status: mappedStatus,
             stripe_customer_id: customerId,
             stripe_subscription_id: stripeSubscriptionId,
             max_active_raffles: limits.maxActiveRaffles,
             max_tickets_per_raffle: limits.maxTicketsPerRaffle,
             templates_available: limits.templatesAvailable,
+            current_period_end: subscriptionEnd,
           })
           .eq("id", profile.organization_id);
-        logStep("Organization updated", { organizationId: profile.organization_id });
+        logStep("Organization updated", { organizationId: profile.organization_id, status: mappedStatus });
       }
     } else {
-      logStep("No active subscription found");
+      logStep("No valid subscription found (checked active, trialing, past_due)");
     }
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       tier,
+      subscription_status: subscriptionStatus,
       subscription_end: subscriptionEnd,
       stripe_customer_id: customerId,
       stripe_subscription_id: stripeSubscriptionId,

@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
 
   const services: ServiceHealth[] = [];
   const now = new Date().toISOString();
-  let dbLatencies: number[] = [];
+  const dbLatencies: number[] = [];
   let metrics: SystemMetrics | null = null;
 
   // Parse query params for detailed mode
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
         lastChecked: now,
       });
     } else {
-      const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       
       const { duration } = await measureTime(async () => {
         await stripe.balance.retrieve();
@@ -286,7 +286,7 @@ Deno.serve(async (req) => {
     status: overallStatus,
     services,
     checkedAt: now,
-    version: "1.1.0",
+    version: "1.2.0",
   };
 
   if (detailed && metrics) {

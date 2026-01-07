@@ -72,7 +72,7 @@ const PLAN_METADATA = {
     limits: {
       maxActiveRaffles: 2,
       maxTicketsPerRaffle: 2000,
-      templatesAvailable: 1,
+      templatesAvailable: 3,
     },
   },
   pro: {
@@ -111,7 +111,7 @@ const PLAN_METADATA = {
     limits: {
       maxActiveRaffles: 15,
       maxTicketsPerRaffle: 100000,
-      templatesAvailable: 6,
+      templatesAvailable: 9,
     },
   },
   enterprise: {

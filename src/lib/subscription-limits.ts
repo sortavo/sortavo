@@ -45,7 +45,7 @@ export function getSubscriptionLimits(tier: SubscriptionTier): SubscriptionLimit
         maxActiveRaffles: 15,
         maxTicketsPerRaffle: 100000,
         maxCustomDomains: 10,
-        templatesAvailable: 9,
+        templatesAvailable: 9,  // SYNCED with backend
         canRemoveBranding: true,
         hasAdvancedAnalytics: true,
         hasPrioritySupport: true,
@@ -82,7 +82,7 @@ export function getSubscriptionLimits(tier: SubscriptionTier): SubscriptionLimit
         maxActiveRaffles: 2,
         maxTicketsPerRaffle: 2000,
         maxCustomDomains: 0,
-        templatesAvailable: 3,
+        templatesAvailable: 3,  // SYNCED with backend
         canRemoveBranding: false,
         hasAdvancedAnalytics: false,
         hasPrioritySupport: false,
