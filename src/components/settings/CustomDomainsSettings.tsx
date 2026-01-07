@@ -51,7 +51,8 @@ import {
   Loader2,
   Save,
   Wifi,
-  WifiOff
+  WifiOff,
+  BarChart3
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -455,6 +456,23 @@ export function CustomDomainsSettings() {
   }, [newDomain]);
   const [vercelDiagnosisData, setVercelDiagnosisData] = useState<VercelDiagnosisResult | null>(null);
   const [diagnosticModal, setDiagnosticModal] = useState<DiagnosticModalState | null>(null);
+
+  // Check if organization has tracking configured (use type assertion for tracking fields)
+  const orgWithTracking = organization as typeof organization & {
+    tracking_enabled?: boolean;
+    tracking_gtm_id?: string | null;
+    tracking_meta_pixel_id?: string | null;
+    tracking_ga4_id?: string | null;
+    tracking_tiktok_pixel_id?: string | null;
+  };
+  const hasTrackingConfigured = Boolean(
+    orgWithTracking?.tracking_enabled && (
+      orgWithTracking?.tracking_gtm_id ||
+      orgWithTracking?.tracking_meta_pixel_id ||
+      orgWithTracking?.tracking_ga4_id ||
+      orgWithTracking?.tracking_tiktok_pixel_id
+    )
+  );
 
   // Determinar si el plan permite custom domains
   const tier = (organization?.subscription_tier || 'basic') as SubscriptionTier;
@@ -980,6 +998,12 @@ export function CustomDomainsSettings() {
                           <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 text-[10px] sm:text-xs px-1.5 py-0.5 leading-tight">
                             <ShieldCheck className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                             SSL
+                          </Badge>
+                        )}
+                        {domain.verified && hasTrackingConfigured && (
+                          <Badge variant="outline" className="text-purple-600 border-purple-200 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-800 text-[10px] sm:text-xs px-1.5 py-0.5 leading-tight">
+                            <BarChart3 className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                            Tracking
                           </Badge>
                         )}
                       </div>
