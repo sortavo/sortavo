@@ -176,7 +176,4 @@ export function useCheckVirtualTicket() {
   });
 }
 
-// Helper to check if virtual tickets are enabled for a raffle
-export function isVirtualTicketsEnabled(raffle: { customization?: Record<string, unknown> | null } | null): boolean {
-  return raffle?.customization?.use_virtual_tickets === true;
-}
+// All raffles now use virtual tickets - legacy helper removed
