@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency-utils";
 import { usePublicTickets, useRandomAvailableTickets, useCheckTicketsAvailability } from "@/hooks/usePublicRaffle";
 import { supabase } from "@/integrations/supabase/client";
+import { useTrackingEvents } from "@/hooks/useTrackingEvents";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TicketButton } from "./TicketButton";
@@ -87,6 +88,7 @@ export function TicketSelector({
   primaryColor,
 }: TicketSelectorProps) {
   const isMobile = useIsMobile();
+  const { trackRemoveFromCart } = useTrackingEvents();
 
   // Theme-aware colors - comprehensive palette
   const colors = isLightTemplate ? {
@@ -384,6 +386,14 @@ export function TicketSelector({
 
     setSelectedTickets(prev => {
       if (prev.includes(ticketNumber)) {
+        // Track remove from cart event
+        trackRemoveFromCart({
+          itemId: raffleId,
+          itemName: `Boleto ${ticketNumber}`,
+          price: ticketPrice,
+          quantity: 1,
+          currency: currencyCode,
+        });
         toast.info(`Boleto ${ticketNumber} removido`);
         return prev.filter(t => t !== ticketNumber);
       }
@@ -394,7 +404,7 @@ export function TicketSelector({
       toast.success(`Boleto ${ticketNumber} seleccionado`, { duration: 1500 });
       return [...prev, ticketNumber];
     });
-  }, [maxPerPurchase]);
+  }, [maxPerPurchase, trackRemoveFromCart, raffleId, ticketPrice, currencyCode]);
 
   const handleClearSelection = useCallback(() => {
     setSelectedTickets([]);

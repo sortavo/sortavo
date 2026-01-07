@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useCustomDomains } from "@/hooks/useCustomDomains";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ import {
   AlertTriangle,
   Eye,
   Code,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -53,10 +55,14 @@ interface TrackingState {
 
 export function TrackingSettings({ hasVerifiedDomain }: TrackingSettingsProps) {
   const { organization } = useAuth();
+  const { domains } = useCustomDomains();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Count verified domains
+  const verifiedDomainsCount = domains?.filter(d => d.verified).length || 0;
 
   const [state, setState] = useState<TrackingState>({
     tracking_enabled: false,
@@ -238,11 +244,14 @@ export function TrackingSettings({ hasVerifiedDomain }: TrackingSettingsProps) {
           )}
 
           {hasVerifiedDomain && (
-            <Alert variant="default" className="border-blue-200 bg-blue-50/50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
-                Los scripts se inyectan automáticamente cuando los visitantes acceden
-                a través de tu dominio personalizado verificado.
+            <Alert variant="default" className="border-green-200 bg-green-50/50">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800 flex items-center gap-2 flex-wrap">
+                <span>Los scripts se activarán en</span>
+                <Badge variant="outline" className="text-green-700 border-green-300 bg-green-100">
+                  <Globe className="h-3 w-3 mr-1" />
+                  {verifiedDomainsCount} dominio{verifiedDomainsCount !== 1 ? 's' : ''} verificado{verifiedDomainsCount !== 1 ? 's' : ''}
+                </Badge>
               </AlertDescription>
             </Alert>
           )}
