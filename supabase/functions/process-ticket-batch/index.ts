@@ -12,11 +12,19 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 };
 
 // Constants for batch processing - OPTIMIZED FOR 10M TICKETS
-const DEFAULT_BATCH_SIZE = 5000; // Reduced from 10000 to prevent timeouts
-const MAX_BATCHES_PER_RUN = 200; // Process up to 200 batches per cron run (1M tickets max)
+const DEFAULT_BATCH_SIZE = 5000; // Default for raffles < 1M tickets
+const MAX_BATCHES_PER_RUN = 200; // Process up to 200 batches per cron run
 const STALE_THRESHOLD_MINUTES = 10; // Reset jobs stuck for more than 10 minutes
 const MAX_RETRIES = 3; // Maximum retries for a batch
 const BASE_RETRY_DELAY_MS = 1000; // 1 second base delay for exponential backoff
+
+// Dynamic batch size based on total tickets to prevent timeouts on massive raffles
+const getDynamicBatchSize = (totalTickets: number): number => {
+  if (totalTickets >= 10000000) return 2500;  // 10M+: 2.5K per batch (~4000 batches)
+  if (totalTickets >= 5000000) return 3000;   // 5M+: 3K per batch (~1667 batches)
+  if (totalTickets >= 1000000) return 4000;   // 1M+: 4K per batch (~250 batches)
+  return 5000;                                 // Default: 5K per batch
+};
 
 // Exponential backoff helper
 const getRetryDelay = (attempt: number): number => {
@@ -168,13 +176,14 @@ serve(async (req) => {
     const results = [];
 
     for (const job of jobs) {
-      // Use job's batch_size or default (now 5000)
-      const batchSize = job.batch_size || DEFAULT_BATCH_SIZE;
+      // Use dynamic batch size based on raffle size to prevent timeouts
+      const batchSize = job.batch_size || getDynamicBatchSize(job.total_tickets);
       
       logStep(`Processing job ${job.id}`, { 
         raffle_id: job.raffle_id, 
         progress: `${job.generated_count}/${job.total_tickets}`,
         batch_size: batchSize,
+        dynamic_batch: !job.batch_size,
         current_batch: job.current_batch
       });
 

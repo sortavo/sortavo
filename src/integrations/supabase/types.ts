@@ -1593,6 +1593,24 @@ export type Database = {
       }
     }
     Views: {
+      active_generation_jobs: {
+        Row: {
+          batch_size: number | null
+          current_batch: number | null
+          elapsed: unknown
+          error_message: string | null
+          eta_remaining: string | null
+          generated_count: number | null
+          id: string | null
+          progress_pct: number | null
+          raffle_title: string | null
+          started_at: string | null
+          status: string | null
+          total_batches: number | null
+          total_tickets: number | null
+        }
+        Relationships: []
+      }
       public_custom_domains: {
         Row: {
           created_at: string | null
