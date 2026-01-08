@@ -29,12 +29,18 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardSkeleton } from "@/components/ui/skeletons/DashboardSkeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, organization, isLoading: authLoading } = useAuth();
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { 
+    data: stats, 
+    isLoading: statsLoading, 
+    isError: statsError,
+    refetch: refetchStats 
+  } = useDashboardStats();
   
   // Date range state for charts
   const [dateRange, setDateRange] = useState({
@@ -42,7 +48,12 @@ export default function Dashboard() {
     to: new Date()
   });
   
-  const { data: chartData, isLoading: chartsLoading } = useDashboardCharts(dateRange);
+  const { 
+    data: chartData, 
+    isLoading: chartsLoading,
+    isError: chartsError,
+    refetch: refetchCharts 
+  } = useDashboardCharts(dateRange);
 
   // Calculate period label for charts
   const getPeriodLabel = () => {
@@ -198,6 +209,15 @@ export default function Dashboard() {
     >
       {statsLoading ? (
         <DashboardSkeleton />
+      ) : statsError ? (
+        <ErrorState 
+          title="Error cargando estadísticas"
+          message="No pudimos cargar tus datos. Esto puede ser un problema temporal."
+          retry={() => {
+            refetchStats();
+            refetchCharts();
+          }}
+        />
       ) : (
         <div className="space-y-6">
           {/* Premium Welcome Banner */}
@@ -286,20 +306,31 @@ export default function Dashboard() {
               />
             </div>
             
-            <div className="grid gap-6 lg:grid-cols-2">
-              <RevenueChart 
-                data={chartData?.dailyRevenue || []}
-                totalRevenue={chartData?.totalRevenue || 0}
-                revenueChange={chartData?.revenueChange || 0}
-                currency={organization?.currency_code || 'MXN'}
-                periodLabel={getPeriodLabel()}
-              />
-              <SalesChart 
-                data={chartData?.raffleSales || []}
-                totalTickets={chartData?.totalTicketsSold || 0}
-                ticketsChange={chartData?.ticketsChange || 0}
-              />
-            </div>
+            {chartsError ? (
+              <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6">
+                <ErrorState 
+                  title="Error cargando gráficos"
+                  message="Los gráficos no están disponibles temporalmente."
+                  retry={() => refetchCharts()}
+                  className="py-8"
+                />
+              </div>
+            ) : (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <RevenueChart 
+                  data={chartData?.dailyRevenue || []}
+                  totalRevenue={chartData?.totalRevenue || 0}
+                  revenueChange={chartData?.revenueChange || 0}
+                  currency={organization?.currency_code || 'MXN'}
+                  periodLabel={getPeriodLabel()}
+                />
+                <SalesChart 
+                  data={chartData?.raffleSales || []}
+                  totalTickets={chartData?.totalTicketsSold || 0}
+                  ticketsChange={chartData?.ticketsChange || 0}
+                />
+              </div>
+            )}
           </div>
 
           {/* Content Grid */}
