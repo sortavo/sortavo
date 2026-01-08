@@ -549,6 +549,120 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          buyer_city: string | null
+          buyer_email: string | null
+          buyer_id: string | null
+          buyer_name: string | null
+          buyer_phone: string | null
+          canceled_at: string | null
+          created_at: string | null
+          id: string
+          lucky_indices: number[] | null
+          order_total: number | null
+          organization_id: string
+          payment_method: string | null
+          payment_proof_url: string | null
+          raffle_id: string
+          reference_code: string
+          reserved_at: string | null
+          reserved_until: string | null
+          sold_at: string | null
+          status: string
+          ticket_count: number
+          ticket_ranges: Json
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          buyer_city?: string | null
+          buyer_email?: string | null
+          buyer_id?: string | null
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          canceled_at?: string | null
+          created_at?: string | null
+          id?: string
+          lucky_indices?: number[] | null
+          order_total?: number | null
+          organization_id: string
+          payment_method?: string | null
+          payment_proof_url?: string | null
+          raffle_id: string
+          reference_code: string
+          reserved_at?: string | null
+          reserved_until?: string | null
+          sold_at?: string | null
+          status?: string
+          ticket_count: number
+          ticket_ranges?: Json
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          buyer_city?: string | null
+          buyer_email?: string | null
+          buyer_id?: string | null
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          canceled_at?: string | null
+          created_at?: string | null
+          id?: string
+          lucky_indices?: number[] | null
+          order_total?: number | null
+          organization_id?: string
+          payment_method?: string | null
+          payment_proof_url?: string | null
+          raffle_id?: string
+          reference_code?: string
+          reserved_at?: string | null
+          reserved_until?: string | null
+          sold_at?: string | null
+          status?: string
+          ticket_count?: number
+          ticket_ranges?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "buyers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "public_raffles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
+          },
+          {
+            foreignKeyName: "orders_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           address: string | null
@@ -1841,9 +1955,24 @@ export type Database = {
         Args: { p_numbering_config?: Json; p_raffle_id: string }
         Returns: number
       }
+      approve_order: {
+        Args: { p_approved_by?: string; p_order_id: string }
+        Returns: {
+          error_message: string
+          success: boolean
+          ticket_count: number
+        }[]
+      }
       archive_old_raffles: { Args: { days_old?: number }; Returns: number }
       archive_raffle: { Args: { p_raffle_id: string }; Returns: Json }
       can_have_custom_domains: { Args: { org_id: string }; Returns: boolean }
+      check_indices_available: {
+        Args: { p_indices: number[]; p_raffle_id: string }
+        Returns: {
+          available: boolean
+          conflicting_indices: number[]
+        }[]
+      }
       check_system_health: {
         Args: never
         Returns: {
@@ -1853,6 +1982,10 @@ export type Database = {
           severity: string
         }[]
       }
+      cleanup_expired_orders: { Args: never; Returns: number }
+      compress_ticket_indices: { Args: { indices: number[] }; Returns: Json }
+      count_tickets_in_ranges: { Args: { ranges: Json }; Returns: number }
+      expand_ticket_ranges: { Args: { ranges: Json }; Returns: number[] }
       format_virtual_ticket: {
         Args: {
           p_numbering_config: Json
@@ -1915,9 +2048,35 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
+      get_occupied_indices: { Args: { p_raffle_id: string }; Returns: number[] }
       get_order_by_reference: {
         Args: { p_reference_code: string }
-        Returns: Json
+        Returns: {
+          approved_at: string
+          buyer_city: string
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          order_id: string
+          order_total: number
+          organization_slug: string
+          raffle_id: string
+          raffle_slug: string
+          raffle_title: string
+          status: string
+          ticket_count: number
+          ticket_numbers: string[]
+        }[]
+      }
+      get_order_ticket_counts: {
+        Args: { p_raffle_id: string }
+        Returns: {
+          available_count: number
+          reserved_count: number
+          sold_count: number
+          total_tickets: number
+        }[]
       }
       get_organization_by_domain: {
         Args: { p_domain: string }
@@ -1979,6 +2138,21 @@ export type Database = {
           ticket_number: string
         }[]
       }
+      get_virtual_tickets_v2: {
+        Args: {
+          p_page_number?: number
+          p_page_size?: number
+          p_raffle_id: string
+        }
+        Returns: {
+          buyer_email: string
+          buyer_name: string
+          order_reference: string
+          status: string
+          ticket_index: number
+          ticket_number: string
+        }[]
+      }
       has_org_access: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
@@ -1988,6 +2162,14 @@ export type Database = {
           _org_id: string
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+        }
+        Returns: boolean
+      }
+      is_index_in_order: {
+        Args: {
+          p_index: number
+          p_lucky_indices: number[]
+          p_ticket_ranges: Json
         }
         Returns: boolean
       }
@@ -2007,6 +2189,14 @@ export type Database = {
           p_resource_type: string
         }
         Returns: string
+      }
+      migrate_sold_tickets_to_orders: {
+        Args: never
+        Returns: {
+          error_message: string
+          orders_created: number
+          tickets_migrated: number
+        }[]
       }
       preview_ticket_numbers: {
         Args: {
@@ -2029,7 +2219,36 @@ export type Database = {
         }
         Returns: string
       }
+      reject_order: {
+        Args: { p_order_id: string }
+        Returns: {
+          error_message: string
+          success: boolean
+          ticket_count: number
+        }[]
+      }
       release_expired_tickets: { Args: never; Returns: undefined }
+      reserve_tickets_v2: {
+        Args: {
+          p_buyer_city?: string
+          p_buyer_email: string
+          p_buyer_name: string
+          p_buyer_phone?: string
+          p_is_lucky_numbers?: boolean
+          p_order_total?: number
+          p_raffle_id: string
+          p_reservation_minutes?: number
+          p_ticket_indices: number[]
+        }
+        Returns: {
+          error_message: string
+          order_id: string
+          reference_code: string
+          reserved_until: string
+          success: boolean
+          ticket_count: number
+        }[]
+      }
       reserve_virtual_tickets: {
         Args: {
           p_buyer_city?: string
