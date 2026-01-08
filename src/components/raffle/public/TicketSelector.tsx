@@ -504,8 +504,8 @@ export function TicketSelector({
 
   // PHASE B: Fix Lucky Numbers to also set indices
   const handleLuckyNumbersSelect = useCallback((numbers: string[]) => {
-    // Calculate indices from the ticket numbers
-    const indices = numbers.map(tn => parseTicketIndex(tn, numberStart)).filter(idx => idx >= 0);
+    // Calculate indices from the ticket numbers (include step for non-standard increments)
+    const indices = numbers.map(tn => parseTicketIndex(tn, numberStart, step)).filter(idx => idx >= 0);
     
     setSelectedTickets(numbers);
     setSelectedTicketIndices(indices);
@@ -603,7 +603,7 @@ export function TicketSelector({
   const handleSelectSearchResult = (ticketNumber: string, status: string) => {
     if (status !== 'available') return;
     
-    const ticketIndex = parseTicketIndex(ticketNumber, numberStart);
+    const ticketIndex = parseTicketIndex(ticketNumber, numberStart, step);
     
     setSelectedTickets(prev => {
       if (prev.includes(ticketNumber)) {
@@ -639,8 +639,8 @@ export function TicketSelector({
     }
 
     const newTickets = availableResults.filter(t => !selectedTickets.includes(t));
-    // Calculate indices for new tickets
-    const newIndices = newTickets.map(tn => parseTicketIndex(tn, numberStart)).filter(idx => idx >= 0);
+    // Calculate indices for new tickets (include step for non-standard increments)
+    const newIndices = newTickets.map(tn => parseTicketIndex(tn, numberStart, step)).filter(idx => idx >= 0);
     
     if (maxPerPurchase > 0 && selectedTickets.length + newTickets.length > maxPerPurchase) {
       const canAdd = maxPerPurchase - selectedTickets.length;
@@ -649,7 +649,7 @@ export function TicketSelector({
         return;
       }
       const ticketsToAdd = newTickets.slice(0, canAdd);
-      const indicesToAdd = ticketsToAdd.map(tn => parseTicketIndex(tn, numberStart)).filter(idx => idx >= 0);
+      const indicesToAdd = ticketsToAdd.map(tn => parseTicketIndex(tn, numberStart, step)).filter(idx => idx >= 0);
       
       setSelectedTickets(prev => [...prev, ...ticketsToAdd]);
       setSelectedTicketIndices(prev => [...prev, ...indicesToAdd]);
