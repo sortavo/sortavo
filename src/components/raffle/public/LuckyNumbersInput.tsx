@@ -385,26 +385,28 @@ export function LuckyNumbersInput({
               )}
             </AnimatePresence>
 
-            {/* Quick add suggestions */}
+            {/* Quick add suggestions - only show valid numbers for this raffle */}
             <div className="flex flex-wrap gap-2">
               <span className={cn("text-xs w-full mb-1", colors.textSubtle)}>Números populares:</span>
-              {['7', '13', '21', '77', '100', '777'].map((num) => (
-                <Button
-                  key={num}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const formatted = num.padStart(maxDigits, '0').slice(-maxDigits);
-                    if (!favoriteNumbers.includes(formatted)) {
-                      setFavoriteNumbers(prev => [...prev, formatted]);
-                    }
-                  }}
-                  disabled={favoriteNumbers.includes(num.padStart(maxDigits, '0').slice(-maxDigits))}
-                  className={cn("text-xs border-dashed", colors.suggestBtn)}
-                >
-                  #{num}
-                </Button>
-              ))}
+              {['7', '13', '21', '77', '100', '777']
+                .map(num => num.padStart(maxDigits, '0').slice(-maxDigits))
+                .filter(formatted => isValidNumber(formatted))
+                .map((formatted) => (
+                  <Button
+                    key={formatted}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!favoriteNumbers.includes(formatted)) {
+                        setFavoriteNumbers(prev => [...prev, formatted]);
+                      }
+                    }}
+                    disabled={favoriteNumbers.includes(formatted)}
+                    className={cn("text-xs border-dashed", colors.suggestBtn)}
+                  >
+                    #{formatted}
+                  </Button>
+                ))}
             </div>
           </TabsContent>
         </Tabs>
