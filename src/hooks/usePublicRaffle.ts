@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Raffle = Tables<'raffles'>;
-type Ticket = Tables<'sold_tickets'>;
 
 export interface RaffleWithStats extends Raffle {
   ticketsSold: number;
@@ -84,13 +83,12 @@ export function usePublicRaffle(slug: string | undefined, orgSlug?: string) {
         supabase.rpc('get_public_ticket_counts', {
           p_raffle_id: raffle.id,
         }),
-        // Revenue query - will return empty for anon users (fine, revenue is org-only data)
+        // Revenue query from orders - will return empty for anon users (fine, revenue is org-only data)
         supabase
-          .from('sold_tickets')
-          .select('payment_reference, order_total')
+          .from('orders')
+          .select('reference_code, order_total')
           .eq('raffle_id', raffle.id)
-          .eq('status', 'sold')
-          .not('payment_reference', 'is', null),
+          .eq('status', 'sold'),
       ]);
 
       // Extract counts from RPC result (works for anonymous users)
@@ -99,23 +97,12 @@ export function usePublicRaffle(slug: string | undefined, orgSlug?: string) {
       const ticketsReserved = Number(counts?.reserved_count) || 0;
       const ticketsAvailable = Number(counts?.available_count) || 0;
 
-      // Calculate total revenue from unique payment groups
+      // Calculate total revenue from orders
       let totalRevenue = 0;
       if (revenueResult.data && revenueResult.data.length > 0) {
-        const uniqueGroups = new Map<string, number>();
-        for (const ticket of revenueResult.data) {
-          if (ticket.payment_reference && ticket.order_total !== null) {
-            uniqueGroups.set(ticket.payment_reference, Number(ticket.order_total));
-          }
-        }
-        totalRevenue = Array.from(uniqueGroups.values()).reduce((sum, val) => sum + val, 0);
-      }
-      
-      // Fallback: for sold tickets without order_total, use ticket_price
-      const soldWithOrderTotal = revenueResult.data?.filter(t => t.order_total !== null).length || 0;
-      const soldWithoutOrderTotal = ticketsSold - soldWithOrderTotal;
-      if (soldWithoutOrderTotal > 0) {
-        totalRevenue += soldWithoutOrderTotal * Number(raffle.ticket_price);
+        totalRevenue = revenueResult.data.reduce((sum, order) => 
+          sum + (Number(order.order_total) || 0), 0
+        );
       }
 
       // Get packages
@@ -254,11 +241,25 @@ export function useMyTickets(
     queryFn: async () => {
       if (!searchValue) return [];
 
+      // Query orders instead of sold_tickets
       let query = supabase
-        .from('sold_tickets')
+        .from('orders')
         .select(`
-          *,
-          raffles (id, title, slug, prize_name, prize_images, draw_date, status, ticket_price, currency_code)
+          id,
+          reference_code,
+          ticket_count,
+          ticket_ranges,
+          status,
+          buyer_name,
+          buyer_email,
+          buyer_phone,
+          buyer_city,
+          payment_method,
+          payment_proof_url,
+          order_total,
+          reserved_at,
+          sold_at,
+          raffles (id, title, slug, prize_name, prize_images, draw_date, status, ticket_price, currency_code, numbering_config, total_tickets)
         `)
         .in('status', ['reserved', 'sold'])
         .order('reserved_at', { ascending: false });
@@ -266,10 +267,8 @@ export function useMyTickets(
       if (searchType === 'email') {
         query = query.eq('buyer_email', searchValue.toLowerCase());
       } else if (searchType === 'reference') {
-        // Search by payment reference (reservation code) - case insensitive
-        query = query.eq('payment_reference', searchValue.toUpperCase());
+        query = query.eq('reference_code', searchValue.toUpperCase());
       } else if (searchType === 'phone') {
-        // Search by phone - strip non-digits and search
         const cleanPhone = searchValue.replace(/\D/g, '');
         query = query.ilike('buyer_phone', `%${cleanPhone}%`);
       }
@@ -400,34 +399,46 @@ export function useCheckTicketsAvailability() {
     }): Promise<string[]> => {
       if (ticketNumbers.length === 0) return [];
 
-      // In virtual model, a ticket is available if it does NOT exist in sold_tickets
-      // or if it exists with expired reservation
-      const { data, error } = await supabase
-        .from('sold_tickets')
-        .select('ticket_number, status, reserved_until')
+      // Get raffle config for numbering
+      const { data: raffle } = await supabase
+        .from('raffles')
+        .select('total_tickets, numbering_config')
+        .eq('id', raffleId)
+        .single();
+
+      if (!raffle) return ticketNumbers;
+
+      // Get all orders to check availability
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('ticket_ranges, lucky_indices, status, reserved_until')
         .eq('raffle_id', raffleId)
-        .in('ticket_number', ticketNumbers);
+        .in('status', ['reserved', 'sold']);
 
       if (error) throw error;
 
-      // Build a set of unavailable tickets
-      const unavailableSet = new Set(
-        (data || [])
-          .filter(t => {
-            // Sold tickets are not available
-            if (t.status === 'sold') return true;
-            // Reserved tickets are unavailable ONLY if not expired
-            if (t.status === 'reserved') {
-              const reservedUntil = t.reserved_until ? new Date(t.reserved_until) : null;
-              return reservedUntil && reservedUntil > new Date();
+      // Build set of unavailable ticket indices
+      const unavailableIndices = new Set<number>();
+      for (const order of orders || []) {
+        if (order.status === 'sold' || 
+            (order.status === 'reserved' && order.reserved_until && new Date(order.reserved_until) > new Date())) {
+          // Expand ticket_ranges
+          const ranges = order.ticket_ranges as { s: number; e: number }[] || [];
+          for (const range of ranges) {
+            for (let i = range.s; i <= range.e; i++) {
+              unavailableIndices.add(i);
             }
-            return false;
-          })
-          .map(t => t.ticket_number)
-      );
+          }
+          // Add lucky indices
+          for (const idx of order.lucky_indices || []) {
+            unavailableIndices.add(idx);
+          }
+        }
+      }
 
-      // Return tickets that are NOT in the unavailable set (they're available)
-      return ticketNumbers.filter(tn => !unavailableSet.has(tn));
+      // Filter to available tickets (those NOT in unavailable set)
+      // For simplicity, we assume ticketNumbers are already validated
+      return ticketNumbers.filter((_, idx) => !unavailableIndices.has(idx + 1));
     },
   });
 }

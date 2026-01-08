@@ -1920,6 +1920,8 @@ export type Database = {
       }
       raffle_stats_mv: {
         Row: {
+          created_at: string | null
+          draw_date: string | null
           organization_id: string | null
           raffle_id: string | null
           reserved_count: number | null
@@ -1927,7 +1929,9 @@ export type Database = {
           sold_count: number | null
           status: Database["public"]["Enums"]["raffle_status"] | null
           ticket_price: number | null
+          title: string | null
           total_tickets: number | null
+          unique_buyers: number | null
         }
         Relationships: [
           {
@@ -1935,6 +1939,61 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sold_tickets_compat: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          buyer_city: string | null
+          buyer_email: string | null
+          buyer_id: string | null
+          buyer_name: string | null
+          buyer_phone: string | null
+          canceled_at: string | null
+          created_at: string | null
+          order_id: string | null
+          order_total: number | null
+          payment_method: string | null
+          payment_proof_url: string | null
+          payment_reference: string | null
+          raffle_id: string | null
+          reserved_at: string | null
+          reserved_until: string | null
+          sold_at: string | null
+          status: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_index: number | null
+          ticket_number: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "buyers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "public_raffles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_stats_mv"
+            referencedColumns: ["raffle_id"]
+          },
+          {
+            foreignKeyName: "orders_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
             referencedColumns: ["id"]
           },
         ]
@@ -1985,6 +2044,12 @@ export type Database = {
       cleanup_expired_orders: { Args: never; Returns: number }
       compress_ticket_indices: { Args: { indices: number[] }; Returns: Json }
       count_tickets_in_ranges: { Args: { ranges: Json }; Returns: number }
+      expand_order_to_indices: {
+        Args: { p_lucky_indices: number[]; p_ticket_ranges: Json }
+        Returns: {
+          ticket_index: number
+        }[]
+      }
       expand_ticket_ranges: { Args: { ranges: Json }; Returns: number[] }
       format_virtual_ticket: {
         Args: {
@@ -1995,41 +2060,62 @@ export type Database = {
         Returns: string
       }
       generate_reference_code: { Args: never; Returns: string }
-      get_buyers_paginated: {
-        Args: {
-          p_city?: string
-          p_end_date?: string
-          p_page?: number
-          p_page_size?: number
-          p_raffle_id: string
-          p_search?: string
-          p_start_date?: string
-          p_status?: string
-        }
-        Returns: {
-          buyer_city: string
-          buyer_email: string
-          buyer_key: string
-          buyer_name: string
-          buyer_phone: string
-          first_reserved_at: string
-          has_payment_proof: boolean
-          order_total: number
-          payment_method: string
-          payment_reference: string
-          sold_at: string
-          status: string
-          ticket_count: number
-          ticket_numbers: string[]
-          total_count: number
-        }[]
-      }
+      get_buyers_paginated:
+        | {
+            Args: {
+              p_page?: number
+              p_page_size?: number
+              p_raffle_id: string
+              p_search?: string
+              p_status_filter?: string
+            }
+            Returns: {
+              buyer_city: string
+              buyer_email: string
+              buyer_name: string
+              buyer_phone: string
+              order_id: string
+              payment_method: string
+              payment_proof_url: string
+              reference_code: string
+              reserved_at: string
+              sold_at: string
+              status: string
+              ticket_count: number
+              total_amount: number
+            }[]
+          }
+        | {
+            Args: {
+              p_city?: string
+              p_end_date?: string
+              p_page?: number
+              p_page_size?: number
+              p_raffle_id: string
+              p_search?: string
+              p_start_date?: string
+              p_status?: string
+            }
+            Returns: {
+              buyer_city: string
+              buyer_email: string
+              buyer_key: string
+              buyer_name: string
+              buyer_phone: string
+              first_reserved_at: string
+              has_payment_proof: boolean
+              order_total: number
+              payment_method: string
+              payment_reference: string
+              sold_at: string
+              status: string
+              ticket_count: number
+              ticket_numbers: string[]
+              total_count: number
+            }[]
+          }
       get_dashboard_charts: {
-        Args: {
-          p_end_date: string
-          p_organization_id: string
-          p_start_date: string
-        }
+        Args: { p_end_date: string; p_org_id: string; p_start_date: string }
         Returns: Json
       }
       get_dashboard_stats: {
@@ -2128,16 +2214,39 @@ export type Database = {
           total_count: number
         }[]
       }
-      get_virtual_tickets: {
-        Args: { p_page?: number; p_page_size?: number; p_raffle_id: string }
-        Returns: {
-          buyer_name: string
-          reserved_until: string
-          status: string
-          ticket_index: number
-          ticket_number: string
-        }[]
-      }
+      get_virtual_tickets:
+        | {
+            Args: { p_page?: number; p_page_size?: number; p_raffle_id: string }
+            Returns: {
+              buyer_name: string
+              reserved_until: string
+              status: string
+              ticket_index: number
+              ticket_number: string
+            }[]
+          }
+        | {
+            Args: {
+              p_page?: number
+              p_page_size?: number
+              p_raffle_id: string
+              p_search?: string
+              p_status_filter?: string
+            }
+            Returns: {
+              buyer_city: string
+              buyer_email: string
+              buyer_name: string
+              buyer_phone: string
+              order_id: string
+              payment_reference: string
+              reserved_at: string
+              sold_at: string
+              status: string
+              ticket_index: number
+              ticket_number: string
+            }[]
+          }
       get_virtual_tickets_v2: {
         Args: {
           p_page_number?: number
@@ -2227,7 +2336,7 @@ export type Database = {
           ticket_count: number
         }[]
       }
-      release_expired_tickets: { Args: never; Returns: undefined }
+      release_expired_tickets: { Args: never; Returns: number }
       reserve_tickets_v2: {
         Args: {
           p_buyer_city?: string
@@ -2294,7 +2403,6 @@ export type Database = {
         Returns: {
           buyer_city: string
           buyer_name: string
-          id: string
           status: string
           ticket_index: number
           ticket_number: string

@@ -4,9 +4,11 @@ import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 
 interface TicketData {
-  id: string;
+  ticket_index: number;
   ticket_number: string;
   status: string;
+  buyer_name?: string | null;
+  buyer_city?: string | null;
 }
 
 interface VirtualizedTicketGridProps {

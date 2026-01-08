@@ -68,16 +68,19 @@ Deno.serve(async (req) => {
 
     // Get system metrics if detailed mode
     if (detailed) {
-      const [ticketResult, raffleResult, orgResult, activeResult] = await Promise.all([
-        supabase.from('sold_tickets').select('*', { count: 'exact', head: true }),
+      const [orderResult, raffleResult, orgResult, activeResult] = await Promise.all([
+        supabase.from('orders').select('ticket_count').eq('status', 'sold'),
         supabase.from('raffles').select('*', { count: 'exact', head: true }),
         supabase.from('organizations').select('*', { count: 'exact', head: true }),
         supabase.from('raffles').select('*', { count: 'exact', head: true }).eq('status', 'active'),
       ]);
 
+      // Sum ticket_count from orders for total tickets sold
+      const ticketCount = (orderResult.data || []).reduce((sum, o) => sum + (o.ticket_count || 0), 0);
+
       metrics = {
         database: {
-          ticketCount: ticketResult.count || 0,
+          ticketCount: ticketCount,
           raffleCount: raffleResult.count || 0,
           organizationCount: orgResult.count || 0,
           activeRaffleCount: activeResult.count || 0,
