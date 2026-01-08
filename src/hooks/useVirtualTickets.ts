@@ -7,7 +7,13 @@ interface VirtualTicket {
   ticket_index: number;
   status: string;
   buyer_name: string | null;
-  reserved_until: string | null;
+  buyer_email?: string | null;
+  buyer_phone?: string | null;
+  buyer_city?: string | null;
+  payment_reference?: string | null;
+  order_id?: string | null;
+  reserved_at?: string | null;
+  sold_at?: string | null;
 }
 
 interface VirtualTicketCounts {

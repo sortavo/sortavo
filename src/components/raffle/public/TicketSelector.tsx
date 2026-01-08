@@ -199,7 +199,7 @@ export function TicketSelector({
   // Separate states for Manual tab (local filter) and Search tab (backend search)
   const [manualFilter, setManualFilter] = useState('');
   const [debouncedManual, setDebouncedManual] = useState('');
-  const [manualResults, setManualResults] = useState<{ id: string; ticket_number: string; status: string }[]>([]);
+  const [manualResults, setManualResults] = useState<{ ticket_index: number; ticket_number: string; status: string; buyer_name?: string | null; buyer_city?: string | null }[]>([]);
   const [hasManualSearched, setHasManualSearched] = useState(false);
   const [isManualSearching, setIsManualSearching] = useState(false);
   const [manualOffset, setManualOffset] = useState(0);
@@ -208,7 +208,7 @@ export function TicketSelector({
   
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<{ id: string; ticket_number: string; status: string }[]>([]);
+  const [searchResults, setSearchResults] = useState<{ ticket_index: number; ticket_number: string; status: string; buyer_name?: string | null; buyer_city?: string | null }[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [generatedNumbers, setGeneratedNumbers] = useState<string[]>([]);
   const [regenerateCount, setRegenerateCount] = useState(0);
@@ -976,7 +976,7 @@ export function TicketSelector({
                             
                             return (
                               <motion.button
-                                key={ticket.id}
+                                key={ticket.ticket_index}
                                 whileHover={isAvailable ? { scale: 1.02 } : {}}
                                 whileTap={isAvailable ? { scale: 0.98 } : {}}
                                 onClick={() => handleSelectSearchResult(ticket.ticket_number, ticket.status)}
@@ -1597,7 +1597,7 @@ export function TicketSelector({
                             
                             return (
                               <motion.button
-                                key={ticket.id}
+                                key={ticket.ticket_index}
                                 whileHover={isAvailable ? { scale: 1.05 } : {}}
                                 whileTap={isAvailable ? { scale: 0.95 } : {}}
                                 onClick={() => handleSelectSearchResult(ticket.ticket_number, ticket.status)}

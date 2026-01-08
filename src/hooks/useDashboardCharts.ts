@@ -97,7 +97,7 @@ export function useDashboardCharts(dateRange?: DateRange) {
 
       // Use the new RPC that aggregates data on the server (no 1000-row limit)
       const { data, error } = await supabase.rpc('get_dashboard_charts', {
-        p_organization_id: organization.id,
+        p_org_id: organization.id,
         p_start_date: startDate.toISOString(),
         p_end_date: endDate.toISOString()
       });

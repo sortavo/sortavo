@@ -128,40 +128,41 @@ export function GlobalSearch() {
       if (orgRaffles && orgRaffles.length > 0) {
         const raffleIds = orgRaffles.map(r => r.id);
         
-        const { data: tickets } = await supabase
-          .from('sold_tickets')
-          .select('id, ticket_number, buyer_name, buyer_email, raffle_id')
+        // Search buyers from orders
+        const { data: orders } = await supabase
+          .from('orders')
+          .select('id, reference_code, ticket_count, buyer_name, buyer_email, raffle_id')
           .in('raffle_id', raffleIds)
           .eq('status', 'sold')
           .or(`buyer_name.ilike.%${searchQuery}%,buyer_email.ilike.%${searchQuery}%`)
           .limit(5);
 
-        tickets?.forEach(ticket => {
+        orders?.forEach(order => {
           searchResults.push({
-            id: ticket.id,
+            id: order.id,
             type: 'buyer',
-            title: ticket.buyer_name || ticket.buyer_email || 'Comprador',
-            subtitle: `Boleto #${ticket.ticket_number}`,
-            link: `/dashboard/raffles/${ticket.raffle_id}?tab=buyers`,
+            title: order.buyer_name || order.buyer_email || 'Comprador',
+            subtitle: `${order.ticket_count} boletos • ${order.reference_code}`,
+            link: `/dashboard/raffles/${order.raffle_id}?tab=buyers`,
           });
         });
 
-        // Search by ticket number if query is numeric
-        if (/^\d+$/.test(searchQuery)) {
-          const { data: ticketsByNumber } = await supabase
-            .from('sold_tickets')
-            .select('id, ticket_number, buyer_name, status, raffle_id')
+        // Search by reference code if query looks like one
+        if (searchQuery.length >= 4) {
+          const { data: ordersByRef } = await supabase
+            .from('orders')
+            .select('id, reference_code, ticket_count, buyer_name, status, raffle_id')
             .in('raffle_id', raffleIds)
-            .eq('ticket_number', searchQuery)
+            .ilike('reference_code', `%${searchQuery}%`)
             .limit(5);
 
-          ticketsByNumber?.forEach(ticket => {
+          ordersByRef?.forEach(order => {
             searchResults.push({
-              id: ticket.id,
+              id: order.id,
               type: 'ticket',
-              title: `Boleto #${ticket.ticket_number}`,
-              subtitle: `${ticket.status === 'sold' ? '✅ Vendido' : ticket.status === 'reserved' ? '⏳ Reservado' : '⭕ Disponible'}`,
-              link: `/dashboard/raffles/${ticket.raffle_id}?tab=tickets`,
+              title: `Orden ${order.reference_code}`,
+              subtitle: `${order.ticket_count} boletos • ${order.status === 'sold' ? '✅ Vendido' : order.status === 'reserved' ? '⏳ Reservado' : '⭕ Disponible'}`,
+              link: `/dashboard/raffles/${order.raffle_id}?tab=tickets`,
             });
           });
         }
