@@ -38,12 +38,19 @@ export function UpcomingPreDraws({
   const cardBg = isLightTemplate ? 'bg-white' : 'bg-white/[0.03]';
   const borderColor = isLightTemplate ? 'border-gray-200' : 'border-white/[0.08]';
 
+  // Dynamic grid columns based on number of items
+  const gridCols = upcomingPrizes.length <= 2 
+    ? "sm:grid-cols-2" 
+    : upcomingPrizes.length === 3 
+      ? "sm:grid-cols-2 lg:grid-cols-3"
+      : "sm:grid-cols-2 lg:grid-cols-4";
+
   return (
-    <section className={compact ? "py-4" : "py-12 lg:py-16"}>
-      <div className={compact ? "w-full" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
-        {/* Header */}
-        <div className="text-center mb-8 lg:mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4"
+    <section className={compact ? "py-6" : "py-12 lg:py-16"}>
+      <div className={compact ? "w-full px-4" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
+        {/* Header - more compact in compact mode */}
+        <div className={cn("text-center", compact ? "mb-4" : "mb-8 lg:mb-12")}>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3"
             style={{ 
               backgroundColor: primaryColor ? `${primaryColor}15` : 'rgba(16, 185, 129, 0.15)',
             }}
@@ -59,16 +66,22 @@ export function UpcomingPreDraws({
               Pre-sorteos
             </span>
           </div>
-          <h2 className={cn("text-2xl lg:text-3xl font-bold tracking-tight", textColor)}>
+          <h2 className={cn(
+            compact ? "text-xl lg:text-2xl" : "text-2xl lg:text-3xl",
+            "font-bold tracking-tight", 
+            textColor
+          )}>
             ¡Más Oportunidades de Ganar!
           </h2>
-          <p className={cn("mt-2 text-sm lg:text-base", textMuted)}>
-            Participa también en estos sorteos anticipados
-          </p>
+          {!compact && (
+            <p className={cn("mt-2 text-sm lg:text-base", textMuted)}>
+              Participa también en estos sorteos anticipados
+            </p>
+          )}
         </div>
 
-        {/* Pre-draws Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Pre-draws Grid - dynamic columns */}
+        <div className={cn("grid gap-3", gridCols)}>
           {upcomingPrizes.map((prize, index) => {
             const drawDate = new Date(prize.scheduled_draw_date!);
             const isNextDraw = index === 0;
@@ -114,7 +127,7 @@ export function UpcomingPreDraws({
                       <Badge variant="secondary" className="mb-2 text-[10px]">
                         Pre-sorteo
                       </Badge>
-                      <h3 className={cn("font-semibold truncate", textColor)}>
+                      <h3 className={cn("font-semibold line-clamp-2 text-sm", textColor)}>
                         {prize.name || 'Premio'}
                       </h3>
                       {prize.value && (

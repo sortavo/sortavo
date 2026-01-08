@@ -55,7 +55,7 @@ export function PrizeShowcase({
   if (displayMode === 'hierarchical') {
     return (
       <div 
-        className="relative overflow-hidden rounded-2xl border-2 p-4 sm:p-6"
+        className="relative overflow-hidden rounded-2xl border-2 p-4 sm:p-6 max-w-2xl mx-auto"
         style={containerStyle}
       >
         {/* Decorative sparkles */}
@@ -155,7 +155,7 @@ export function PrizeShowcase({
   if (displayMode === 'equal') {
     return (
       <div 
-        className="relative overflow-hidden rounded-2xl border-2 p-4 sm:p-6"
+        className="relative overflow-hidden rounded-2xl border-2 p-4 sm:p-6 max-w-2xl mx-auto"
         style={containerStyle}
       >
         {/* Decorative sparkles */}
@@ -225,7 +225,7 @@ export function PrizeShowcase({
   // Numbered mode: Prize 1, 2, 3... without hierarchy medals
   return (
     <div 
-      className="relative overflow-hidden rounded-2xl border-2 p-4 sm:p-6"
+      className="relative overflow-hidden rounded-2xl border-2 p-4 sm:p-6 max-w-2xl mx-auto"
       style={containerStyle}
     >
       {/* Decorative sparkles */}
