@@ -314,11 +314,15 @@ export function CheckoutModal({
         orderTotal: total,
       });
 
+      // If we used the resilient reservation, it may return the final list (filled if some collided)
+      const finalTicketNumbers = virtualResult.ticketNumbers ?? selectedTickets;
+      const finalTicketIndices = virtualResult.ticketIndices ?? selectedTicketIndices;
+
       // Adapt result to expected format
       const result = {
-        tickets: selectedTickets.map((tn, i) => ({ 
-          id: `virtual-${selectedTicketIndices[i]}`, 
-          ticket_number: tn 
+        tickets: finalTicketNumbers.map((tn, i) => ({
+          id: `virtual-${finalTicketIndices[i] ?? i}`,
+          ticket_number: tn,
         })),
         reservedUntil: virtualResult.reservedUntil,
         referenceCode: virtualResult.referenceCode,
@@ -333,7 +337,7 @@ export function CheckoutModal({
       sendReservationEmail({
         to: data.email,
         buyerName: data.name,
-        ticketNumbers: selectedTickets,
+        ticketNumbers: result.tickets.map(t => t.ticket_number),
         raffleTitle: raffle.title,
         raffleSlug: raffle.slug,
         amount: total,
@@ -379,7 +383,7 @@ export function CheckoutModal({
         itemId: raffle.id,
         itemName: raffle.title,
         value: total,
-        quantity: selectedTickets.length,
+        quantity: result.tickets.length,
         currency: raffle.currency_code || 'MXN',
         userEmail: data.email,
         userPhone: cleanPhone,
