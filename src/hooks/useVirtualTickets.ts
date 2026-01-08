@@ -26,6 +26,16 @@ interface ReserveResult {
   error_message: string | null;
 }
 
+interface ReserveResilientResult {
+  success: boolean;
+  reference_code: string | null;
+  reserved_until: string | null;
+  reserved_count: number;
+  ticket_indices: number[] | null;
+  ticket_numbers: string[] | null;
+  error_message: string | null;
+}
+
 export function useVirtualTickets(
   raffleId: string | undefined,
   page: number = 1,
@@ -113,7 +123,13 @@ export function useReserveVirtualTickets() {
       reservationMinutes?: number;
       orderTotal?: number;
     }) => {
-      const { data, error } = await supabase.rpc('reserve_virtual_tickets', {
+      // For very large selections (e.g. 10,000), use the resilient RPC that can "fill" collisions.
+      const useResilient = ticketIndices.length >= 1000;
+      const rpcName = useResilient
+        ? ('reserve_virtual_tickets_resilient' as any)
+        : ('reserve_virtual_tickets' as any);
+
+      const { data, error } = await (supabase as any).rpc(rpcName, {
         p_raffle_id: raffleId,
         p_ticket_indices: ticketIndices,
         p_buyer_name: buyerData.name,
@@ -126,15 +142,24 @@ export function useReserveVirtualTickets() {
 
       if (error) throw error;
 
-      const result = (data as ReserveResult[] | null)?.[0];
-      if (!result?.success) {
-        throw new Error(result?.error_message || 'Error al reservar boletos');
+      const raw = (data as any[] | null)?.[0] as (ReserveResult | ReserveResilientResult | undefined);
+
+      if (!raw?.success) {
+        throw new Error(raw?.error_message || 'Error al reservar boletos');
       }
 
+      const ticketNumbers = (raw as ReserveResilientResult).ticket_numbers || undefined;
+      const finalTicketNumbers = ticketNumbers && ticketNumbers.length > 0 ? ticketNumbers : undefined;
+
+      const ticketIdx = (raw as ReserveResilientResult).ticket_indices || undefined;
+      const finalTicketIndices = ticketIdx && ticketIdx.length > 0 ? ticketIdx : undefined;
+
       return {
-        referenceCode: result.reference_code!,
-        reservedUntil: result.reserved_until!,
-        count: result.reserved_count,
+        referenceCode: raw.reference_code!,
+        reservedUntil: raw.reserved_until!,
+        count: raw.reserved_count,
+        ticketNumbers: finalTicketNumbers,
+        ticketIndices: finalTicketIndices,
       };
     },
     onSuccess: (_, variables) => {

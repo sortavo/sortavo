@@ -2064,6 +2064,27 @@ export type Database = {
           success: boolean
         }[]
       }
+      reserve_virtual_tickets_resilient: {
+        Args: {
+          p_buyer_city?: string
+          p_buyer_email: string
+          p_buyer_name: string
+          p_buyer_phone: string
+          p_order_total?: number
+          p_raffle_id: string
+          p_reservation_minutes?: number
+          p_ticket_indices: number[]
+        }
+        Returns: {
+          error_message: string
+          reference_code: string
+          reserved_count: number
+          reserved_until: string
+          success: boolean
+          ticket_indices: number[]
+          ticket_numbers: string[]
+        }[]
+      }
       search_public_tickets: {
         Args: { p_limit?: number; p_raffle_id: string; p_search: string }
         Returns: {
