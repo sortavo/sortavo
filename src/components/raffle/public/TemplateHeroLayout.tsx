@@ -1099,18 +1099,35 @@ export function TemplateHeroLayout({
           <div className="relative py-12 lg:py-20">
             <PatternOverlay />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Hero Grid: Intro left, Gallery right */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-                {/* Text content - takes 6 columns (balanced) */}
-                <div className="lg:col-span-6 order-2 lg:order-1 lg:sticky lg:top-32">
-                  <InfoSection />
+                {/* Intro content only - takes 6 columns */}
+                <div className="lg:col-span-6 order-2 lg:order-1 space-y-6">
+                  <HeaderBadges />
+                  <TitleSection />
+                  <DescriptionSection />
                 </div>
                 
-                {/* Gallery - takes 6 columns (balanced) */}
+                {/* Gallery - takes 6 columns */}
                 <div className="lg:col-span-6 order-1 lg:order-2">
                   <div className="relative">
                     <GalleryComponent />
                     <PriceDisplay />
                   </div>
+                </div>
+              </div>
+              
+              {/* Full-width content below the hero grid */}
+              <div className="mt-12 flex flex-col items-center gap-6 lg:gap-8">
+                <PrizesSection />
+                <PreDrawsSection />
+                <div className="w-full space-y-6">
+                  <StatsCards />
+                  <ProgressSection />
+                </div>
+                <div className="w-full space-y-4">
+                  <CTASection />
+                  <TrustBadges />
                 </div>
               </div>
             </div>
