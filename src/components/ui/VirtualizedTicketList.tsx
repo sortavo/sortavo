@@ -36,9 +36,15 @@ const STATUS_CONFIG = {
 interface TicketData {
   id: string;
   ticket_number: string;
+  ticket_index?: number;
   status: string;
   buyer_name?: string | null;
   buyer_city?: string | null;
+  buyer_email?: string | null;
+  buyer_phone?: string | null;
+  payment_reference?: string | null;
+  payment_method?: string | null;
+  order_total?: number | null;
   reserved_at?: string | null;
   sold_at?: string | null;
   created_at?: string | null;

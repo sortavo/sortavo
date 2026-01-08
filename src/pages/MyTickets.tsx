@@ -24,6 +24,95 @@ import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "@/lib/currency-utils";
+import type { Json } from "@/integrations/supabase/types";
+
+// Helper to format ticket number using numbering_config
+function formatTicketNumber(index: number, config: any, total: number): string {
+  const startNumber = config?.start_number ?? 1;
+  const step = config?.step ?? 1;
+  const ticketNumber = startNumber + (index * step);
+  
+  // Calculate max number for padding
+  const maxNumber = startNumber + ((total - 1) * step);
+  const digits = Math.max(maxNumber.toString().length, config?.digits || 0);
+  
+  const prefix = config?.prefix || '';
+  return `${prefix}${ticketNumber.toString().padStart(digits, '0')}`;
+}
+
+// Helper to expand orders to individual tickets
+interface ExpandedTicket {
+  id: string;
+  ticket_number: string;
+  ticket_index: number;
+  status: string;
+  buyer_name: string | null;
+  buyer_email: string | null;
+  buyer_phone: string | null;
+  buyer_city: string | null;
+  payment_reference: string;
+  payment_method: string | null;
+  payment_proof_url: string | null;
+  order_total: number | null;
+  reserved_at: string | null;
+  sold_at: string | null;
+  raffles: any;
+}
+
+function expandOrdersToTickets(orders: any[]): ExpandedTicket[] {
+  const tickets: ExpandedTicket[] = [];
+  
+  for (const order of orders) {
+    const raffle = order.raffles;
+    const config = raffle?.numbering_config || {};
+    const total = raffle?.total_tickets || 1000;
+    
+    // Parse ticket_ranges
+    const ranges = order.ticket_ranges as Array<{ s: number; e: number }> || [];
+    const luckyIndices = order.lucky_indices as number[] || [];
+    
+    // Collect all indices
+    const indices: number[] = [];
+    
+    for (const range of ranges) {
+      for (let i = range.s; i <= range.e; i++) {
+        indices.push(i);
+      }
+    }
+    
+    for (const idx of luckyIndices) {
+      if (!indices.includes(idx)) {
+        indices.push(idx);
+      }
+    }
+    
+    // Sort indices
+    indices.sort((a, b) => a - b);
+    
+    // Create ticket entries
+    for (const idx of indices) {
+      tickets.push({
+        id: `${order.id}-${idx}`,
+        ticket_number: formatTicketNumber(idx, config, total),
+        ticket_index: idx,
+        status: order.status,
+        buyer_name: order.buyer_name,
+        buyer_email: order.buyer_email,
+        buyer_phone: order.buyer_phone,
+        buyer_city: order.buyer_city,
+        payment_reference: order.reference_code,
+        payment_method: order.payment_method,
+        payment_proof_url: order.payment_proof_url,
+        order_total: order.order_total,
+        reserved_at: order.reserved_at,
+        sold_at: order.sold_at,
+        raffles: raffle,
+      });
+    }
+  }
+  
+  return tickets;
+}
 
 // Status configuration for visual display
 const STATUS_CONFIG = {
@@ -67,7 +156,13 @@ export default function MyTickets() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [ticketSearch, setTicketSearch] = useState('');
 
-  const { data: tickets, isLoading } = useMyTickets(searchValue, searchType);
+  const { data: ordersData, isLoading } = useMyTickets(searchValue, searchType);
+  
+  // Expand orders to individual tickets
+  const tickets = useMemo(() => {
+    if (!ordersData) return undefined;
+    return expandOrdersToTickets(ordersData);
+  }, [ordersData]);
   const { generatePDF, isGenerating } = useBulkTicketDownload();
   const { generateOrderReceipt, isGenerating: isGeneratingOrder } = useOrderReceipt();
   const { sendReservationEmail } = useEmails();
