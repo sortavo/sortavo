@@ -1127,12 +1127,7 @@ export function TicketSelector({
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <div className={cn("text-sm", colors.paginationText)}>
-                Página {page} de {effectiveTotalPages}
-                {isLargeRaffle && effectiveTotalPages < totalPages && (
-                  <span className="text-amber-500 ml-2">
-                    (usa búsqueda para ver más)
-                  </span>
-                )}
+                Página {page.toLocaleString('es-MX')} de {effectiveTotalPages.toLocaleString('es-MX')}
               </div>
               
               <div className="flex items-center gap-1">

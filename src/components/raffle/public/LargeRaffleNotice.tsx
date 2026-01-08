@@ -11,10 +11,10 @@ interface LargeRaffleNoticeProps {
   isLightTemplate?: boolean;
 }
 
-// Threshold where we show the notice but still allow grid
+// Threshold where we show the "large raffle" notice with recommendations
 const LARGE_RAFFLE_THRESHOLD = 50000;
 
-// Threshold where we hide the grid completely - mega-raffles
+// Threshold for "mega raffle" styling (purple theme, different messaging)
 const MEGA_RAFFLE_THRESHOLD = 100000;
 
 export function LargeRaffleNotice({ 
