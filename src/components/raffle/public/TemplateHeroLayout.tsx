@@ -909,7 +909,7 @@ export function TemplateHeroLayout({
     
     return (
       <motion.div
-        className="w-full"
+        className="w-full max-w-6xl mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
@@ -1099,38 +1099,18 @@ export function TemplateHeroLayout({
           <div className="relative py-12 lg:py-20">
             <PatternOverlay />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
-                {/* Text content - takes 5 columns */}
-                <div className="lg:col-span-5 order-2 lg:order-1 lg:sticky lg:top-32">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                {/* Text content - takes 6 columns (balanced) */}
+                <div className="lg:col-span-6 order-2 lg:order-1 lg:sticky lg:top-32">
                   <InfoSection />
                 </div>
                 
-                {/* Gallery - takes 7 columns */}
-                <div className="lg:col-span-7 order-1 lg:order-2">
+                {/* Gallery - takes 6 columns (balanced) */}
+                <div className="lg:col-span-6 order-1 lg:order-2">
                   <div className="relative">
                     <GalleryComponent />
-                    {pricePosition !== 'side' && <PriceDisplay />}
+                    <PriceDisplay />
                   </div>
-                  
-                  {/* Side price display */}
-                  {pricePosition === 'side' && raffle.prize_value && (
-                    <motion.div 
-                      className={cn(
-                        "mt-6 p-6 rounded-xl shadow-lg backdrop-blur-sm",
-                        isLightTemplate
-                          ? "bg-gray-50 border border-gray-200"
-                          : "bg-white/[0.03] border border-white/[0.06]"
-                      )}
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <p className={cn("text-sm font-medium", isLightTemplate ? "text-gray-500" : "text-white/50")}>Valor estimado del premio</p>
-                      <p className="text-4xl font-bold mt-1 text-emerald-500">
-                        {formatCurrency(Number(raffle.prize_value), currency)}
-                      </p>
-                    </motion.div>
-                  )}
-                  
-                  {/* Video is now integrated in GalleryComponent */}
                 </div>
               </div>
             </div>
@@ -1198,13 +1178,13 @@ export function TemplateHeroLayout({
                 <DescriptionSection />
                 
                 {/* 6. STATS + PROGRESS */}
-                <div className="w-full space-y-8">
+                <div className="w-full space-y-6">
                   <StatsCards />
                   <ProgressSection />
                 </div>
                 
                 {/* 7. CTAs + Trust Badges */}
-                <div className="w-full space-y-8">
+                <div className="w-full space-y-4">
                   <CTASection />
                   <TrustBadges />
                 </div>
