@@ -1787,20 +1787,6 @@ export type Database = {
       }
     }
     Functions: {
-      append_ticket_batch: {
-        Args: {
-          p_existing_count: number
-          p_new_total: number
-          p_numbering_config?: Json
-          p_raffle_id: string
-        }
-        Returns: number
-      }
-      apply_custom_numbers: { Args: { p_raffle_id: string }; Returns: number }
-      apply_random_permutation: {
-        Args: { p_numbering_config?: Json; p_raffle_id: string }
-        Returns: number
-      }
       approve_order: {
         Args: { p_approved_by?: string; p_order_id: string }
         Returns: {
@@ -2102,46 +2088,6 @@ export type Database = {
           reserved_until: string
           success: boolean
           ticket_count: number
-        }[]
-      }
-      reserve_virtual_tickets: {
-        Args: {
-          p_buyer_city?: string
-          p_buyer_email: string
-          p_buyer_name: string
-          p_buyer_phone: string
-          p_order_total?: number
-          p_raffle_id: string
-          p_reservation_minutes?: number
-          p_ticket_indices: number[]
-        }
-        Returns: {
-          error_message: string
-          reference_code: string
-          reserved_count: number
-          reserved_until: string
-          success: boolean
-        }[]
-      }
-      reserve_virtual_tickets_resilient: {
-        Args: {
-          p_buyer_city?: string
-          p_buyer_email: string
-          p_buyer_name: string
-          p_buyer_phone?: string
-          p_order_total?: number
-          p_raffle_id: string
-          p_reservation_minutes?: number
-          p_ticket_indices: number[]
-        }
-        Returns: {
-          error_message: string
-          reference_code: string
-          reserved_count: number
-          reserved_until: string
-          success: boolean
-          ticket_indices: number[]
-          ticket_numbers: string[]
         }[]
       }
       search_public_tickets: {
