@@ -12,6 +12,7 @@ interface UpcomingPreDrawsProps {
   currencyCode?: string;
   primaryColor?: string;
   isLightTemplate?: boolean;
+  compact?: boolean; // For use inside hero layout
 }
 
 export function UpcomingPreDraws({
@@ -19,6 +20,7 @@ export function UpcomingPreDraws({
   currencyCode = 'MXN',
   primaryColor,
   isLightTemplate = false,
+  compact = false,
 }: UpcomingPreDrawsProps) {
   // Filter to only future pre-draws and sort by date
   const upcomingPrizes = prizes
@@ -37,8 +39,8 @@ export function UpcomingPreDraws({
   const borderColor = isLightTemplate ? 'border-gray-200' : 'border-white/[0.08]';
 
   return (
-    <section className="py-12 lg:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className={compact ? "py-4" : "py-12 lg:py-16"}>
+      <div className={compact ? "w-full" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
         {/* Header */}
         <div className="text-center mb-8 lg:mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4"
