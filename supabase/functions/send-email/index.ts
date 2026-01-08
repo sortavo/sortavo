@@ -524,7 +524,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Sortavo <onboarding@resend.dev>',
+        from: 'Sortavo <notificaciones@updates.sortavo.com>',
         to: [to],
         subject: emailSubject,
         html: htmlContent,
