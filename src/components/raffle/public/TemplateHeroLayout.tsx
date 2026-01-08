@@ -28,6 +28,8 @@ import { getVideoEmbedUrl } from "@/lib/video-utils";
 import { PrizeShowcase } from "@/components/raffle/public/PrizeShowcase";
 import { PrizeVideoPlayer } from "@/components/raffle/public/PrizeVideoPlayer";
 import { PrizeLightbox } from "@/components/raffle/public/PrizeLightbox";
+import { UpcomingPreDraws } from "@/components/raffle/public/UpcomingPreDraws";
+import type { Prize } from "@/types/prize";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState } from "react";
@@ -73,6 +75,7 @@ interface TemplateHeroLayoutProps {
     fontTitle: string;
     fontBody: string;
   };
+  upcomingPreDrawPrizes?: Prize[];
 }
 
 export function TemplateHeroLayout({
@@ -92,6 +95,7 @@ export function TemplateHeroLayout({
   logoPosition = 'top-center',
   isLightTemplate = false,
   customColors,
+  upcomingPreDrawPrizes = [],
 }: TemplateHeroLayoutProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -897,6 +901,30 @@ export function TemplateHeroLayout({
     </div>
   );
 
+  // Pre-draws section - shows upcoming pre-draws right after main prize
+  const PreDrawsSection = () => {
+    if (!upcomingPreDrawPrizes || upcomingPreDrawPrizes.length === 0) {
+      return null;
+    }
+    
+    return (
+      <motion.div
+        className="w-full"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+      >
+        <UpcomingPreDraws
+          prizes={upcomingPreDrawPrizes}
+          currencyCode={currency}
+          primaryColor={brandPrimary}
+          isLightTemplate={isLightTemplate}
+          compact
+        />
+      </motion.div>
+    );
+  };
+
   // Legacy InfoSection for other layouts
   const InfoSection = ({ className = "" }: { className?: string }) => (
     <div className={`space-y-8 ${className}`}>
@@ -904,6 +932,7 @@ export function TemplateHeroLayout({
       <TitleSection />
       <DescriptionSection />
       <PrizesSection />
+      <PreDrawsSection />
       <StatsCards />
       <ProgressSection />
       <CTASection />
@@ -1161,6 +1190,9 @@ export function TemplateHeroLayout({
                 >
                   <PrizesSection />
                 </motion.div>
+
+                {/* 3.5 PRE-DRAWS - Right after main prize */}
+                <PreDrawsSection />
                 
                 {/* 5. DESCRIPTION - Context after seeing prizes */}
                 <DescriptionSection />

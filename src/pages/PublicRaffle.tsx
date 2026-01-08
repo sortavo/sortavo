@@ -536,6 +536,7 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
               onShare={shareRaffle}
               isLightTemplate={isLightTemplate}
               customColors={customColors}
+              upcomingPreDrawPrizes={upcomingPreDrawPrizes}
             />
 
             {/* Desktop Countdown */}
@@ -642,16 +643,6 @@ export default function PublicRaffle({ tenantOrgSlug, raffleSlugOverride }: Publ
               )}
             </div>
           </div>
-        )}
-
-        {/* Upcoming Pre-draws Section */}
-        {upcomingPreDrawPrizes.length > 0 && (
-          <UpcomingPreDraws
-            prizes={upcomingPreDrawPrizes}
-            currencyCode={currency}
-            primaryColor={primaryColor}
-            isLightTemplate={isLightTemplate}
-          />
         )}
 
         {/* Announced Winners Section */}
