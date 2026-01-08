@@ -1603,14 +1603,6 @@ export type Database = {
       }
     }
     Views: {
-      legacy_tickets_archived: {
-        Row: {
-          detalle: string | null
-          fecha_limpieza: string | null
-          nota: string | null
-        }
-        Relationships: []
-      }
       public_custom_domains: {
         Row: {
           created_at: string | null

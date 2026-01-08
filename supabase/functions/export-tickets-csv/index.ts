@@ -12,6 +12,41 @@ const STATUS_LABELS: Record<string, string> = {
   canceled: 'Cancelado'
 };
 
+interface TicketRange {
+  s: number;
+  e: number;
+}
+
+interface Order {
+  ticket_ranges: TicketRange[];
+  status: string;
+  buyer_name: string | null;
+  buyer_email: string | null;
+  buyer_phone: string | null;
+  buyer_city: string | null;
+  approved_at: string | null;
+}
+
+interface NumberingConfig {
+  pad_width?: number;
+  pad_char?: string;
+  prefix?: string;
+  suffix?: string;
+  start_number?: number;
+}
+
+function formatTicketNumber(index: number, config: NumberingConfig | null): string {
+  const startNumber = config?.start_number ?? 1;
+  const ticketNum = startNumber + index;
+  const padWidth = config?.pad_width ?? 4;
+  const padChar = config?.pad_char ?? '0';
+  const prefix = config?.prefix ?? '';
+  const suffix = config?.suffix ?? '';
+  
+  const paddedNum = String(ticketNum).padStart(padWidth, padChar);
+  return `${prefix}${paddedNum}${suffix}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -38,12 +73,13 @@ Deno.serve(async (req) => {
       .eq('id', raffle_id)
       .single();
 
-    // Use the sold_tickets_compat view which expands orders into individual tickets
+    const numberingConfig = raffle?.numbering_config as NumberingConfig | null;
+
+    // Fetch orders and expand ticket_ranges into individual tickets
     let query = supabase
-      .from('sold_tickets_compat')
-      .select('ticket_number, status, buyer_name, buyer_email, buyer_phone, buyer_city, approved_at')
-      .eq('raffle_id', raffle_id)
-      .order('ticket_index', { ascending: true });
+      .from('orders')
+      .select('ticket_ranges, status, buyer_name, buyer_email, buyer_phone, buyer_city, approved_at')
+      .eq('raffle_id', raffle_id);
 
     if (status_filter) {
       if (Array.isArray(status_filter)) {
@@ -53,14 +89,47 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { data: tickets, error, count } = await query;
+    const { data: orders, error } = await query;
 
     if (error) {
-      console.error('Error fetching tickets:', error);
+      console.error('Error fetching orders:', error);
       throw error;
     }
 
-    console.log(`Exporting ${tickets?.length || 0} tickets for raffle ${raffle_id}`);
+    // Expand orders into individual tickets
+    const tickets: Array<{
+      ticket_index: number;
+      ticket_number: string;
+      status: string;
+      buyer_name: string | null;
+      buyer_email: string | null;
+      buyer_phone: string | null;
+      buyer_city: string | null;
+      approved_at: string | null;
+    }> = [];
+
+    for (const order of (orders as Order[]) || []) {
+      const ranges = order.ticket_ranges || [];
+      for (const range of ranges) {
+        for (let idx = range.s; idx <= range.e; idx++) {
+          tickets.push({
+            ticket_index: idx,
+            ticket_number: formatTicketNumber(idx, numberingConfig),
+            status: order.status,
+            buyer_name: order.buyer_name,
+            buyer_email: order.buyer_email,
+            buyer_phone: order.buyer_phone,
+            buyer_city: order.buyer_city,
+            approved_at: order.approved_at,
+          });
+        }
+      }
+    }
+
+    // Sort by ticket index
+    tickets.sort((a, b) => a.ticket_index - b.ticket_index);
+
+    console.log(`Exporting ${tickets.length} tickets for raffle ${raffle_id}`);
 
     // CSV headers
     const headers = [
@@ -76,7 +145,7 @@ Deno.serve(async (req) => {
     // Build CSV content
     const csvRows: string[] = [headers.join(',')];
 
-    for (const ticket of tickets || []) {
+    for (const ticket of tickets) {
       const row = [
         ticket.ticket_number,
         STATUS_LABELS[ticket.status || 'available'] || ticket.status,
@@ -97,14 +166,14 @@ Deno.serve(async (req) => {
     const safeRaffleName = raffleName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, '-').slice(0, 50);
     const filename = `boletos-${safeRaffleName}-${Date.now()}.csv`;
 
-    console.log(`Export complete: ${csvRows.length - 1} tickets exported`);
+    console.log(`Export complete: ${tickets.length} tickets exported`);
 
     return new Response(csvContent, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'X-Total-Count': String(tickets?.length || 0),
+        'X-Total-Count': String(tickets.length),
         'X-Filename': filename
       }
     });
