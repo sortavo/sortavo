@@ -181,26 +181,30 @@ export function useDashboardCharts(dateRange?: DateRange) {
             }
             processedReferences.add(ticket.payment_reference);
             
-            // Use order_total if available (includes discounts)
+            // Count tickets in this order
+            const ticketsInOrder = tickets.filter(t => t.payment_reference === ticket.payment_reference);
+            const raffle = rafflesData?.find(r => r.id === ticket.raffle_id);
+            const maxPossibleValue = ticketsInOrder.length * Number(raffle?.ticket_price || 0);
+            
+            // Use order_total if available, but validate it doesn't exceed max possible
             if (ticket.order_total) {
-              totalRevenue += Number(ticket.order_total);
+              // IMPORTANT: Validate order_total is reasonable (not more than tickets * price)
+              // This prevents inflated values from corrupted data
+              const orderTotal = Number(ticket.order_total);
+              totalRevenue += Math.min(orderTotal, maxPossibleValue);
             } else {
-              // Fallback: count all tickets with this reference
-              const ticketsInOrder = tickets.filter(t => t.payment_reference === ticket.payment_reference);
-              const raffle = rafflesData?.find(r => r.id === ticket.raffle_id);
-              if (raffle) {
-                totalRevenue += ticketsInOrder.length * Number(raffle.ticket_price);
-              }
+              totalRevenue += maxPossibleValue;
             }
           } else {
             // No payment_reference, count individually using order_total or ticket_price
+            const raffle = rafflesData?.find(r => r.id === ticket.raffle_id);
+            const maxSingleTicketValue = Number(raffle?.ticket_price || 0);
+            
             if (ticket.order_total) {
-              totalRevenue += Number(ticket.order_total);
+              // Validate individual ticket order_total
+              totalRevenue += Math.min(Number(ticket.order_total), maxSingleTicketValue);
             } else {
-              const raffle = rafflesData?.find(r => r.id === ticket.raffle_id);
-              if (raffle) {
-                totalRevenue += Number(raffle.ticket_price);
-              }
+              totalRevenue += maxSingleTicketValue;
             }
           }
         }
