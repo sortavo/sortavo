@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -213,4 +213,43 @@ export function useCheckVirtualTicket() {
   });
 }
 
-// All raffles now use virtual tickets - legacy helper removed
+/**
+ * Prefetch adjacent pages for smooth navigation in mega raffles.
+ * This function silently loads data into the cache without triggering UI loading states.
+ */
+export async function prefetchVirtualTickets(
+  queryClient: QueryClient,
+  raffleId: string,
+  page: number,
+  pageSize: number = 100
+): Promise<void> {
+  await queryClient.prefetchQuery({
+    queryKey: ['virtual-tickets', raffleId, page, pageSize],
+    queryFn: async () => {
+      const [ticketsResult, countsResult] = await Promise.all([
+        supabase.rpc('get_virtual_tickets', {
+          p_raffle_id: raffleId,
+          p_page: page,
+          p_page_size: pageSize,
+        }),
+        supabase.rpc('get_virtual_ticket_counts', {
+          p_raffle_id: raffleId,
+        }),
+      ]);
+
+      if (ticketsResult.error) throw ticketsResult.error;
+      if (countsResult.error) throw countsResult.error;
+
+      const counts = (countsResult.data as VirtualTicketCounts[] | null)?.[0];
+
+      return {
+        tickets: (ticketsResult.data || []) as VirtualTicket[],
+        count: counts?.total_count || 0,
+        sold: counts?.sold_count || 0,
+        reserved: counts?.reserved_count || 0,
+        available: counts?.available_count || 0,
+      };
+    },
+    staleTime: 5000,
+  });
+}

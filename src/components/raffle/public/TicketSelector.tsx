@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency-utils";
 import { parseTicketIndex } from "@/lib/ticket-utils";
 import { useRandomAvailableTickets, useCheckTicketsAvailability } from "@/hooks/usePublicRaffle";
-import { useVirtualTickets } from "@/hooks/useVirtualTickets";
+import { useVirtualTickets, prefetchVirtualTickets } from "@/hooks/useVirtualTickets";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTrackingEvents } from "@/hooks/useTrackingEvents";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
@@ -231,10 +232,44 @@ export function TicketSelector({
   const effectiveTotalPages = totalPages;
 
   // Always use virtual tickets - with error handling
+  const queryClient = useQueryClient();
   const { data, isLoading, error: ticketsError, refetch } = useVirtualTickets(raffleId, page, pageSize);
   const randomMutation = useRandomAvailableTickets();
   const checkAvailabilityMutation = useCheckTicketsAvailability();
   const [isSearching, setIsSearching] = useState(false);
+
+  // Prefetch adjacent pages for smooth navigation in mega raffles
+  useEffect(() => {
+    if (!raffleId || isLoading) return;
+    
+    // Only prefetch when in grid mode (manual tab)
+    if (mode !== 'manual') return;
+
+    const prefetchAdjacentPages = async () => {
+      const promises: Promise<void>[] = [];
+
+      // Prefetch next page (if exists)
+      if (page < effectiveTotalPages) {
+        promises.push(
+          prefetchVirtualTickets(queryClient, raffleId, page + 1, pageSize)
+        );
+      }
+
+      // Prefetch previous page (if exists and not first)
+      if (page > 1) {
+        promises.push(
+          prefetchVirtualTickets(queryClient, raffleId, page - 1, pageSize)
+        );
+      }
+
+      // Execute prefetches in parallel (non-blocking)
+      await Promise.allSettled(promises);
+    };
+
+    // Small delay to not compete with current page load
+    const timer = setTimeout(prefetchAdjacentPages, 150);
+    return () => clearTimeout(timer);
+  }, [queryClient, raffleId, page, pageSize, effectiveTotalPages, mode, isLoading]);
 
   // Debounce for Manual tab
   useEffect(() => {
