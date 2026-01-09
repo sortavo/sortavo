@@ -1960,7 +1960,13 @@ export type Database = {
       }
       get_raffle_stats_list: {
         Args: { p_organization_id: string }
-        Returns: Json
+        Returns: {
+          raffle_id: string
+          tickets_reserved: number
+          tickets_sold: number
+          total_revenue: number
+          unique_buyers: number
+        }[]
       }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
       get_virtual_ticket_counts: {

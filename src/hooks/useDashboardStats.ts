@@ -126,18 +126,18 @@ export function useDashboardStats() {
         total_revenue: number; 
       } | null;
       
-      // Parse raffle stats list (returns jsonb array)
+      // Parse raffle stats list (returns table with new column names)
       const raffleStatsList = (Array.isArray(raffleStatsResult.data) 
         ? raffleStatsResult.data 
-        : []) as Array<{ raffle_id: string; sold_count: number; reserved_count: number; revenue: number }>;
+        : []) as Array<{ raffle_id: string; tickets_sold: number; tickets_reserved: number; total_revenue: number; unique_buyers: number }>;
       const raffleStatsMap = new Map(raffleStatsList.map(rs => [rs.raffle_id, rs]));
 
       // Build individual raffle stats using RPC data
       const activeRafflesList: RaffleStats[] = activeRafflesData.map(raffle => {
         const stats = raffleStatsMap.get(raffle.id);
-        const raffleSold = Number(stats?.sold_count || 0);
-        const raffleReserved = Number(stats?.reserved_count || 0);
-        const raffleRevenue = Number(stats?.revenue || 0) || (raffleSold * Number(raffle.ticket_price));
+        const raffleSold = Number(stats?.tickets_sold || 0);
+        const raffleReserved = Number(stats?.tickets_reserved || 0);
+        const raffleRevenue = Number(stats?.total_revenue || 0) || (raffleSold * Number(raffle.ticket_price));
         const raffleConversion = raffle.total_tickets > 0 
           ? Math.round((raffleSold / raffle.total_tickets) * 100) 
           : 0;
