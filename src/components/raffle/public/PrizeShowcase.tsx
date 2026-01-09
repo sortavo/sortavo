@@ -1,6 +1,7 @@
-import { Trophy, Gift, Sparkles } from "lucide-react";
+import { Trophy, Gift, Sparkles, Award, Star } from "lucide-react";
 import { formatCurrency } from "@/lib/currency-utils";
 import { PrizeDisplayMode, Prize } from "@/types/prize";
+import { cn } from "@/lib/utils";
 
 interface PrizeShowcaseProps {
   raffle: {
@@ -51,47 +52,51 @@ export function PrizeShowcase({
     borderColor: `${primaryColor}30`,
   };
 
-  // Hierarchical mode: Main prize + 2nd, 3rd place, etc.
+  // Hierarchical mode: Main prize + 2nd, 3rd place, etc. - CLEANED UP VERSION
   if (displayMode === 'hierarchical') {
     return (
       <div 
         className="relative overflow-hidden rounded-2xl border-2 p-4 sm:p-6 max-w-2xl mx-auto"
         style={containerStyle}
       >
-        {/* Decorative sparkles */}
+        {/* Decorative sparkles - using icon instead of emoji */}
         <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
-          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 animate-pulse" />
+          <Sparkles className={cn(
+            "w-5 h-5 sm:w-6 sm:h-6 animate-pulse",
+            isDarkTemplate ? "text-amber-400" : "text-amber-500"
+          )} />
         </div>
         
         {/* Main Prize */}
         <div className="flex items-start gap-3 sm:gap-4">
           <div 
-            className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-md flex-shrink-0"
             style={{ 
-              background: `linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%)`,
+              background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
             }}
           >
-            <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+            <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <p 
-              className="text-xs sm:text-sm font-bold uppercase tracking-wider mb-1"
-              style={{ color: '#D97706' }}
+              className="text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5"
+              style={{ color: primaryColor }}
             >
-              🏆 Premio Principal
+              <Award className="w-3.5 h-3.5" />
+              Premio Principal
             </p>
             <h2 
-              className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight"
+              className="text-lg sm:text-xl lg:text-2xl font-bold leading-tight"
               style={{ color: textColor }}
             >
               {allPrizes[0]?.name || raffle.prize_name}
             </h2>
             {(allPrizes[0]?.value || raffle.prize_value) && (
               <p 
-                className="text-base sm:text-lg font-semibold mt-1"
-                style={{ color: '#D97706' }}
+                className="text-sm mt-1"
+                style={{ color: textMuted }}
               >
-                Valor: {formatCurrency(Number(allPrizes[0]?.value || raffle.prize_value), currency)}
+                Valor estimado: {formatCurrency(Number(allPrizes[0]?.value || raffle.prize_value), currency)}
               </p>
             )}
           </div>
@@ -99,45 +104,46 @@ export function PrizeShowcase({
         
         {/* Additional Prizes */}
         {allPrizes.length > 1 && (
-          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t" style={{ borderColor: `${primaryColor}20` }}>
-            <p className="text-xs sm:text-sm font-semibold mb-3 sm:mb-4 flex items-center gap-2" style={{ color: textMuted }}>
+          <div className="mt-4 sm:mt-5 pt-4 sm:pt-5 border-t" style={{ borderColor: `${primaryColor}20` }}>
+            <p className="text-xs font-medium mb-3 flex items-center gap-2" style={{ color: textMuted }}>
               <Gift className="w-4 h-4" style={{ color: primaryColor }} />
-              ¡Y también puedes ganar!
+              También puedes ganar
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {allPrizes.slice(1).map((prize, idx) => {
+                // Use icons instead of emojis, more muted colors
                 const badgeStyles = [
-                  { bg: 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)', icon: '🥈', label: '2° Lugar' },
-                  { bg: 'linear-gradient(135deg, #CD7F32 0%, #B87333 100%)', icon: '🥉', label: '3° Lugar' },
-                  { bg: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`, icon: '🎁', label: `${idx + 2}° Premio` },
+                  { bg: `linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%)`, label: '2° Lugar' },
+                  { bg: `linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)`, label: '3° Lugar' },
+                  { bg: `linear-gradient(135deg, ${primaryColor}90 0%, ${accentColor}90 100%)`, label: `${idx + 2}° Premio` },
                 ];
                 const style = badgeStyles[Math.min(idx, 2)];
                 
                 return (
                   <div 
                     key={prize.id || idx}
-                    className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl border shadow-sm"
+                    className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl border"
                     style={{ 
-                      backgroundColor: isDarkTemplate ? cardBg : 'rgba(255,255,255,0.8)',
+                      backgroundColor: isDarkTemplate ? cardBg : 'rgba(255,255,255,0.9)',
                       borderColor: `${primaryColor}15`,
                     }}
                   >
                     <div 
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ background: style.bg }}
                     >
-                      <span className="text-base sm:text-lg">{style.icon}</span>
+                      <Star className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] sm:text-xs font-medium" style={{ color: textMuted }}>
                         {style.label}
                       </p>
-                      <p className="text-xs sm:text-sm font-semibold truncate" style={{ color: textColor }}>
+                      <p className="text-sm font-semibold truncate" style={{ color: textColor }}>
                         {prize.name}
                       </p>
                       {prize.value && (
                         <p className="text-[10px] sm:text-xs" style={{ color: textMuted }}>
-                          Valor: {formatCurrency(prize.value, currency)}
+                          Valor estimado: {formatCurrency(prize.value, currency)}
                         </p>
                       )}
                     </div>
@@ -151,7 +157,7 @@ export function PrizeShowcase({
     );
   }
 
-  // Equal mode: All prizes shown with same visual weight
+  // Equal mode: All prizes shown with same visual weight - CLEANED UP VERSION
   if (displayMode === 'equal') {
     return (
       <div 
@@ -160,13 +166,16 @@ export function PrizeShowcase({
       >
         {/* Decorative sparkles */}
         <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
-          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 animate-pulse" />
+          <Sparkles className={cn(
+            "w-5 h-5 sm:w-6 sm:h-6 animate-pulse",
+            isDarkTemplate ? "text-amber-400" : "text-amber-500"
+          )} />
         </div>
         
         {/* Header */}
-        <div className="flex items-center gap-3 mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 mb-4 sm:mb-5">
           <div 
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-md flex-shrink-0"
             style={{ 
               background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
             }}
@@ -175,43 +184,44 @@ export function PrizeShowcase({
           </div>
           <div>
             <p 
-              className="text-xs sm:text-sm font-bold uppercase tracking-wider"
+              className="text-xs sm:text-sm font-semibold uppercase tracking-wider flex items-center gap-1.5"
               style={{ color: primaryColor }}
             >
-              🎁 Premios del Sorteo
+              <Star className="w-3.5 h-3.5" />
+              Premios del Sorteo
             </p>
             <p className="text-xs" style={{ color: textMuted }}>
-              ¡Todos tienen la misma oportunidad!
+              Todos tienen la misma oportunidad
             </p>
           </div>
         </div>
         
         {/* All Prizes Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {allPrizes.map((prize, idx) => (
             <div 
               key={prize.id || idx}
-              className="flex items-center gap-3 p-3 sm:p-4 rounded-xl border shadow-sm"
+              className="flex items-center gap-3 p-3 rounded-xl border"
               style={{ 
                 backgroundColor: isDarkTemplate ? cardBg : 'rgba(255,255,255,0.9)',
-                borderColor: `${primaryColor}20`,
+                borderColor: `${primaryColor}15`,
               }}
             >
               <div 
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ 
-                  background: `linear-gradient(135deg, ${primaryColor}20 0%, ${accentColor}20 100%)`,
+                  background: `linear-gradient(135deg, ${primaryColor}15 0%, ${accentColor}15 100%)`,
                 }}
               >
-                <span className="text-xl sm:text-2xl">🎁</span>
+                <Gift className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: primaryColor }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base font-semibold truncate" style={{ color: textColor }}>
+                <p className="text-sm font-semibold truncate" style={{ color: textColor }}>
                   {prize.name}
                 </p>
                 {prize.value && (
-                  <p className="text-xs sm:text-sm" style={{ color: textMuted }}>
-                    Valor: {formatCurrency(prize.value, currency)}
+                  <p className="text-xs" style={{ color: textMuted }}>
+                    Valor estimado: {formatCurrency(prize.value, currency)}
                   </p>
                 )}
               </div>
@@ -222,7 +232,7 @@ export function PrizeShowcase({
     );
   }
 
-  // Numbered mode: Prize 1, 2, 3... without hierarchy medals
+  // Numbered mode: Prize 1, 2, 3... without hierarchy medals - CLEANED UP VERSION
   return (
     <div 
       className="relative overflow-hidden rounded-2xl border-2 p-4 sm:p-6 max-w-2xl mx-auto"
@@ -230,25 +240,28 @@ export function PrizeShowcase({
     >
       {/* Decorative sparkles */}
       <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
-        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 animate-pulse" />
+        <Sparkles className={cn(
+          "w-5 h-5 sm:w-6 sm:h-6 animate-pulse",
+          isDarkTemplate ? "text-amber-400" : "text-amber-500"
+        )} />
       </div>
       
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+      <div className="flex items-center gap-3 mb-4 sm:mb-5">
         <div 
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-md flex-shrink-0"
           style={{ 
-            background: `linear-gradient(135deg, #FFD700 0%, #FFA500 100%)`,
+            background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
           }}
         >
           <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
         <div>
           <p 
-            className="text-xs sm:text-sm font-bold uppercase tracking-wider"
-            style={{ color: '#D97706' }}
+            className="text-xs sm:text-sm font-semibold uppercase tracking-wider"
+            style={{ color: primaryColor }}
           >
-            🎰 Premios
+            Premios
           </p>
           <p className="text-xs" style={{ color: textMuted }}>
             {allPrizes.length} premio{allPrizes.length > 1 ? 's' : ''} a sortear
@@ -256,45 +269,40 @@ export function PrizeShowcase({
         </div>
       </div>
       
-      {/* Numbered Prizes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {allPrizes.map((prize, idx) => {
-          const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
-          const emoji = numberEmojis[idx] || `#${idx + 1}`;
-          
-          return (
+      {/* Numbered Prizes - using number badges instead of emojis */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {allPrizes.map((prize, idx) => (
+          <div 
+            key={prize.id || idx}
+            className="flex items-center gap-3 p-3 rounded-xl border"
+            style={{ 
+              backgroundColor: isDarkTemplate ? cardBg : 'rgba(255,255,255,0.9)',
+              borderColor: `${primaryColor}15`,
+            }}
+          >
             <div 
-              key={prize.id || idx}
-              className="flex items-center gap-3 p-3 sm:p-4 rounded-xl border shadow-sm"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-white text-sm"
               style={{ 
-                backgroundColor: isDarkTemplate ? cardBg : 'rgba(255,255,255,0.9)',
-                borderColor: `${primaryColor}20`,
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
               }}
             >
-              <div 
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ 
-                  background: `linear-gradient(135deg, ${primaryColor}15 0%, ${accentColor}15 100%)`,
-                }}
-              >
-                <span className="text-xl sm:text-2xl">{emoji}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs font-medium" style={{ color: textMuted }}>
-                  Premio {idx + 1}
-                </p>
-                <p className="text-sm sm:text-base font-semibold truncate" style={{ color: textColor }}>
-                  {prize.name}
-                </p>
-                {prize.value && (
-                  <p className="text-xs sm:text-sm" style={{ color: textMuted }}>
-                    Valor: {formatCurrency(prize.value, currency)}
-                  </p>
-                )}
-              </div>
+              {idx + 1}
             </div>
-          );
-        })}
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] sm:text-xs font-medium" style={{ color: textMuted }}>
+                Premio {idx + 1}
+              </p>
+              <p className="text-sm font-semibold truncate" style={{ color: textColor }}>
+                {prize.name}
+              </p>
+              {prize.value && (
+                <p className="text-xs" style={{ color: textMuted }}>
+                  Valor estimado: {formatCurrency(prize.value, currency)}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
