@@ -88,6 +88,8 @@ export function MobileHero({
     dragFree: false,
     containScroll: 'trimSnaps',
     skipSnaps: false,
+    duration: 20,
+    dragThreshold: 5,
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
