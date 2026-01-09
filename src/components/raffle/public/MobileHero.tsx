@@ -288,8 +288,8 @@ export function MobileHero({
         </div>
       </div>
 
-      {/* Image/Video Carousel */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden">
+      {/* Image/Video Carousel - CLEAN, NO OVERLAY TEXT */}
+      <div className="relative aspect-square w-full overflow-hidden">
         <div className="overflow-hidden h-full" ref={emblaRef}>
           <div className="flex h-full">
             {mediaItems.map((item, idx) => (
@@ -312,19 +312,17 @@ export function MobileHero({
           </div>
         </div>
 
-        {/* Elegant gradient overlays - adaptive to light/dark */}
+        {/* Subtle gradient only for pagination dots visibility */}
         <div 
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
           style={{ 
-            background: isLightTemplate
-              ? 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, transparent 25%, transparent 45%, rgba(255,255,255,0.97) 100%)' 
-              : 'linear-gradient(to bottom, rgba(3,7,18,0.5) 0%, transparent 25%, transparent 45%, rgba(3,7,18,0.97) 100%)' 
+            background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 100%)' 
           }}
         />
 
         {/* Pagination dots - TIER S minimal white with video indicator */}
         {mediaItems.length > 1 && (
-          <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
             {mediaItems.map((item, idx) => (
               <button
                 key={idx}
@@ -346,40 +344,39 @@ export function MobileHero({
             ))}
           </div>
         )}
+      </div>
 
-        {/* Prize info overlay - TIER S DRAMATIC PREMIUM typography */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3 pointer-events-none">
-          {/* Title - Adaptive sizing based on title length */}
-          <h1 className={cn(
-            "font-black leading-[0.85] tracking-[-0.03em]",
-            // Adaptive sizing: shorter titles get larger text
-            raffle.title.length > 40 
-              ? "text-2xl sm:text-3xl" 
-              : raffle.title.length > 25 
-                ? "text-3xl sm:text-4xl" 
-                : "text-4xl sm:text-5xl",
-            isLightTemplate ? "text-gray-900" : "text-white"
+      {/* Raffle Info Section - BELOW THE IMAGE, NOT OVERLAY */}
+      <div className={cn(
+        "relative px-6 py-6",
+        isLightTemplate ? "bg-white" : "bg-ultra-dark"
+      )}>
+        {/* Clean title with em-dash fix for better line breaks */}
+        <h1 className={cn(
+          "font-black leading-[1.0] tracking-[-0.02em]",
+          // Responsive font sizing with clamp
+          "text-[clamp(1.75rem,6vw,2.75rem)]",
+          isLightTemplate ? "text-gray-900" : "text-white"
+        )}>
+          {raffle.title.replace(/ - /g, ' — ')}
+        </h1>
+        
+        {/* Prize name and value - subtle hierarchy */}
+        <div className="mt-3 space-y-1">
+          <p className={cn(
+            "text-lg font-semibold",
+            isLightTemplate ? "text-gray-800" : "text-white/90"
           )}>
-            {raffle.title}
-          </h1>
-          
-          {/* Prize name with subtle value text */}
-          <div className="flex flex-col gap-1">
-            <span className={cn(
-              "text-lg font-semibold tracking-tight",
-              isLightTemplate ? "text-gray-800" : "text-white"
+            {raffle.prize_name}
+          </p>
+          {raffle.prize_value && (
+            <p className={cn(
+              "text-sm",
+              isLightTemplate ? "text-gray-500" : "text-white/50"
             )}>
-              {raffle.prize_name}
-            </span>
-            {raffle.prize_value && (
-              <span className={cn(
-                "text-sm font-medium",
-                isLightTemplate ? "text-gray-500" : "text-white/60"
-              )}>
-                Valor estimado: {formatCurrency(raffle.prize_value, currency)}
-              </span>
-            )}
-          </div>
+              Valor estimado: {formatCurrency(raffle.prize_value, currency)}
+            </p>
+          )}
         </div>
       </div>
 

@@ -554,37 +554,12 @@ export function TemplateHeroLayout({
     }
   };
 
-  // Price display with premium styling
+  // Price display - DISABLED for overlay/badge modes to avoid visual clutter
+  // Only show prize value in PrizeShowcase component with proper hierarchy
   const PriceDisplay = () => {
-    const priceContent = (
-      <div className={cn(isLightTemplate ? "text-white" : "text-white")}>
-        <p className="text-xs font-medium text-white/90">Valor del Premio</p>
-        <p className="text-2xl font-bold">
-          {formatCurrency(Number(raffle.prize_value), currency)}
-        </p>
-      </div>
-    );
-
-    if (!raffle.prize_value) return null;
-
-    switch (pricePosition) {
-      case 'overlay':
-        return (
-          <div className="absolute bottom-4 left-4 px-6 py-3 rounded-2xl shadow-xl pointer-events-none bg-gradient-to-r from-emerald-600 to-teal-600">
-            {priceContent}
-          </div>
-        );
-      case 'badge':
-        return (
-          <div className="absolute top-4 left-4 px-4 py-2 rounded-full shadow-xl pointer-events-none bg-gradient-to-r from-emerald-600 to-teal-600">
-            <p className="text-white font-bold">{formatCurrency(Number(raffle.prize_value), currency)}</p>
-          </div>
-        );
-      case 'side':
-      case 'below':
-      default:
-        return null;
-    }
+    // Completely disable overlay and badge modes to avoid "badge sobre la imagen"
+    // The prize value is shown properly in PrizeShowcase instead
+    return null;
   };
 
   // Get brand colors for dynamic styling

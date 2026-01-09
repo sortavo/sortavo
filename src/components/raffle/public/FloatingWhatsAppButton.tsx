@@ -29,7 +29,7 @@ export function FloatingWhatsAppButton({
       transition={{ delay: 1, type: "spring", stiffness: 200 }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 sm:w-16 sm:h-16 bg-[#25D366] hover:bg-[#128C7E] rounded-full flex items-center justify-center shadow-lg shadow-green-500/30 transition-colors"
+      className="fixed bottom-24 sm:bottom-6 right-6 z-50 w-14 h-14 sm:w-16 sm:h-16 bg-[#25D366] hover:bg-[#128C7E] rounded-full flex items-center justify-center shadow-lg shadow-green-500/30 transition-colors"
       title="Contactar por WhatsApp"
     >
       <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
