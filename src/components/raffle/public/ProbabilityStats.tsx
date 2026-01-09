@@ -13,25 +13,41 @@ import {
   BarChart3
 } from "lucide-react";
 
-// Smart probability formatting - shows readable format for small percentages
-function formatProbability(probability: number): string {
+// Structured probability result for intentional rendering
+interface ProbabilityFormat {
+  kind: 'percent' | 'oneIn';
+  percent?: string;
+  oneIn?: number;
+}
+
+// Smart probability formatting - returns structured data for intentional two-line rendering
+function getProbabilityFormat(probability: number): ProbabilityFormat {
   if (probability >= 10) {
-    return probability.toFixed(0) + '%';
+    return { kind: 'percent', percent: probability.toFixed(0) + '%' };
   } else if (probability >= 1) {
-    return probability.toFixed(1) + '%';
+    return { kind: 'percent', percent: probability.toFixed(1) + '%' };
   } else if (probability >= 0.1) {
-    return probability.toFixed(2) + '%';
+    return { kind: 'percent', percent: probability.toFixed(2) + '%' };
   } else if (probability >= 0.01) {
-    return probability.toFixed(2) + '%';
+    return { kind: 'percent', percent: probability.toFixed(2) + '%' };
   } else if (probability > 0) {
-    // For very small percentages, show as "1 en X" format which is more readable
+    // For very small percentages, use "1 en X" format
     const oneInX = Math.round(100 / probability);
     if (oneInX >= 1000) {
-      return `1 en ${oneInX.toLocaleString()}`;
+      return { kind: 'oneIn', oneIn: oneInX };
     }
-    return probability.toFixed(2) + '%';
+    return { kind: 'percent', percent: probability.toFixed(2) + '%' };
   }
-  return '0%';
+  return { kind: 'percent', percent: '0%' };
+}
+
+// Legacy string format for simple cases
+function formatProbability(probability: number): string {
+  const format = getProbabilityFormat(probability);
+  if (format.kind === 'percent') {
+    return format.percent!;
+  }
+  return `1 en ${format.oneIn!.toLocaleString()}`;
 }
 
 interface ProbabilityStatsProps {
@@ -110,6 +126,56 @@ export function ProbabilityStats({
     { qty: 10, label: "10 boletos" }
   ];
 
+  // Get structured probability formats
+  const mainProbFormat = getProbabilityFormat(stats.probabilityPerTicket);
+  const selectionProbFormat = getProbabilityFormat(stats.probabilityWithSelection);
+
+  // Render probability with intentional two-line layout for "1 en X" format
+  const renderProbability = (
+    format: ProbabilityFormat, 
+    sizeClasses: { label: string; number: string },
+    labelColor: string
+  ) => {
+    if (format.kind === 'oneIn') {
+      return (
+        <div className="flex flex-col items-center leading-none">
+          <span className={cn(sizeClasses.label, labelColor, "font-semibold uppercase tracking-wide")}>
+            1 en
+          </span>
+          <span className={cn(sizeClasses.number, "font-black text-emerald-500 tabular-nums tracking-[-0.02em]")}>
+            {format.oneIn!.toLocaleString()}
+          </span>
+        </div>
+      );
+    }
+    return (
+      <span className={cn(sizeClasses.number, "font-black text-emerald-500 tabular-nums tracking-[-0.02em]")}>
+        {format.percent}
+      </span>
+    );
+  };
+
+  // Render package card probability - compact version for grid
+  const renderPackageProbability = (format: ProbabilityFormat) => {
+    if (format.kind === 'oneIn') {
+      return (
+        <div className="flex flex-col items-center leading-none min-w-0">
+          <span className={cn("text-[10px] sm:text-xs font-semibold uppercase tracking-wide", colors.textMuted)}>
+            1 en
+          </span>
+          <span className="text-lg sm:text-2xl font-black text-emerald-500 tabular-nums tracking-tight">
+            {format.oneIn!.toLocaleString()}
+          </span>
+        </div>
+      );
+    }
+    return (
+      <span className="text-lg sm:text-2xl font-black text-emerald-500 tabular-nums tracking-tight">
+        {format.percent}
+      </span>
+    );
+  };
+
   return (
     <Card className={cn(
       "relative border backdrop-blur-xl overflow-hidden",
@@ -160,68 +226,71 @@ export function ProbabilityStats({
         }}
       />
       
-      <CardContent className="relative pt-10 pb-10 space-y-10">
+      <CardContent className="relative pt-8 sm:pt-10 pb-8 sm:pb-10 space-y-8 sm:space-y-10">
         {/* Header */}
         <div className="text-center">
           <motion.div 
-            className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/30"
+            className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-xl shadow-emerald-500/30"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <BarChart3 className="w-10 h-10 text-white" />
+            <BarChart3 className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </motion.div>
-          <h3 className={cn("text-2xl lg:text-3xl font-black tracking-tight", colors.text)}>
+          <h3 className={cn("text-xl sm:text-2xl lg:text-3xl font-black tracking-tight", colors.text)}>
             Tus Probabilidades
           </h3>
-          <p className={cn("text-base mt-2", colors.textMuted)}>
+          <p className={cn("text-sm sm:text-base mt-2", colors.textMuted)}>
             Estadísticas en tiempo real
           </p>
         </div>
 
         {/* Main probability */}
         <div className={cn(
-          "backdrop-blur-sm rounded-2xl p-8 border transition-colors",
+          "backdrop-blur-sm rounded-xl sm:rounded-2xl p-5 sm:p-8 border transition-colors",
           colors.innerCardBg, colors.innerCardBorder, colors.innerCardHover
         )}>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center", colors.iconBg)}>
-                <Target className={cn("w-7 h-7", colors.iconText)} />
+          <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className={cn("w-11 h-11 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shrink-0", colors.iconBg)}>
+                <Target className={cn("w-5 h-5 sm:w-7 sm:h-7", colors.iconText)} />
               </div>
-              <span className={cn("font-semibold text-lg", colors.text, "opacity-80")}>
+              <span className={cn("font-semibold text-sm sm:text-lg", colors.text, "opacity-80")}>
                 Probabilidad por boleto
               </span>
             </div>
-            <Badge className={cn("shadow-lg shadow-emerald-500/10 text-sm px-4 py-2", colors.badgeBg)}>
+            <Badge className={cn("shadow-lg shadow-emerald-500/10 text-xs sm:text-sm px-2.5 py-1.5 sm:px-4 sm:py-2 shrink-0", colors.badgeBg)}>
               1 de {ticketsAvailable.toLocaleString()}
             </Badge>
           </div>
           
-          <div className="text-center py-6">
-            <motion.span 
-              className="text-6xl lg:text-7xl font-black text-emerald-500 tracking-[-0.04em]"
+          <div className="text-center py-4 sm:py-6">
+            <motion.div
               key={stats.probabilityPerTicket}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
             >
-              {formatProbability(stats.probabilityPerTicket)}
-            </motion.span>
+              {renderProbability(
+                mainProbFormat,
+                { label: 'text-base sm:text-lg', number: 'text-5xl sm:text-6xl lg:text-7xl' },
+                colors.textMuted
+              )}
+            </motion.div>
           </div>
         </div>
 
         {/* Progress bar - tickets sold */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-base">
+        <div className="space-y-2.5 sm:space-y-3">
+          <div className="flex items-center justify-between text-sm sm:text-base">
             <span className={colors.textMuted}>Boletos vendidos</span>
-            <span className={cn("font-bold text-lg", colors.text)}>
+            <span className={cn("font-bold text-base sm:text-lg tabular-nums", colors.text)}>
               {ticketsSold.toLocaleString()} / {totalTickets.toLocaleString()}
             </span>
           </div>
           <Progress 
             value={stats.soldPercentage} 
-            className={cn("h-4", colors.progressBg, "[&>div]:bg-gradient-to-r [&>div]:from-emerald-600 [&>div]:to-emerald-400")} 
+            className={cn("h-3 sm:h-4", colors.progressBg, "[&>div]:bg-gradient-to-r [&>div]:from-emerald-600 [&>div]:to-emerald-400")} 
           />
-          <p className={cn("text-sm text-center", colors.textSubtle)}>
+          <p className={cn("text-xs sm:text-sm text-center tabular-nums", colors.textSubtle)}>
             {ticketsAvailable.toLocaleString()} boletos disponibles
           </p>
         </div>
@@ -232,49 +301,48 @@ export function ProbabilityStats({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              "flex items-center justify-center gap-3 p-5 rounded-2xl border shimmer-badge",
+              "flex items-center justify-center gap-2.5 sm:gap-3 p-4 sm:p-5 rounded-xl sm:rounded-2xl border shimmer-badge",
               colors.amberBadgeBg
             )}
           >
-            <Sparkles className="w-6 h-6 text-amber-500" />
-            <span className="text-base font-semibold text-amber-600">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
+            <span className="text-sm sm:text-base font-semibold text-amber-600">
               {stats.timesMoreLikely.toLocaleString()}× más probable que la lotería nacional
             </span>
           </motion.div>
         )}
 
         {/* Package multipliers */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center", colors.iconBg)}>
-              <TrendingUp className={cn("w-7 h-7", colors.iconText)} />
+        <div className="space-y-4 sm:space-y-6">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className={cn("w-11 h-11 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shrink-0", colors.iconBg)}>
+              <TrendingUp className={cn("w-5 h-5 sm:w-7 sm:h-7", colors.iconText)} />
             </div>
-            <span className={cn("font-semibold text-lg", colors.text, "opacity-80")}>
+            <span className={cn("font-semibold text-sm sm:text-lg", colors.text, "opacity-80")}>
               Aumenta tus probabilidades
             </span>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             {packageMultipliers.map((pkg) => {
               const pkgProbability = ticketsAvailable > 0 ? (pkg.qty / ticketsAvailable) * 100 : 0;
+              const pkgFormat = getProbabilityFormat(pkgProbability);
               const cost = pkg.qty * ticketPrice;
               
               return (
                 <div 
                   key={pkg.qty}
                   className={cn(
-                    "text-center p-6 backdrop-blur-sm rounded-2xl border transition-all duration-300 group hover:shadow-lg hover:shadow-emerald-500/10",
+                    "text-center p-3 sm:p-5 backdrop-blur-sm rounded-xl sm:rounded-2xl border transition-all duration-300 group hover:shadow-lg hover:shadow-emerald-500/10 min-w-0",
                     colors.packageCardBg
                   )}
                 >
-                  <div className="flex items-center justify-center gap-1.5 mb-3">
-                    <Ticket className={cn("w-4 h-4 group-hover:text-emerald-500 transition-colors", colors.textSubtle)} />
-                    <span className={cn("text-sm", colors.textMuted)}>{pkg.label}</span>
+                  <div className="flex items-center justify-center gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+                    <Ticket className={cn("w-3 h-3 sm:w-4 sm:h-4 group-hover:text-emerald-500 transition-colors shrink-0", colors.textSubtle)} />
+                    <span className={cn("text-[11px] sm:text-sm truncate", colors.textMuted)}>{pkg.label}</span>
                   </div>
-                  <p className="text-2xl lg:text-3xl font-black text-emerald-500 tracking-tight">
-                    {formatProbability(pkgProbability)}
-                  </p>
-                  <p className={cn("text-sm mt-2", colors.textSubtle)}>
+                  {renderPackageProbability(pkgFormat)}
+                  <p className={cn("text-[11px] sm:text-sm mt-1.5 sm:mt-2 tabular-nums", colors.textSubtle)}>
                     {formatCurrency(cost, currencyCode)}
                   </p>
                 </div>
@@ -288,17 +356,30 @@ export function ProbabilityStats({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl text-white shadow-2xl shadow-emerald-500/30"
+            className="p-5 sm:p-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl sm:rounded-2xl text-white shadow-2xl shadow-emerald-500/30"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-base opacity-90">Con tus {selectedCount} boletos</p>
-                <p className="text-4xl lg:text-5xl font-black tracking-[-0.04em]">
-                  {formatProbability(stats.probabilityWithSelection)} de ganar
-                </p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-sm sm:text-base opacity-90">Con tus {selectedCount} boletos</p>
+                <div className="mt-1">
+                  {selectionProbFormat.kind === 'oneIn' ? (
+                    <div className="flex flex-col leading-none">
+                      <span className="text-sm sm:text-base opacity-80 font-semibold uppercase tracking-wide">
+                        1 en
+                      </span>
+                      <span className="text-3xl sm:text-4xl lg:text-5xl font-black tabular-nums tracking-[-0.04em]">
+                        {selectionProbFormat.oneIn!.toLocaleString()}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-3xl sm:text-4xl lg:text-5xl font-black tabular-nums tracking-[-0.04em]">
+                      {selectionProbFormat.percent} de ganar
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                <Sparkles className="w-10 h-10" />
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-sm shrink-0">
+                <Sparkles className="w-7 h-7 sm:w-10 sm:h-10" />
               </div>
             </div>
           </motion.div>
