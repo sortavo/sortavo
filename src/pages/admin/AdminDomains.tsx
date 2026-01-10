@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useDomainStatus, DomainCheckResult } from "@/hooks/useDomainStatus";
-import { RefreshCw, Globe, CheckCircle2, AlertTriangle, XCircle, Clock, Building2, ExternalLink, Wifi } from "lucide-react";
+import { RefreshCw, Globe, CheckCircle2, AlertTriangle, XCircle, Clock, Building2, ExternalLink, Wifi, LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminDomains() {
+  const navigate = useNavigate();
   const {
     vercelDomains,
     customDomains,
@@ -22,6 +25,18 @@ export default function AdminDomains() {
   } = useDomainStatus();
 
   const [autoRefresh, setAutoRefresh] = useState(false);
+
+  // Check if it's an authentication error
+  const isAuthError = domainsError instanceof Error && 
+    (domainsError.message === 'AUTH_ERROR' || 
+     domainsError.message.includes('401') || 
+     domainsError.message.includes('Unauthorized') ||
+     domainsError.message.includes('Authentication'));
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
 
   // Auto-check on mount
   useEffect(() => {
@@ -164,7 +179,25 @@ export default function AdminDomains() {
                 ))}
               </div>
             ) : domainsError ? (
-              <p className="text-red-500">Error cargando dominios: {(domainsError as Error).message}</p>
+              <div className="text-center py-8 space-y-4">
+                {isAuthError ? (
+                  <>
+                    <div className="mx-auto w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+                      <LogOut className="h-6 w-6 text-amber-500" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-medium text-amber-600">Tu sesión ha expirado</p>
+                      <p className="text-sm text-muted-foreground mt-1">Por favor, inicia sesión de nuevo para continuar.</p>
+                    </div>
+                    <Button onClick={handleSignOut} variant="default">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Volver a iniciar sesión
+                    </Button>
+                  </>
+                ) : (
+                  <p className="text-red-500">Error cargando dominios: {(domainsError as Error).message}</p>
+                )}
+              </div>
             ) : (
               <Table>
                 <TableHeader>
