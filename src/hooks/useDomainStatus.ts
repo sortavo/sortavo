@@ -47,9 +47,27 @@ export function useDomainStatus() {
     queryKey: ['vercel-domains'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('list-vercel-domains');
+      
+      // Detect authentication errors
+      if (error?.message?.includes('401') || error?.message?.includes('Unauthorized') || error?.message?.includes('Authentication required')) {
+        throw new Error('AUTH_ERROR');
+      }
+      
       if (error) throw error;
-      if (!data.success) throw new Error(data.error);
+      if (!data.success) {
+        if (data.error?.includes('Authentication') || data.error?.includes('401')) {
+          throw new Error('AUTH_ERROR');
+        }
+        throw new Error(data.error);
+      }
       return data.domains as VercelDomain[];
+    },
+    retry: (failureCount, error) => {
+      // Don't retry on auth errors
+      if (error instanceof Error && error.message === 'AUTH_ERROR') {
+        return false;
+      }
+      return failureCount < 2;
     },
   });
 
@@ -81,6 +99,13 @@ export function useDomainStatus() {
         is_primary: d.is_primary,
         organization_name: d.organizations?.name,
       })) as CustomDomain[];
+    },
+    retry: (failureCount, error) => {
+      // Don't retry on auth errors
+      if (error instanceof Error && error.message === 'AUTH_ERROR') {
+        return false;
+      }
+      return failureCount < 2;
     },
   });
 

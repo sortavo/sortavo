@@ -65,7 +65,24 @@ import AdminDomains from "./pages/admin/AdminDomains";
 import AdminUsers from "./pages/admin/AdminUsers";
 
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) => {
+        // Don't retry on authentication errors
+        if (error instanceof Error && 
+            (error.message.includes('401') || 
+             error.message.includes('AUTH_ERROR') ||
+             error.message.includes('Unauthorized') ||
+             error.message.includes('Authentication required'))) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 // Adaptive toaster that positions based on route
 function AdaptiveToaster() {
